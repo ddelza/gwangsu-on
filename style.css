@@ -1,0 +1,124 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: #f5f6f8;
+  color: #1a1a1a;
+}
+
+/* ── 상단 네비 ── */
+.topnav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  background: #1a3d7c;
+  padding: 12px 16px;
+}
+.topnav .brand {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-right: 16px;
+  white-space: nowrap;
+}
+.topnav a {
+  color: #d8e3ff;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+.topnav a:hover, .topnav a.active {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+/* ── 인앱 브라우저 경고 배너 ── */
+#inappBanner {
+  display: none;
+  background: #fff3e0;
+  border: 2px solid #ffb74d;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 16px;
+  text-align: center;
+}
+#inappBanner p { font-size: 0.9rem; color: #e65100; margin-bottom: 10px; line-height: 1.5; }
+#inappBanner button {
+  padding: 9px 18px; background: #e65100; color: white; border: none;
+  border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+}
+
+/* ── 검색 허브 ── */
+.search-wrap { padding: 20px 16px 8px; max-width: 960px; margin: 0 auto; }
+.search-box {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1.05rem;
+  border: 2px solid #d0d6e2;
+  border-radius: 12px;
+  outline: none;
+}
+.search-box:focus { border-color: #1a3d7c; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #e6ebf5;
+  color: #1a3d7c;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+}
+.chip.active { background: #1a3d7c; color: #fff; }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 8px 16px 40px;
+}
+.card {
+  display: block;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  text-decoration: none;
+  color: #1a1a1a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); }
+.card .cat { font-size: 0.75rem; color: #1a3d7c; font-weight: 700; margin-bottom: 4px; }
+.card .title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+.card .desc { font-size: 0.85rem; color: #666; line-height: 1.4; }
+.empty-state { text-align: center; color: #888; padding: 40px 0; }
+
+/* ── 목록형 (학사일정/회의록) ── */
+.list-wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+.list-item {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.list-item .date { font-size: 0.8rem; color: #1a3d7c; font-weight: 700; }
+.list-item .title { font-size: 1rem; font-weight: 600; margin: 4px 0; }
+.list-item .meta { font-size: 0.8rem; color: #888; }
+.list-item .summary { font-size: 0.88rem; color: #444; margin-top: 6px; line-height: 1.5; }
+.list-item a.link-btn {
+  display: inline-block; margin-top: 8px; font-size: 0.85rem;
+  color: #1a3d7c; text-decoration: none; font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .topnav { padding: 10px 12px; }
+  .topnav .brand { width: 100%; margin-bottom: 6px; }
+  .search-box { font-size: 1rem; }
+  .card-grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 10px 30px; }
+}
