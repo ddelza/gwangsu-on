@@ -193,10 +193,13 @@ function fuzzySearch(items, query, fields) {
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
 const ACTION_MAP = { getPhoneDirectory: (runner) => runner.getPhoneDirectory() };
-const CAT_LABELS = { '관리자행정': '관리자/행정', '1학년': '1학년', '2학년': '2학년', '3학년': '3학년' };
-const CAT_KEYS = Object.keys(CAT_LABELS);
+// 새로 추가되는 분류는 자유 텍스트라 미리 정해둔 예쁜 표시명이 없을 수 있다 — 기존 4개만 표시명을
+// 따로 두고, 그 외(새로 추가한 분류)는 입력한 이름을 그대로 보여준다.
+const CAT_LABEL_OVERRIDES = { '관리자행정': '관리자/행정' };
+function catLabel(cat) { return CAT_LABEL_OVERRIDES[cat] || cat; }
 
 let directory = [];
+let categories = [];
 let activeCat = '';
 let editMode = false;
 
@@ -204,8 +207,28 @@ function loadDirectory() {
   return callApi('getPhoneDirectory', {}, { scriptUrl: APPS_SCRIPT_URL, actionMap: ACTION_MAP })
     .then(data => {
       directory = (data.entries || []).map(d => ({ ...d, _searchText: [d.role, d.name, d.ext, d.direct].join(' ') }));
+      categories = data.categories || [];
       renderAll();
     });
+}
+
+async function addCategory() {
+  const name = (prompt('추가할 분류 이름을 입력하세요 (예: 행정실, 4학년부)') || '').trim();
+  if (!name) return;
+  if (categories.includes(name)) { alert('이미 있는 분류입니다.'); return; }
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'addPhoneCategory', name }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    categories = data.categories || categories;
+    renderAll();
+  } catch (err) {
+    alert('분류 추가 실패: ' + (err.message || String(err)));
+  }
 }
 
 function renderAll() {
@@ -213,8 +236,13 @@ function renderAll() {
   if (editMode) renderEditList(); else renderResults();
 }
 
+function allCategoryKeys() {
+  const fromEntries = directory.map(d => d.cat).filter(Boolean);
+  return [...new Set([...categories, ...fromEntries])];
+}
+
 function renderChips() {
-  const cats = [...new Set(directory.map(d => d.cat))];
+  const cats = allCategoryKeys();
   const wrap = document.getElementById('chips');
   wrap.innerHTML = '';
   const allChip = document.createElement('button');
@@ -225,10 +253,15 @@ function renderChips() {
   cats.forEach(c => {
     const chip = document.createElement('button');
     chip.className = 'chip' + (activeCat === c ? ' active' : '');
-    chip.textContent = CAT_LABELS[c] || c;
+    chip.textContent = catLabel(c);
     chip.onclick = () => { activeCat = c; renderAll(); };
     wrap.appendChild(chip);
   });
+  const addChip = document.createElement('button');
+  addChip.className = 'chip';
+  addChip.textContent = '+ 분류 추가';
+  addChip.onclick = addCategory;
+  wrap.appendChild(addChip);
 }
 
 function renderResults() {
@@ -263,9 +296,10 @@ function renderEditList() {
 }
 
 function editRowHtml(d, i) {
+  const cats = allCategoryKeys();
   return `<div class="phone-edit-card" data-idx="${i}">
     <select class="ed-cat">
-      ${CAT_KEYS.map(c => `<option value="${esc(c)}"${c === d.cat ? ' selected' : ''}>${esc(CAT_LABELS[c])}</option>`).join('')}
+      ${cats.map(c => `<option value="${esc(c)}"${c === d.cat ? ' selected' : ''}>${esc(catLabel(c))}</option>`).join('')}
     </select>
     <input class="ed-role" value="${escAttr(d.role)}" placeholder="담당">
     <input class="ed-name" value="${escAttr(d.name)}" placeholder="이름">
@@ -276,7 +310,7 @@ function editRowHtml(d, i) {
 }
 
 function addEditRow() {
-  directory.push({ cat: CAT_KEYS[0], role: '', name: '', ext: '', direct: '' });
+  directory.push({ cat: allCategoryKeys()[0] || '', role: '', name: '', ext: '', direct: '' });
   renderEditList();
 }
 
