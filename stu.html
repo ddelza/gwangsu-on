@@ -204,6 +204,13 @@ const BAN_COLORS = ['#eef3fc', '#fdf2e9', '#eafaf1', '#fbeee6', '#f5eef8', '#eaf
 
 let allStudents = [];
 let studentById = {};
+// structure 탭에서 받아온 "고를 수 있는 이름 목록"(grade -> "1학기 스포츠클럽" 등 -> [이름...]).
+// 아직 정해지지 않은 학기는 비어있으므로, 수정모드 드롭다운은 이 목록과 현재 배정된 값들을 합쳐서 보여준다.
+let fieldOptions = {};
+function curatedOptions(grade, sem, label) {
+  const g = fieldOptions[String(grade)];
+  return (g && g[`${sem}학기 ${label}`]) || [];
+}
 let activeGrade = '';
 let activeBan = '';
 // 활동(주제선택/동아리/스포츠클럽) 단위로 학생을 모아볼 때 사용 — 설정되면 학년/반 필터보다 우선한다.
@@ -445,7 +452,7 @@ function editableSportSelect(s, semKey) {
   const sem = semKey === 'sem1' ? 1 : 2;
   const key = pendingKey(s.id, sem, '스포츠클럽');
   const current = key in pendingEdits ? pendingEdits[key].value : s[semKey].sport;
-  const opts = uniqueSorted([...sportOptionsForGrade(s.grade), current]);
+  const opts = uniqueSorted([...sportOptionsForGrade(s.grade), ...curatedOptions(s.grade, sem, '스포츠클럽'), current]);
   const dirty = key in pendingEdits;
   return `<select class="edit-field-select${dirty ? ' dirty' : ''}"
       data-id="${escAttr(s.id)}" data-grade="${esc(s.grade)}" data-sem="${sem}" data-label="스포츠클럽"
@@ -462,7 +469,7 @@ function editableElectiveSelects(s, semKey) {
   return extras.map((e, idx) => {
     const key = pendingKey(s.id, sem, e.label);
     const current = key in pendingEdits ? pendingEdits[key].value : e.value;
-    const opts = uniqueSorted([...electiveOptionsForGradeField(s.grade, idx), current]);
+    const opts = uniqueSorted([...electiveOptionsForGradeField(s.grade, idx), ...curatedOptions(s.grade, sem, e.label), current]);
     const dirty = key in pendingEdits;
     return `<div class="edit-elective-field">
       <span class="edit-elective-label">${esc(e.label)}</span>
@@ -557,6 +564,7 @@ function reloadRoster() {
       allStudents = (data.students || []).map(s => ({ ...s, _searchText: '' }));
       allStudents.forEach(s => { s._searchText = studentSearchText(s); });
       studentById = Object.fromEntries(allStudents.map(s => [s.id, s]));
+      fieldOptions = data.fieldOptions || {};
       renderAll();
     });
 }
