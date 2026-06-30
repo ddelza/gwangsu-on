@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내선번호 — 광수 Online 교무실</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: #f5f6f8;
+  color: #1a1a1a;
+}
+.topnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  background: #1a3d7c; padding: 12px 16px;
+}
+.topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
+.topnav a { color: #d8e3ff; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
+.topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
+#inappBanner {
+  display: none; background: #fff3e0; border: 2px solid #ffb74d; border-radius: 12px;
+  padding: 16px 20px; margin: 16px; text-align: center;
+}
+#inappBanner p { font-size: 0.9rem; color: #e65100; margin-bottom: 10px; line-height: 1.5; }
+#inappBanner button {
+  padding: 9px 18px; background: #e65100; color: white; border: none;
+  border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+}
+.filter-wrap { max-width: 900px; margin: 0 auto; padding: 20px 16px 8px; }
+.search-box { width: 100%; padding: 14px 16px; font-size: 1.05rem; border: 2px solid #d0d6e2; border-radius: 12px; outline: none; margin-bottom: 12px; }
+.search-box:focus { border-color: #1a3d7c; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.chip { padding: 6px 14px; border-radius: 999px; background: #e6ebf5; color: #1a3d7c; font-size: 0.85rem; cursor: pointer; border: none; }
+.chip.active { background: #1a3d7c; color: #fff; }
+.howto-card {
+  background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.82rem; color: #444; line-height: 1.7;
+}
+.howto-card b { color: #1a3d7c; }
+.list-wrap { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; }
+.result-count { font-size: 0.82rem; color: #888; margin: 4px 2px 10px; }
+.phone-card {
+  display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 12px;
+  padding: 12px 16px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 6px solid #ccc;
+}
+.phone-card .role { font-size: 0.75rem; color: #888; min-width: 96px; }
+.phone-card .name { font-size: 1rem; font-weight: 700; min-width: 76px; }
+.phone-card .nums { margin-left: auto; text-align: right; }
+.phone-card .ext { font-size: 1.1rem; font-weight: 700; color: #1a3d7c; }
+.phone-card .direct { font-size: 0.78rem; color: #888; }
+.cat-관리자행정 { border-left-color: #6c93cf; }
+.cat-1학년 { border-left-color: #d7c36a; }
+.cat-2학년 { border-left-color: #7fb26b; }
+.cat-3학년 { border-left-color: #c98aa8; }
+.empty-state { text-align: center; color: #888; padding: 40px 0; }
+.footer-note { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; font-size: 0.82rem; color: #666; text-align: center; }
+@media (max-width: 600px) {
+  .topnav { padding: 10px 12px; }
+  .topnav .brand { width: 100%; margin-bottom: 6px; }
+  .phone-card { flex-wrap: wrap; }
+  .phone-card .nums { margin-left: 0; text-align: left; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <span class="brand">📋 광수 Online 교무실</span>
+  <a href="index.html">검색</a>
+  <a href="calender.html">캘린더</a>
+  <a href="schedule.html">학사일정</a>
+  <a href="minutes.html">회의록</a>
+  <a href="stu.html">학생 정보 조회</a>
+  <a href="phone.html" class="active">내선번호</a>
+</nav>
+
+<div id="inappBanner">
+  <p>⚠️ 카카오톡 등 메신저 안에서 열면 데이터를 불러오지 못할 수 있어요.<br>아래 버튼으로 외부 브라우저(Chrome/Safari)에서 열어주세요.</p>
+  <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
+</div>
+
+<div class="filter-wrap">
+  <input id="searchBox" class="search-box" type="text" placeholder="이름, 담당, 내선번호로 검색">
+  <div id="chips" class="chips"></div>
+  <div class="howto-card">
+    📞 <b>돌려주기</b> ["돌려주기"+내선번호+#] &nbsp;&nbsp; 🔁 <b>착신</b> ["수신전환"+전화번호+"확인"] &nbsp;&nbsp; ⛔ <b>해지</b> ["수신전환"]
+  </div>
+</div>
+
+<div class="list-wrap" id="listWrap"></div>
+
+<div class="footer-note">
+  📞 직통번호: 인터폰에 표시된 번호 그대로 사용 &nbsp;&nbsp; 📠 팩스번호: 031-768-3104
+</div>
+
+<script>
+function detectInAppBrowser() {
+  const ua = navigator.userAgent || '';
+  return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua);
+}
+function openInExternalBrowser() {
+  const url = window.location.href;
+  const ua = navigator.userAgent || '';
+  if (/KAKAOTALK/i.test(ua)) window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+  else if (/NAVER/i.test(ua)) window.location.href = 'naversearchapp://inappbrowser?app=naversearchapp&url=' + encodeURIComponent(url);
+  else window.location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+}
+function showExternalBrowserBannerIfNeeded(bannerId) {
+  if (detectInAppBrowser()) { const el = document.getElementById(bannerId); if (el) el.style.display = 'block'; }
+}
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fuzzySearch(items, query, fields) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return items;
+  const qNorm = q.replace(/\s/g, '');
+  return items.filter(item => fields.some(f => {
+    const v = String(item[f] || '').toLowerCase();
+    return v.includes(q) || v.replace(/\s/g, '').includes(qNorm);
+  }));
+}
+
+// 2026학년도 광수중학교 내선번호 — "내선번호" 슬라이드(11mmjVrpwCqVBBSK9exiFJVOpxjT7QEo5xvv4mSyyO6A) 내용을
+// 그대로 옮긴 정적 데이터. 인원/번호가 바뀌면 이 배열만 고치면 된다.
+const DIRECTORY = [
+  { cat: '관리자행정', role: '교장', name: '이정환', ext: '0001', direct: '031-768-3102' },
+  { cat: '관리자행정', role: '교감', name: '박영아', ext: '0002', direct: '070-4776-3610' },
+  { cat: '관리자행정', role: '교무기획부', name: '박상열', ext: '0003', direct: '070-4770-5262' },
+  { cat: '관리자행정', role: '연구부', name: '윤지영', ext: '0004', direct: '070-4774-6684' },
+  { cat: '관리자행정', role: '학생안전부', name: '정은주', ext: '0005', direct: '070-4773-4575' },
+  { cat: '관리자행정', role: '비담임(자치)', name: '이영재', ext: '0006', direct: '070-4773-4576' },
+  { cat: '관리자행정', role: '교육정보원부', name: '이국형', ext: '0007', direct: '070-4774-6685' },
+  { cat: '관리자행정', role: '미래교육과정부', name: '김요섭', ext: '0008', direct: '070-4776-0139' },
+  { cat: '관리자행정', role: '비담임(기자재)', name: '전창기', ext: '0009', direct: '070-4776-0756' },
+  { cat: '관리자행정', role: '행정실장', name: '이윤희', ext: '1001', direct: '070-4754-9371' },
+  { cat: '관리자행정', role: '행정계장', name: '오선숙', ext: '1002', direct: '070-4763-1486' },
+  { cat: '관리자행정', role: '', name: '', ext: '1003', direct: '070-4774-6683' },
+  { cat: '관리자행정', role: '급여담당', name: '여용수', ext: '3103', direct: '031-768-3103' },
+  { cat: '관리자행정', role: '시설당직', name: '안병호', ext: '2001', direct: '070-5175-7116' },
+  { cat: '관리자행정', role: '시설관리', name: '이용순', ext: '2002', direct: '070-5175-7373' },
+  { cat: '관리자행정', role: '교무실무', name: '양은경', ext: '3101', direct: '031-768-3101' },
+  { cat: '관리자행정', role: '교무실무', name: '이수진', ext: '3102', direct: '070-4770-8544' },
+  { cat: '관리자행정', role: '디지털튜터', name: '김세미', ext: '0010', direct: '031-768-3105' },
+
+  { cat: '1학년', role: '1학년부장', name: '신훈식', ext: '0100', direct: '070-4770-9381' },
+  { cat: '1학년', role: '1-1 담임', name: '박지희', ext: '0101', direct: '070-4779-8666' },
+  { cat: '1학년', role: '1-2 담임', name: '박선정', ext: '0102', direct: '070-4786-9646' },
+  { cat: '1학년', role: '1-3 담임', name: '채종필', ext: '0103', direct: '070-4789-1871' },
+  { cat: '1학년', role: '1-4 담임', name: '김하정', ext: '0104', direct: '070-4789-2997' },
+  { cat: '1학년', role: '소회의실', name: '', ext: '9999', direct: '070-5175-7971' },
+  { cat: '1학년', role: '진로진학상담', name: '한미란', ext: '0401', direct: '070-5175-8364' },
+  { cat: '1학년', role: '어울림반', name: '최소영', ext: '0402', direct: '070-4773-4577' },
+
+  { cat: '2학년', role: '2학년부장', name: '강현아', ext: '0200', direct: '070-4770-9490' },
+  { cat: '2학년', role: '2-1 담임', name: '박소연', ext: '0201', direct: '070-4789-4174' },
+  { cat: '2학년', role: '2-2 담임', name: '안지혁', ext: '0202', direct: '070-5156-1889' },
+  { cat: '2학년', role: '2-3 담임', name: '장준혁', ext: '0203', direct: '070-5156-1890' },
+  { cat: '2학년', role: '2-4 담임', name: '염수인', ext: '0204', direct: '070-5175-1632' },
+  { cat: '2학년', role: '2-5 담임', name: '최연미', ext: '0205', direct: '070-5175-3342' },
+  { cat: '2학년', role: '보건', name: '김숙자', ext: '0403', direct: '070-5175-8362' },
+  { cat: '2학년', role: '영양', name: '김수현', ext: '0404', direct: '070-5175-8361' },
+
+  { cat: '3학년', role: '3학년부장', name: '김지연', ext: '0300', direct: '070-4770-8654' },
+  { cat: '3학년', role: '3-1 담임', name: '나예지', ext: '0301', direct: '070-4776-3611' },
+  { cat: '3학년', role: '3-2 담임', name: '서광석', ext: '0302', direct: '070-4779-1756' },
+  { cat: '3학년', role: '3-3 담임', name: '김선은', ext: '0303', direct: '070-4779-1757' },
+  { cat: '3학년', role: '3-4 담임', name: '김정아', ext: '0304', direct: '070-4779-1758' },
+  { cat: '3학년', role: '3-5 담임', name: '김병선', ext: '0305', direct: '070-4779-3542' },
+  { cat: '3학년', role: 'WEE CLASS', name: '박소영', ext: '0501', direct: '070-4774-6682' },
+  { cat: '3학년', role: '사서', name: '정혜정', ext: '0502', direct: '070-5175-7972' },
+];
+DIRECTORY.forEach(d => { d._searchText = [d.role, d.name, d.ext, d.direct].join(' '); });
+
+let activeCat = '';
+
+function renderChips() {
+  const cats = [...new Set(DIRECTORY.map(d => d.cat))];
+  const labels = { '관리자행정': '관리자/행정', '1학년': '1학년', '2학년': '2학년', '3학년': '3학년' };
+  const wrap = document.getElementById('chips');
+  wrap.innerHTML = '';
+  const allChip = document.createElement('button');
+  allChip.className = 'chip' + (activeCat === '' ? ' active' : '');
+  allChip.textContent = '전체';
+  allChip.onclick = () => { activeCat = ''; renderChips(); renderResults(); };
+  wrap.appendChild(allChip);
+  cats.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (activeCat === c ? ' active' : '');
+    chip.textContent = labels[c] || c;
+    chip.onclick = () => { activeCat = c; renderChips(); renderResults(); };
+    wrap.appendChild(chip);
+  });
+}
+
+function renderResults() {
+  const q = document.getElementById('searchBox').value;
+  let results = activeCat ? DIRECTORY.filter(d => d.cat === activeCat) : DIRECTORY;
+  results = fuzzySearch(results, q, ['_searchText']);
+
+  const wrap = document.getElementById('listWrap');
+  if (!results.length) {
+    wrap.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
+    return;
+  }
+
+  let html = `<div class="result-count">${results.length}건</div>`;
+  html += results.map(d => `
+    <div class="phone-card cat-${d.cat}">
+      <span class="role">${esc(d.role)}</span>
+      <span class="name">${esc(d.name)}</span>
+      <span class="nums">
+        <div class="ext">☎ ${esc(d.ext)}</div>
+        <div class="direct">${esc(d.direct)}</div>
+      </span>
+    </div>
+  `).join('');
+  wrap.innerHTML = html;
+}
+
+let debounceTimer = null;
+document.getElementById('searchBox').addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(renderResults, 150);
+});
+
+window.onload = function() {
+  showExternalBrowserBannerIfNeeded('inappBanner');
+  renderChips();
+  renderResults();
+};
+</script>
+</body>
+</html>
