@@ -28,34 +28,43 @@ body {
   padding: 9px 18px; background: #e65100; color: white; border: none;
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
-.search-wrap { padding: 20px 16px 8px; max-width: 720px; margin: 0 auto; }
-.search-box { width: 100%; padding: 14px 16px; font-size: 1.05rem; border: 2px solid #d0d6e2; border-radius: 12px; outline: none; }
+.filter-wrap { max-width: 1000px; margin: 0 auto; padding: 16px 16px 8px; }
+.search-box { width: 100%; padding: 12px 14px; font-size: 1rem; border: 2px solid #d0d6e2; border-radius: 12px; outline: none; margin-bottom: 10px; }
 .search-box:focus { border-color: #1a3d7c; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.filter-card { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.filter-row-label { font-size: 0.78rem; color: #888; font-weight: 700; margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { padding: 6px 14px; border-radius: 999px; background: #e6ebf5; color: #1a3d7c; font-size: 0.85rem; cursor: pointer; border: none; }
 .chip.active { background: #1a3d7c; color: #fff; }
-.list-wrap { max-width: 720px; margin: 0 auto; padding: 8px 16px 40px; }
+.ban-row { margin-top: 10px; }
+.activity-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.activity-select {
+  flex: 1; min-width: 140px; padding: 8px 10px; border: 1px solid #d0d6e2; border-radius: 8px;
+  font-size: 0.85rem; background: #fff; color: #1a1a1a;
+}
+.activity-select.locked { border-color: #1a3d7c; background: #eef2fb; }
+.reset-btn {
+  padding: 6px 14px; border-radius: 999px; background: #fdecea; color: #c0392b;
+  font-size: 0.82rem; cursor: pointer; border: none; font-weight: 600;
+}
+.active-filter-banner {
+  display: none; background: #eef2fb; border: 1px solid #1a3d7c; border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 10px; font-size: 0.85rem; color: #1a3d7c;
+  display: none; align-items: center; justify-content: space-between; gap: 10px;
+}
+.list-wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px 40px; overflow-x: auto; }
 .result-count { font-size: 0.82rem; color: #888; margin: 4px 2px 10px; }
-.stu-card {
-  background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-.stu-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
-.stu-id { font-size: 0.78rem; color: #1a3d7c; font-weight: 700; }
-.stu-name { font-size: 1.05rem; font-weight: 700; }
-.stu-sem { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-.stu-sem-label { font-size: 0.78rem; color: #888; font-weight: 700; width: 100%; margin-top: 4px; }
-.stu-tag {
-  font-size: 0.82rem; background: #f0f2f6; border-radius: 8px; padding: 5px 10px;
-  white-space: nowrap;
-}
-.stu-tag .stu-tag-label { color: #888; margin-right: 4px; }
-.stu-tag.empty { color: #bbb; }
+table.stu-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.85rem; }
+table.stu-table th, table.stu-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
+table.stu-table th { background: #1a3d7c; color: #fff; font-size: 0.78rem; position: sticky; top: 0; }
+table.stu-table tr:last-child td { border-bottom: none; }
+table.stu-table tr:nth-child(even) { background: #fafbfd; }
+.cell-empty { color: #bbb; }
 .empty-state { text-align: center; color: #888; padding: 40px 0; }
 @media (max-width: 600px) {
   .topnav { padding: 10px 12px; }
   .topnav .brand { width: 100%; margin-bottom: 6px; }
-  .search-box { font-size: 1rem; }
+  table.stu-table { font-size: 0.78rem; }
 }
 </style>
 </head>
@@ -75,9 +84,32 @@ body {
   <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
 </div>
 
-<div class="search-wrap">
+<div class="filter-wrap">
   <input id="searchBox" class="search-box" type="text" placeholder="이름, 학번, 반, 동아리/스포츠클럽 등으로 검색">
-  <div id="gradeChips" class="chips"></div>
+
+  <div class="filter-card">
+    <div class="filter-row-label">학년</div>
+    <div id="gradeChips" class="chips"></div>
+    <div id="banRow" class="ban-row" style="display:none">
+      <div class="filter-row-label">반</div>
+      <div id="banChips" class="chips"></div>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <div class="filter-row-label">주제선택 / 동아리 (학년별로 한 프로그램을 선택하면 그 그룹 학생만 모아 보여줍니다)</div>
+    <div id="electiveRow" class="activity-row"></div>
+  </div>
+
+  <div class="filter-card">
+    <div class="filter-row-label">스포츠클럽 (학년별로 한 클럽을 선택하면 그 그룹 학생만 모아 보여줍니다)</div>
+    <div id="sportRow" class="activity-row"></div>
+  </div>
+
+  <div id="activeFilterBanner" class="active-filter-banner">
+    <span id="activeFilterText"></span>
+    <button class="reset-btn" onclick="resetActivityFilter()">필터 해제</button>
+  </div>
 </div>
 
 <div class="list-wrap" id="listWrap">
@@ -136,6 +168,10 @@ const ACTION_MAP = { getStudentRoster: (runner) => runner.getStudentRoster() };
 
 let allStudents = [];
 let activeGrade = '';
+let activeBan = '';
+// 활동(주제선택/동아리/스포츠클럽) 단위로 학생을 모아볼 때 사용 — 설정되면 학년/반 필터보다 우선한다.
+// type: 'elective' | 'sport'
+let activityFilter = null; // { grade, type, value }
 
 function studentSearchText(s) {
   const sem1Extras = s.sem1.extras.map(e => e.value).join(' ');
@@ -143,38 +179,164 @@ function studentSearchText(s) {
   return [s.name, s.id, s.grade, s.ban, s.num, s.sem1.sport, sem1Extras, s.sem2.sport, sem2Extras].join(' ');
 }
 
+function uniqueSorted(arr) {
+  return [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
+}
+
+function gradesAvailable() {
+  return uniqueSorted(allStudents.map(s => String(s.grade)));
+}
+function bansForGrade(grade) {
+  return uniqueSorted(allStudents.filter(s => String(s.grade) === String(grade)).map(s => String(s.ban)));
+}
+function electiveOptionsForGrade(grade) {
+  const vals = [];
+  allStudents.filter(s => String(s.grade) === String(grade)).forEach(s => {
+    [s.sem1, s.sem2].forEach(sem => sem.extras.forEach(e => { if (e.value) vals.push(e.value); }));
+  });
+  return uniqueSorted(vals);
+}
+function sportOptionsForGrade(grade) {
+  const vals = [];
+  allStudents.filter(s => String(s.grade) === String(grade)).forEach(s => {
+    [s.sem1, s.sem2].forEach(sem => { if (sem.sport) vals.push(sem.sport); });
+  });
+  return uniqueSorted(vals);
+}
+
 function renderGradeChips() {
   const wrap = document.getElementById('gradeChips');
-  const grades = [...new Set(allStudents.map(s => String(s.grade)))].sort();
+  const grades = gradesAvailable();
   wrap.innerHTML = '';
   const allChip = document.createElement('button');
   allChip.className = 'chip' + (activeGrade === '' ? ' active' : '');
   allChip.textContent = '전체';
-  allChip.onclick = () => { activeGrade = ''; renderGradeChips(); renderResults(); };
+  allChip.onclick = () => { activeGrade = ''; activeBan = ''; clearActivityFilterSelects(); activityFilter = null; renderAll(); };
   wrap.appendChild(allChip);
   grades.forEach(g => {
     const chip = document.createElement('button');
     chip.className = 'chip' + (activeGrade === g ? ' active' : '');
     chip.textContent = g + '학년';
-    chip.onclick = () => { activeGrade = g; renderGradeChips(); renderResults(); };
+    chip.onclick = () => { activeGrade = g; activeBan = ''; clearActivityFilterSelects(); activityFilter = null; renderAll(); };
     wrap.appendChild(chip);
   });
+
+  const banRow = document.getElementById('banRow');
+  if (activeGrade && !activityFilter) {
+    banRow.style.display = 'block';
+    const banWrap = document.getElementById('banChips');
+    banWrap.innerHTML = '';
+    const allBanChip = document.createElement('button');
+    allBanChip.className = 'chip' + (activeBan === '' ? ' active' : '');
+    allBanChip.textContent = '전체';
+    allBanChip.onclick = () => { activeBan = ''; renderAll(); };
+    banWrap.appendChild(allBanChip);
+    bansForGrade(activeGrade).forEach(b => {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (activeBan === b ? ' active' : '');
+      chip.textContent = b + '반';
+      chip.onclick = () => { activeBan = b; renderAll(); };
+      banWrap.appendChild(chip);
+    });
+  } else {
+    banRow.style.display = 'none';
+  }
 }
 
-function semTagsHtml(sem) {
-  let html = `<span class="stu-tag${sem.sport ? '' : ' empty'}"><span class="stu-tag-label">스포츠클럽</span>${esc(sem.sport) || '미배정'}</span>`;
-  sem.extras.forEach(e => {
-    html += `<span class="stu-tag${e.value ? '' : ' empty'}"><span class="stu-tag-label">${esc(e.label)}</span>${esc(e.value) || '미배정'}</span>`;
-  });
-  return html;
+function renderActivitySelects() {
+  const grades = gradesAvailable();
+
+  const electiveRow = document.getElementById('electiveRow');
+  electiveRow.innerHTML = grades.map(g => {
+    const opts = electiveOptionsForGrade(g);
+    const selected = activityFilter && activityFilter.type === 'elective' && String(activityFilter.grade) === g;
+    return `<select class="activity-select${selected ? ' locked' : ''}" data-grade="${g}" data-type="elective" onchange="onActivitySelect(this)">
+      <option value="">${g}학년 주제선택/동아리</option>
+      ${opts.map(o => `<option value="${escAttr(o)}"${selected && activityFilter.value === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+    </select>`;
+  }).join('');
+
+  const sportRow = document.getElementById('sportRow');
+  sportRow.innerHTML = grades.map(g => {
+    const opts = sportOptionsForGrade(g);
+    const selected = activityFilter && activityFilter.type === 'sport' && String(activityFilter.grade) === g;
+    return `<select class="activity-select${selected ? ' locked' : ''}" data-grade="${g}" data-type="sport" onchange="onActivitySelect(this)">
+      <option value="">${g}학년 스포츠클럽</option>
+      ${opts.map(o => `<option value="${escAttr(o)}"${selected && activityFilter.value === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+    </select>`;
+  }).join('');
+}
+
+function escAttr(str) {
+  return esc(str).replace(/"/g, '&quot;');
+}
+
+function clearActivityFilterSelects() {
+  document.querySelectorAll('.activity-select').forEach(sel => { sel.value = ''; sel.classList.remove('locked'); });
+}
+
+function onActivitySelect(selectEl) {
+  const value = selectEl.value;
+  if (!value) { activityFilter = null; renderAll(); return; }
+  activityFilter = { grade: selectEl.dataset.grade, type: selectEl.dataset.type, value };
+  activeGrade = selectEl.dataset.grade;
+  activeBan = '';
+  // 다른 드롭다운들은 선택 해제(한 번에 하나의 활동 그룹만 본다)
+  document.querySelectorAll('.activity-select').forEach(sel => { if (sel !== selectEl) sel.value = ''; });
+  renderAll();
+}
+
+function resetActivityFilter() {
+  activityFilter = null;
+  activeBan = '';
+  clearActivityFilterSelects();
+  renderAll();
+}
+
+function renderAll() {
+  renderGradeChips();
+  renderActivitySelects();
+  renderActiveFilterBanner();
+  renderResults();
+}
+
+function renderActiveFilterBanner() {
+  const banner = document.getElementById('activeFilterBanner');
+  if (!activityFilter) { banner.style.display = 'none'; return; }
+  const typeLabel = activityFilter.type === 'sport' ? '스포츠클럽' : '주제선택/동아리';
+  document.getElementById('activeFilterText').textContent =
+    `${activityFilter.grade}학년 ${typeLabel} "${activityFilter.value}" 그룹만 표시 중`;
+  banner.style.display = 'flex';
+}
+
+function semExtraText(sem) {
+  if (!sem.extras.length) return '';
+  if (sem.extras.length === 1) return sem.extras[0].value;
+  return sem.extras.map(e => `${e.label}: ${e.value || '미배정'}`).join(' / ');
+}
+
+function studentMatchesActivity(s) {
+  if (!activityFilter) return true;
+  if (String(s.grade) !== String(activityFilter.grade)) return false;
+  if (activityFilter.type === 'sport') {
+    return s.sem1.sport === activityFilter.value || s.sem2.sport === activityFilter.value;
+  }
+  return [s.sem1, s.sem2].some(sem => sem.extras.some(e => e.value === activityFilter.value));
 }
 
 function renderResults() {
   const q = document.getElementById('searchBox').value;
-  let results = activeGrade ? allStudents.filter(s => String(s.grade) === activeGrade) : allStudents;
+  let results = allStudents;
+
+  if (activityFilter) {
+    results = results.filter(studentMatchesActivity);
+  } else {
+    if (activeGrade) results = results.filter(s => String(s.grade) === activeGrade);
+    if (activeBan) results = results.filter(s => String(s.ban) === activeBan);
+  }
   results = fuzzySearch(results, q, ['_searchText']);
 
-  results.sort((a, b) => {
+  results = results.slice().sort((a, b) => {
     if (a.grade !== b.grade) return a.grade - b.grade;
     if (a.ban !== b.ban) return a.ban - b.ban;
     return a.num - b.num;
@@ -187,22 +349,20 @@ function renderResults() {
   }
 
   let html = `<div class="result-count">${results.length}명</div>`;
-  html += results.map(s => `
-    <div class="stu-card">
-      <div class="stu-head">
-        <span class="stu-id">${esc(s.grade)}학년 ${esc(s.ban)}반 ${esc(s.num)}번 · ${esc(s.id)}</span>
-        <span class="stu-name">${esc(s.name)}</span>
-      </div>
-      <div class="stu-sem">
-        <div class="stu-sem-label">1학기</div>
-        ${semTagsHtml(s.sem1)}
-      </div>
-      <div class="stu-sem">
-        <div class="stu-sem-label">2학기</div>
-        ${semTagsHtml(s.sem2)}
-      </div>
-    </div>
-  `).join('');
+  html += '<table class="stu-table"><thead><tr>';
+  html += '<th>학년</th><th>반</th><th>번호</th><th>학번</th><th>이름</th>';
+  html += '<th>1학기 스포츠클럽</th><th>1학기 주제선택/동아리</th>';
+  html += '<th>2학기 스포츠클럽</th><th>2학기 주제선택/동아리</th>';
+  html += '</tr></thead><tbody>';
+  html += results.map(s => {
+    const cell = (v) => v ? esc(v) : '<span class="cell-empty">미배정</span>';
+    return `<tr>
+      <td>${esc(s.grade)}</td><td>${esc(s.ban)}</td><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td>
+      <td>${cell(s.sem1.sport)}</td><td>${cell(semExtraText(s.sem1))}</td>
+      <td>${cell(s.sem2.sport)}</td><td>${cell(semExtraText(s.sem2))}</td>
+    </tr>`;
+  }).join('');
+  html += '</tbody></table>';
   wrap.innerHTML = html;
 }
 
@@ -218,8 +378,7 @@ window.onload = function() {
     .then(data => {
       allStudents = (data.students || []).map(s => ({ ...s, _searchText: '' }));
       allStudents.forEach(s => { s._searchText = studentSearchText(s); });
-      renderGradeChips();
-      renderResults();
+      renderAll();
     })
     .catch(err => {
       document.getElementById('listWrap').innerHTML =
