@@ -96,6 +96,9 @@ body {
   border-radius: 3px; margin-bottom: 2px; color: #fff;
   white-space: nowrap; overflow: hidden; text-overflow: clip;
 }
+/* 실 예약 이모지 줄 — 텍스트로 늘어놓으면 지저분해서 칸당 한 줄, 이모지만 표시 */
+.room-icons { display: flex; flex-wrap: wrap; gap: 1px; margin-top: 2px; line-height: 1; }
+.room-icon { font-size: 0.72rem; cursor: pointer; }
 
 .empty-state { text-align: center; color: #888; padding: 40px 0; }
 
@@ -106,6 +109,7 @@ body {
   pointer-events: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
 .hover-tooltip .tip-cat { font-weight: 700; opacity: 0.75; margin-bottom: 2px; display: block; }
+.hover-tooltip .tip-hint { color: #aaa; font-size: 0.7rem; margin-top: 4px; display: block; }
 
 /* 날짜 상세 팝업 */
 .modal-overlay {
@@ -179,6 +183,11 @@ body {
   <div class="legend-item"><div class="legend-dot bg-sat"></div> 토요일</div>
   <div class="legend-item"><div class="legend-dot bg-holiday"></div> 일요일·공휴일</div>
   <div class="legend-item"><div class="legend-dot bg-vacation"></div> 방학</div>
+  <div class="legend-item">🟪 광장</div>
+  <div class="legend-item">🟥 대형세미나실</div>
+  <div class="legend-item">🟧 중형세미나실</div>
+  <div class="legend-item">🟨 소형세미나실</div>
+  <div class="legend-item">💃 댄스실</div>
 </div>
 
 <div class="cal-wrap" id="calWrap">
@@ -219,6 +228,15 @@ const CATS = [
   { key: 'teacher', label: '전교사', color: '#2e7d32' },
   { key: 'grade',   label: '학년',   color: '#e65100' },
   { key: 'other',   label: '기타',   color: '#6a1b9a' },
+];
+
+// 실 예약 4종 + 댄스실. 텍스트를 그대로 다 보여주면 칸이 지저분해져서 이모지 1개로 축약 표시.
+const ROOM_CATS = [
+  { key: 'plaza',  label: '광장 예약',     emoji: '🟪' },
+  { key: 'large',  label: '대형 세미나실', emoji: '🟥' },
+  { key: 'medium', label: '중형 세미나실', emoji: '🟧' },
+  { key: 'small',  label: '소형 세미나실', emoji: '🟨' },
+  { key: 'dance',  label: '댄스실',        emoji: '💃' },
 ];
 
 const DAY_HEADERS = ['일','월','화','수','목','금','토'];
@@ -281,12 +299,13 @@ function applyMode(mode) {
   document.body.classList.toggle('mode-pc', mode === 'pc');
   document.getElementById('modeLabel').textContent = mode === 'mobile' ? '모바일' : 'PC';
   // 모드가 바뀌면 말줄임 기준 글자수가 달라지므로 다시 그린다
-  if (currentEventsMap) renderAndShow(currentEventsMap);
+  if (currentEventsMap) renderAndShow(currentEventsMap, currentRoomsMap);
 }
 
 // ── 데이터 로딩 ──────────────────────────────
 let semCache = {};
 let currentEventsMap = null;
+let currentRoomsMap = null;
 
 async function fetchSemester(sem) {
   if (semCache[sem]) return semCache[sem];
@@ -305,15 +324,22 @@ async function fetchSemester(sem) {
 function parseTable(table) {
   const cols = table.cols;
   const idx = {};
+  const roomIdx = {};
   cols.forEach((c, i) => {
     const label = (c.label || '').trim().replace(/\n.*/,'');
     if (label === '학사일정') idx.school = i;
     else if (label === '전교사일정') idx.teacher = i;
     else if (label.includes('학년') || label === '학생일정') idx.grade = i;
     else if (label.includes('기타')) idx.other = i;
+    else if (label.includes('광장')) roomIdx.plaza = i;
+    else if (label.includes('대형')) roomIdx.large = i;
+    else if (label.includes('중형')) roomIdx.medium = i;
+    else if (label.includes('소형')) roomIdx.small = i;
+    else if (label.includes('댄스')) roomIdx.dance = i;
   });
 
   const events = {};
+  const rooms = {};
   for (const row of (table.rows || [])) {
     if (!row.c || !row.c[0] || !row.c[0].v) continue;
     const m = String(row.c[0].v).match(/Date\((\d+),(\d+),(\d+)\)/);
@@ -331,13 +357,25 @@ function parseTable(table) {
       if (text) dayEvs.push({ ...cat, text });
     }
     if (dayEvs.length) events[key] = (events[key] || []).concat(dayEvs);
+
+    const dayRooms = [];
+    for (const room of ROOM_CATS) {
+      const ci = roomIdx[room.key];
+      if (ci === undefined) continue;
+      const cell = row.c[ci];
+      if (!cell || !cell.v) continue;
+      const text = String(cell.v).trim();
+      if (text) dayRooms.push({ ...room, text });
+    }
+    if (dayRooms.length) rooms[key] = (rooms[key] || []).concat(dayRooms);
   }
-  return events;
+  return { events, rooms };
 }
 
-function getMonthsFromEvents(events) {
+function getMonthsFromEvents(events, rooms) {
   const set = new Set();
   for (const key of Object.keys(events)) set.add(key.substring(0, 7));
+  for (const key of Object.keys(rooms || {})) set.add(key.substring(0, 7));
   return [...set].sort();
 }
 
@@ -345,8 +383,8 @@ function isHolidayText(evs) {
   return evs.some(ev => HOLIDAY_KEYWORDS.some(k => ev.text.includes(k)));
 }
 
-function renderCalendar(events) {
-  const months = getMonthsFromEvents(events);
+function renderCalendar(events, rooms) {
+  const months = getMonthsFromEvents(events, rooms);
   if (!months.length) return '<div class="empty-state">일정 데이터가 없습니다.</div>';
 
   const today = new Date();
@@ -374,13 +412,14 @@ function renderCalendar(events) {
       const holiday = dow === 0 || isHolidayText(evs);
       const saturday = dow === 6;
       const vacation = isVacationDate(key);
+      const dayRooms = (rooms && rooms[key]) || [];
 
       let cellClass = 'day-cell';
       if (isToday) cellClass += ' today';
       if (saturday) cellClass += ' saturday';
       if (holiday) cellClass += ' holiday';
       if (vacation) cellClass += ' vacation'; // 방학 배경이 요일 배경보다 항상 우선(CSS에서 vacation을 마지막에 선언)
-      if (evs.length) cellClass += ' has-events';
+      if (evs.length || dayRooms.length) cellClass += ' has-events';
 
       let numClass = 'day-num';
       if (holiday) numClass += ' holiday';
@@ -390,6 +429,11 @@ function renderCalendar(events) {
       html += `<div class="${numClass}">${d}</div>`;
       for (const ev of evs) {
         html += `<span class="chip" style="background:${ev.color}" data-full="${escAttr(ev.text)}" data-cat="${esc(ev.label)}">${esc(truncate(ev.text, maxChars))}</span>`;
+      }
+      if (dayRooms.length) {
+        html += `<div class="room-icons">` + dayRooms.map(r =>
+          `<span class="room-icon" data-full="${escAttr(r.text)}" data-cat="${esc(r.label)}">${r.emoji}</span>`
+        ).join('') + `</div>`;
       }
       html += `</div>`;
     }
@@ -402,8 +446,8 @@ function renderCalendar(events) {
   return html;
 }
 
-function renderAndShow(events) {
-  document.getElementById('calWrap').innerHTML = renderCalendar(events);
+function renderAndShow(events, rooms) {
+  document.getElementById('calWrap').innerHTML = renderCalendar(events, rooms);
 }
 
 function formatDateKorean(dateKey) {
@@ -414,15 +458,26 @@ function formatDateKorean(dateKey) {
 
 function openDayModal(dateKey) {
   const evs = (currentEventsMap && currentEventsMap[dateKey]) || [];
+  const dayRooms = (currentRoomsMap && currentRoomsMap[dateKey]) || [];
   document.getElementById('dayModalDate').textContent = formatDateKorean(dateKey);
   const body = document.getElementById('dayModalBody');
-  body.innerHTML = evs.length
-    ? evs.map(ev => `
+
+  let html = '';
+  if (evs.length) {
+    html += evs.map(ev => `
         <div class="day-modal-item">
           <span class="day-modal-tag" style="background:${ev.color}">${esc(ev.label)}</span>
           <span class="day-modal-text">${esc(ev.text)}</span>
-        </div>`).join('')
-    : '<div class="empty-state">등록된 일정이 없습니다.</div>';
+        </div>`).join('');
+  }
+  if (dayRooms.length) {
+    html += dayRooms.map(r => `
+        <div class="day-modal-item">
+          <span class="day-modal-tag" style="background:#555">${r.emoji} ${esc(r.label)}</span>
+          <span class="day-modal-text">${esc(r.text)}</span>
+        </div>`).join('');
+  }
+  body.innerHTML = html || '<div class="empty-state">등록된 일정이 없습니다.</div>';
   document.getElementById('dayModal').style.display = 'flex';
 }
 function closeDayModal() {
@@ -431,7 +486,7 @@ function closeDayModal() {
 
 function showTooltip(x, y, text, cat) {
   const tip = document.getElementById('hoverTooltip');
-  tip.innerHTML = `<span class="tip-cat">${esc(cat)}</span>${esc(text)}`;
+  tip.innerHTML = `<span class="tip-cat">${esc(cat)}</span>${esc(text)}<span class="tip-hint">(상세보기: 클릭)</span>`;
   tip.style.left = (x + 14) + 'px';
   tip.style.top = (y + 14) + 'px';
   tip.style.display = 'block';
@@ -450,7 +505,11 @@ function loadAndRender(sem) {
   const wrap = document.getElementById('calWrap');
   wrap.innerHTML = '<div class="empty-state">불러오는 중...</div>';
   fetchSemester(sem)
-    .then(events => { currentEventsMap = events; renderAndShow(events); })
+    .then(({ events, rooms }) => {
+      currentEventsMap = events;
+      currentRoomsMap = rooms;
+      renderAndShow(events, rooms);
+    })
     .catch(err => { wrap.innerHTML = `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`; });
 }
 
@@ -478,8 +537,8 @@ window.onload = function() {
   // PC 전용: 커서 위치에 잘린 글자 전체 보여주는 툴팁
   document.getElementById('calWrap').addEventListener('mousemove', (e) => {
     if (currentMode !== 'pc') { hideTooltip(); return; }
-    const chip = e.target.closest('.chip');
-    if (chip) showTooltip(e.clientX, e.clientY, chip.dataset.full, chip.dataset.cat);
+    const target = e.target.closest('.chip, .room-icon');
+    if (target) showTooltip(e.clientX, e.clientY, target.dataset.full, target.dataset.cat);
     else hideTooltip();
   });
   document.getElementById('calWrap').addEventListener('mouseleave', hideTooltip);
