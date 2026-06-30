@@ -29,9 +29,20 @@ body {
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
 
+/* 화면 모드 표시줄 */
+.mode-bar {
+  display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+  max-width: 960px; margin: 0 auto; padding: 12px 16px 0;
+}
+.mode-toggle {
+  background: #fff; border: 1px solid #d0d6e2; border-radius: 999px;
+  padding: 6px 14px; font-size: 0.78rem; color: #555; cursor: pointer;
+}
+.mode-toggle:hover { border-color: #1a3d7c; color: #1a3d7c; }
+
 /* 학기 탭 */
 .sem-tabs {
-  display: flex; gap: 8px; padding: 16px 16px 8px; max-width: 960px; margin: 0 auto;
+  display: flex; gap: 8px; padding: 12px 16px 8px; max-width: 960px; margin: 0 auto;
 }
 .sem-tab {
   padding: 8px 24px; border: 2px solid #1a3d7c; border-radius: 999px; background: #fff;
@@ -45,6 +56,9 @@ body {
 }
 .legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-dot.bg-vacation { background: #9e9e9e; }
+.legend-dot.bg-sat { background: #90caf9; }
+.legend-dot.bg-holiday { background: #e53935; }
 
 /* 캘린더 */
 .cal-wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 40px; }
@@ -54,7 +68,7 @@ body {
   padding: 8px 0 6px; border-bottom: 2px solid #1a3d7c; margin-bottom: 8px;
 }
 .cal-grid {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px;
 }
 .day-header {
   text-align: center; font-size: 0.75rem; font-weight: 700;
@@ -64,24 +78,64 @@ body {
 .day-header:last-child { color: #1565c0; }
 .day-cell {
   min-height: 64px; background: #fff; border-radius: 6px; padding: 4px;
-  position: relative; border: 1px solid #e8eaf0;
+  position: relative; border: 1px solid #e8eaf0; min-width: 0; overflow: hidden;
 }
 .day-cell.empty { background: transparent; border-color: transparent; }
 .day-cell.today { border-color: #1a3d7c; border-width: 2px; }
-.day-num {
-  font-size: 0.8rem; font-weight: 600; margin-bottom: 2px; line-height: 1;
-}
-.day-cell:nth-child(7n+1) .day-num { color: #c62828; }
-.day-cell:nth-child(7n) .day-num { color: #1565c0; }
-.day-cell.other-month { opacity: 0.3; }
+.day-cell.has-events { cursor: pointer; }
+.day-cell.has-events:hover { box-shadow: 0 0 0 2px #1a3d7c inset; }
+/* 방학: 회색 배경 */
+.day-cell.vacation { background: #e2e2e2; }
+.day-num { font-size: 0.8rem; font-weight: 600; margin-bottom: 2px; line-height: 1; }
+/* 토요일: 옅은 하늘색 글자 / 일요일·공휴일: 빨간 글자 */
+.day-num.saturday { color: #1565c0; }
+.day-num.holiday { color: #e53935; }
 .chip {
-  display: block; font-size: 0.68rem; line-height: 1.3; padding: 1px 4px;
-  border-radius: 3px; margin-bottom: 2px; color: #fff; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; cursor: default;
+  display: block; width: 100%; font-size: 0.68rem; line-height: 1.3; padding: 1px 4px;
+  border-radius: 3px; margin-bottom: 2px; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: clip;
 }
-.chip:hover { overflow: visible; white-space: normal; z-index: 10; position: relative; }
 
 .empty-state { text-align: center; color: #888; padding: 40px 0; }
+
+/* 커서 추적 툴팁 (PC 전용) */
+.hover-tooltip {
+  position: fixed; display: none; max-width: 260px; background: #1a1a1a; color: #fff;
+  font-size: 0.8rem; line-height: 1.4; padding: 8px 10px; border-radius: 8px;
+  pointer-events: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.hover-tooltip .tip-cat { font-weight: 700; opacity: 0.75; margin-bottom: 2px; display: block; }
+
+/* 날짜 상세 팝업 */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  align-items: center; justify-content: center; z-index: 2000; padding: 20px;
+}
+.modal-box {
+  background: #fff; border-radius: 16px; padding: 22px; max-width: 420px; width: 100%;
+  max-height: 80vh; overflow-y: auto; position: relative;
+}
+.modal-close {
+  position: absolute; top: 12px; right: 14px; background: none; border: none;
+  font-size: 1.2rem; cursor: pointer; color: #888;
+}
+.modal-box h3 { margin: 0 0 14px; font-size: 1.1rem; color: #1a3d7c; padding-right: 24px; }
+.day-modal-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+.day-modal-tag {
+  flex-shrink: 0; color: #fff; font-size: 0.72rem; font-weight: 700;
+  padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+}
+.day-modal-text { font-size: 0.92rem; line-height: 1.5; white-space: pre-line; }
+
+/* 모드 선택 모달 */
+.device-modal-box { max-width: 360px; text-align: center; }
+.device-modal-box p { color: #666; font-size: 0.88rem; line-height: 1.5; margin-bottom: 18px; }
+.device-modal-actions { display: flex; gap: 10px; }
+.device-modal-actions button {
+  flex: 1; padding: 14px 8px; border-radius: 12px; border: 2px solid #1a3d7c;
+  background: #fff; color: #1a3d7c; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+}
+.device-modal-actions button:hover { background: #1a3d7c; color: #fff; }
 
 @media (max-width: 600px) {
   .topnav { padding: 10px 12px; }
@@ -97,14 +151,18 @@ body {
 <nav class="topnav">
   <span class="brand">📋 광수 Online 교무실</span>
   <a href="index.html">검색</a>
-  <a href="schedule.html">학사일정(목록)</a>
   <a href="calender.html" class="active">캘린더</a>
+  <a href="schedule.html">학사일정(목록)</a>
   <a href="minutes.html">회의록</a>
 </nav>
 
 <div id="inappBanner">
   <p>⚠️ 카카오톡 등 메신저 안에서 열면 데이터를 불러오지 못할 수 있어요.<br>아래 버튼으로 외부 브라우저(Chrome/Safari)에서 열어주세요.</p>
   <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
+</div>
+
+<div class="mode-bar">
+  <button class="mode-toggle" id="modeToggleBtn" onclick="showDeviceModal()">화면 모드: <span id="modeLabel">-</span> (변경)</button>
 </div>
 
 <div class="sem-tabs">
@@ -117,11 +175,38 @@ body {
   <div class="legend-item"><div class="legend-dot" style="background:#2e7d32"></div> 전교사일정</div>
   <div class="legend-item"><div class="legend-dot" style="background:#e65100"></div> 학년별/학생일정</div>
   <div class="legend-item"><div class="legend-dot" style="background:#6a1b9a"></div> 기타일정</div>
+  <div class="legend-item"><div class="legend-dot bg-sat"></div> 토요일</div>
+  <div class="legend-item"><div class="legend-dot bg-holiday"></div> 일요일·공휴일</div>
+  <div class="legend-item"><div class="legend-dot bg-vacation"></div> 방학</div>
 </div>
 
 <div class="cal-wrap" id="calWrap">
   <div class="empty-state">불러오는 중...</div>
 </div>
+
+<!-- 날짜 상세 팝업 -->
+<div class="modal-overlay" id="dayModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeDayModal()">✕</button>
+    <h3 id="dayModalDate"></h3>
+    <div id="dayModalBody"></div>
+  </div>
+</div>
+
+<!-- 화면 모드 선택 팝업 -->
+<div class="modal-overlay" id="deviceModal">
+  <div class="modal-box device-modal-box">
+    <h3>화면 모드를 선택하세요</h3>
+    <p>한 번 선택하면 이 기기(브라우저)에 저장되어 다음에 다시 접속할 때도 자동으로 적용됩니다.</p>
+    <div class="device-modal-actions">
+      <button onclick="chooseMode('mobile')">📱 모바일</button>
+      <button onclick="chooseMode('pc')">🖥 PC</button>
+    </div>
+  </div>
+</div>
+
+<!-- 커서 추적 툴팁 -->
+<div class="hover-tooltip" id="hoverTooltip"></div>
 
 <script>
 // ─── 설정 ──────────────────────────────────────────────────
@@ -136,6 +221,15 @@ const CATS = [
 ];
 
 const DAY_HEADERS = ['일','월','화','수','목','금','토'];
+
+// 방학/공휴일은 시트에 별도 열이 없어 학사일정 텍스트의 키워드로 판별합니다.
+// (시트 표기가 달라지면 이 목록을 갱신해야 인식됩니다.)
+const HOLIDAY_KEYWORDS = ['공휴일','광복절','개천절','한글날','추석','설날','어린이날','현충일','부처님','성탄절','신정','삼일절','제헌절'];
+const VACATION_KEYWORD = '방학';
+const VACATION_EXCLUDE = '방학식'; // 방학식 당일은 등교일이므로 제외
+
+const MODE_KEY = 'gwangsu_calendar_device_mode';
+const MAX_CHARS = { pc: 9, mobile: 5 };
 // ───────────────────────────────────────────────────────────
 
 function detectInAppBrowser() {
@@ -151,9 +245,39 @@ function openInExternalBrowser() {
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+function escAttr(str) {
+  return esc(str).replace(/"/g, '&quot;');
+}
+function truncate(text, max) {
+  return text.length > max ? text.slice(0, max) + '...' : text;
+}
 
+// ── 화면 모드 (모바일/PC) ──────────────────────────────
+let currentMode = 'pc';
+
+function detectDefaultMode() {
+  return (window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) ? 'mobile' : 'pc';
+}
+function showDeviceModal() {
+  document.getElementById('deviceModal').style.display = 'flex';
+}
+function chooseMode(mode) {
+  localStorage.setItem(MODE_KEY, mode);
+  applyMode(mode);
+  document.getElementById('deviceModal').style.display = 'none';
+}
+function applyMode(mode) {
+  currentMode = mode;
+  document.body.classList.toggle('mode-mobile', mode === 'mobile');
+  document.body.classList.toggle('mode-pc', mode === 'pc');
+  document.getElementById('modeLabel').textContent = mode === 'mobile' ? '모바일' : 'PC';
+  // 모드가 바뀌면 말줄임 기준 글자수가 달라지므로 다시 그린다
+  if (currentEventsMap) renderAndShow(currentEventsMap);
+}
+
+// ── 데이터 로딩 ──────────────────────────────
 let semCache = {};
-let currentSem = 1;
+let currentEventsMap = null;
 
 async function fetchSemester(sem) {
   if (semCache[sem]) return semCache[sem];
@@ -204,72 +328,121 @@ function parseTable(table) {
 
 function getMonthsFromEvents(events) {
   const set = new Set();
-  for (const key of Object.keys(events)) {
-    set.add(key.substring(0, 7)); // 'YYYY-MM'
-  }
+  for (const key of Object.keys(events)) set.add(key.substring(0, 7));
   return [...set].sort();
+}
+
+function isHolidayText(evs) {
+  return evs.some(ev => HOLIDAY_KEYWORDS.some(k => ev.text.includes(k)));
+}
+function isVacationText(evs) {
+  return evs.some(ev => ev.text.includes(VACATION_KEYWORD) && !ev.text.includes(VACATION_EXCLUDE));
 }
 
 function renderCalendar(events) {
   const months = getMonthsFromEvents(events);
-  if (!months.length) {
-    return '<div class="empty-state">일정 데이터가 없습니다.</div>';
-  }
+  if (!months.length) return '<div class="empty-state">일정 데이터가 없습니다.</div>';
 
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const maxChars = MAX_CHARS[currentMode] || MAX_CHARS.pc;
 
   let html = '';
   for (const ym of months) {
     const [year, mon] = ym.split('-').map(Number);
-    const monthName = `${year}년 ${mon}월`;
     const firstDay = new Date(year, mon - 1, 1);
     const lastDay = new Date(year, mon, 0);
     const startDow = firstDay.getDay();
     const totalDays = lastDay.getDate();
 
-    html += `<div class="month-block"><div class="month-title">${monthName}</div><div class="cal-grid">`;
+    html += `<div class="month-block"><div class="month-title">${year}년 ${mon}월</div><div class="cal-grid">`;
     html += DAY_HEADERS.map(d => `<div class="day-header">${d}</div>`).join('');
 
-    // empty cells before 1st
     for (let i = 0; i < startDow; i++) html += `<div class="day-cell empty"></div>`;
 
     for (let d = 1; d <= totalDays; d++) {
       const key = `${year}-${String(mon).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const isToday = key === todayKey;
+      const dow = new Date(year, mon - 1, d).getDay();
       const evs = events[key] || [];
-      html += `<div class="day-cell${isToday ? ' today' : ''}">`;
-      html += `<div class="day-num">${d}</div>`;
+      const isToday = key === todayKey;
+      const holiday = dow === 0 || isHolidayText(evs);
+      const saturday = dow === 6;
+      const vacation = isVacationText(evs);
+
+      let cellClass = 'day-cell';
+      if (isToday) cellClass += ' today';
+      if (vacation) cellClass += ' vacation';
+      if (evs.length) cellClass += ' has-events';
+
+      let numClass = 'day-num';
+      if (holiday) numClass += ' holiday';
+      else if (saturday) numClass += ' saturday';
+
+      html += `<div class="${cellClass}" data-date="${key}">`;
+      html += `<div class="${numClass}">${d}</div>`;
       for (const ev of evs) {
-        html += `<span class="chip" style="background:${ev.color}" title="${esc(ev.text)}">${esc(ev.label)}: ${esc(ev.text)}</span>`;
+        html += `<span class="chip" style="background:${ev.color}" data-full="${escAttr(ev.text)}" data-cat="${esc(ev.label)}">${esc(truncate(ev.text, maxChars))}</span>`;
       }
       html += `</div>`;
     }
 
-    // trailing empty
     const lastDow = lastDay.getDay();
-    if (lastDow < 6) {
-      for (let i = lastDow + 1; i <= 6; i++) html += `<div class="day-cell empty"></div>`;
-    }
+    if (lastDow < 6) for (let i = lastDow + 1; i <= 6; i++) html += `<div class="day-cell empty"></div>`;
 
     html += `</div></div>`;
   }
   return html;
 }
 
-function switchSem(sem) {
-  currentSem = sem;
-  document.querySelectorAll('.sem-tab').forEach((btn, i) => {
-    btn.classList.toggle('active', i + 1 === sem);
-  });
-  loadAndRender(sem);
+function renderAndShow(events) {
+  document.getElementById('calWrap').innerHTML = renderCalendar(events);
 }
 
+function formatDateKorean(dateKey) {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const dow = DAY_HEADERS[new Date(y, m - 1, d).getDay()];
+  return `${y}년 ${m}월 ${d}일 (${dow})`;
+}
+
+function openDayModal(dateKey) {
+  const evs = (currentEventsMap && currentEventsMap[dateKey]) || [];
+  document.getElementById('dayModalDate').textContent = formatDateKorean(dateKey);
+  const body = document.getElementById('dayModalBody');
+  body.innerHTML = evs.length
+    ? evs.map(ev => `
+        <div class="day-modal-item">
+          <span class="day-modal-tag" style="background:${ev.color}">${esc(ev.label)}</span>
+          <span class="day-modal-text">${esc(ev.text)}</span>
+        </div>`).join('')
+    : '<div class="empty-state">등록된 일정이 없습니다.</div>';
+  document.getElementById('dayModal').style.display = 'flex';
+}
+function closeDayModal() {
+  document.getElementById('dayModal').style.display = 'none';
+}
+
+function showTooltip(x, y, text, cat) {
+  const tip = document.getElementById('hoverTooltip');
+  tip.innerHTML = `<span class="tip-cat">${esc(cat)}</span>${esc(text)}`;
+  tip.style.left = (x + 14) + 'px';
+  tip.style.top = (y + 14) + 'px';
+  tip.style.display = 'block';
+}
+function hideTooltip() {
+  document.getElementById('hoverTooltip').style.display = 'none';
+}
+
+let currentSem = 1;
+function switchSem(sem) {
+  currentSem = sem;
+  document.querySelectorAll('.sem-tab').forEach((btn, i) => btn.classList.toggle('active', i + 1 === sem));
+  loadAndRender(sem);
+}
 function loadAndRender(sem) {
   const wrap = document.getElementById('calWrap');
   wrap.innerHTML = '<div class="empty-state">불러오는 중...</div>';
   fetchSemester(sem)
-    .then(events => { wrap.innerHTML = renderCalendar(events); })
+    .then(events => { currentEventsMap = events; renderAndShow(events); })
     .catch(err => { wrap.innerHTML = `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`; });
 }
 
@@ -278,6 +451,36 @@ window.onload = function() {
     const el = document.getElementById('inappBanner');
     if (el) el.style.display = 'block';
   }
+
+  // 기기별 화면 모드: localStorage에 저장된 값이 있으면 그대로, 없으면 최초 1회 선택창 표시
+  const saved = localStorage.getItem(MODE_KEY);
+  if (saved) {
+    applyMode(saved);
+  } else {
+    applyMode(detectDefaultMode());
+    showDeviceModal();
+  }
+
+  // 날짜 칸 클릭(=모바일 터치) → 상세 팝업
+  document.getElementById('calWrap').addEventListener('click', (e) => {
+    const cell = e.target.closest('.day-cell');
+    if (cell && cell.dataset.date) openDayModal(cell.dataset.date);
+  });
+
+  // PC 전용: 커서 위치에 잘린 글자 전체 보여주는 툴팁
+  document.getElementById('calWrap').addEventListener('mousemove', (e) => {
+    if (currentMode !== 'pc') { hideTooltip(); return; }
+    const chip = e.target.closest('.chip');
+    if (chip) showTooltip(e.clientX, e.clientY, chip.dataset.full, chip.dataset.cat);
+    else hideTooltip();
+  });
+  document.getElementById('calWrap').addEventListener('mouseleave', hideTooltip);
+
+  // 모달 바깥(배경) 클릭 시 닫기
+  document.getElementById('dayModal').addEventListener('click', (e) => {
+    if (e.target.id === 'dayModal') closeDayModal();
+  });
+
   loadAndRender(1);
 };
 </script>
