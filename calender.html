@@ -678,7 +678,8 @@ async function saveDayEditMode() {
 
     delete semCache[currentSem];
     statusEl.textContent = '저장되었습니다.';
-    loadAndRender(currentSem);
+    const scrollY = window.scrollY;
+    loadAndRender(currentSem, () => window.scrollTo(0, scrollY));
     closeDayModal();
   } catch (err) {
     statusEl.textContent = '저장 실패: ' + (err.message || String(err));
@@ -766,7 +767,7 @@ function switchSem(sem) {
   document.querySelectorAll('.sem-tab').forEach((btn, i) => btn.classList.toggle('active', i + 1 === sem));
   loadAndRender(sem);
 }
-function loadAndRender(sem) {
+function loadAndRender(sem, onDone) {
   const wrap = document.getElementById('calWrap');
   wrap.innerHTML = '<div class="empty-state">불러오는 중...</div>';
   fetchSemester(sem)
@@ -774,6 +775,7 @@ function loadAndRender(sem) {
       currentEventsMap = events;
       currentRoomsMap = rooms;
       renderAndShow(events, rooms);
+      if (onDone) onDone();
     })
     .catch(err => { wrap.innerHTML = `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`; });
 }
