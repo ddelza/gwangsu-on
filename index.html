@@ -35,6 +35,9 @@ body {
   background: var(--nav-bg); padding: 12px 16px;
 }
 .topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
+.topnav .brand { display: inline-flex; align-items: center; gap: 8px; }
+.brand-logo { height: 28px; width: auto; display: block; }
+.gen1-link { margin-left: auto; font-size: 0.8rem; opacity: 0.85; }
 .topnav a { color: var(--nav-text); text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
 .topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
 #inappBanner {
@@ -61,7 +64,9 @@ body {
   color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.15s, transform 0.15s;
 }
 .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); }
-.card .cat { font-size: 0.75rem; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+.card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.card-icon { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; object-fit: contain; }
+.card .cat { font-size: 0.75rem; color: var(--accent); font-weight: 700; }
 .card .title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
 .card .desc { font-size: 0.85rem; color: #666; line-height: 1.4; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
@@ -76,10 +81,11 @@ body {
 <body>
 
 <nav class="topnav">
-  <a href="index.html" class="brand">📋 광수 Online 교무실</a>
+  <a href="index.html" class="brand"><img src="logo.png" alt="" class="brand-logo">광수 Online 교무실 2세대</a>
   <a href="calender.html">캘린더</a>
   <a href="stu.html">학생 정보 조회</a>
   <a href="phone.html">내선번호</a>
+  <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
 </nav>
 
 <div id="inappBanner">
@@ -226,11 +232,27 @@ function renderResults() {
   }
   grid.innerHTML = results.map(item => `
     <a class="card" href="${esc(item.url)}" target="_blank" rel="noopener">
-      <div class="cat">${esc(item.category)}</div>
+      <div class="card-head">${iconFor(item.url)}<div class="cat">${esc(item.category)}</div></div>
       <div class="title">${esc(item.title)}</div>
       <div class="desc">${esc(item.description)}</div>
     </a>
   `).join('');
+}
+
+// 링크 종류에 따라 카드에 보여줄 작은 아이콘 — 구글 슬라이드/시트는 간단한 색상 아이콘으로,
+// 우리가 만든 자체 HTML 페이지(GitHub Pages)는 광수 로고로, 그 외는 기본 문서 아이콘으로 표시한다.
+function iconFor(url) {
+  const u = String(url || '');
+  if (u.includes('docs.google.com/presentation')) {
+    return '<svg class="card-icon" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#f9ab00"/><rect x="5" y="6" width="14" height="9" rx="1" fill="#fff"/><rect x="9" y="17" width="6" height="2" rx="1" fill="#fff"/></svg>';
+  }
+  if (u.includes('docs.google.com/spreadsheets')) {
+    return '<svg class="card-icon" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0f9d58"/><rect x="5" y="5" width="14" height="14" rx="1" fill="#fff"/><rect x="5" y="9.3" width="14" height="1.4" fill="#0f9d58"/><rect x="5" y="13.3" width="14" height="1.4" fill="#0f9d58"/><rect x="10.3" y="5" width="1.4" height="14" fill="#0f9d58"/></svg>';
+  }
+  if (u.includes('ddelza.github.io/gwangsu-on')) {
+    return '<img class="card-icon" src="logo.png" alt="">';
+  }
+  return '<svg class="card-icon" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#90a4ae"/><rect x="6" y="5" width="12" height="14" rx="1" fill="#fff"/></svg>';
 }
 
 function esc(str) {
