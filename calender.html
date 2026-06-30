@@ -29,9 +29,15 @@ body {
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
 
+/* 스크롤해도 상단에 고정되는 헤더(네비+모드바+학기탭+범례) */
+.sticky-header {
+  position: sticky; top: 0; z-index: 500; background: #f5f6f8;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
 /* 화면 모드 표시줄 */
 .mode-bar {
-  display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
   max-width: 960px; margin: 0 auto; padding: 12px 16px 0;
 }
 .mode-toggle {
@@ -39,6 +45,12 @@ body {
   padding: 6px 14px; font-size: 0.78rem; color: #555; cursor: pointer;
 }
 .mode-toggle:hover { border-color: #1a3d7c; color: #1a3d7c; }
+.sheet-link-btn {
+  background: #fff; border: 1px solid #1a3d7c; border-radius: 999px;
+  padding: 6px 14px; font-size: 0.78rem; color: #1a3d7c; font-weight: 600;
+  text-decoration: none; cursor: pointer; white-space: nowrap;
+}
+.sheet-link-btn:hover { background: #1a3d7c; color: #fff; }
 
 /* 학기 탭 */
 .sem-tabs {
@@ -51,9 +63,8 @@ body {
 .sem-tab.active { background: #1a3d7c; color: #fff; }
 
 /* 범례 */
-.legend {
-  display: flex; flex-wrap: wrap; gap: 10px; padding: 0 16px 12px; max-width: 960px; margin: 0 auto;
-}
+.legend { padding: 0 16px 12px; max-width: 960px; margin: 0 auto; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
 .legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .legend-dot.bg-vacation { background: #9e9e9e; }
@@ -132,6 +143,39 @@ body {
 }
 .day-modal-text { font-size: 0.92rem; line-height: 1.5; white-space: pre-line; }
 
+/* 일정 추가/편집 팝업 */
+.edit-modal-box { max-width: 380px; text-align: left; }
+.edit-trigger-btn {
+  display: block; width: 100%; margin-top: 14px; padding: 10px; border: none;
+  border-radius: 10px; background: #1a3d7c; color: #fff; font-size: 0.88rem;
+  font-weight: 700; cursor: pointer;
+}
+.edit-trigger-btn:hover { background: #122b59; }
+.edit-hint { font-size: 0.76rem; color: #888; line-height: 1.5; margin: 0 0 14px; }
+.edit-label { display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 4px; }
+.edit-select, .edit-textarea, .room-edit-input {
+  width: 100%; border: 1px solid #d0d6e2; border-radius: 8px; padding: 8px 10px;
+  font-size: 0.88rem; font-family: inherit; box-sizing: border-box;
+}
+.edit-select { margin-bottom: 10px; }
+.edit-textarea { resize: vertical; margin-bottom: 14px; }
+.room-toggle-btn {
+  width: 100%; padding: 9px; border: 1px dashed #1a3d7c; border-radius: 8px;
+  background: #fff; color: #1a3d7c; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  margin-bottom: 10px;
+}
+.room-edit-section { margin-bottom: 12px; }
+.room-edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.room-edit-label { flex-shrink: 0; font-size: 0.8rem; width: 96px; }
+.edit-actions { display: flex; gap: 8px; }
+.edit-save-btn, .edit-cancel-btn {
+  flex: 1; padding: 11px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+}
+.edit-save-btn { border: none; background: #1a3d7c; color: #fff; }
+.edit-save-btn:hover { background: #122b59; }
+.edit-cancel-btn { border: 1px solid #d0d6e2; background: #fff; color: #555; }
+.edit-status-msg { margin-top: 10px; font-size: 0.8rem; color: #888; text-align: center; min-height: 1.2em; }
+
 /* 모드 선택 모달 */
 .device-modal-box { max-width: 360px; text-align: center; }
 .device-modal-box p { color: #666; font-size: 0.88rem; line-height: 1.5; margin-bottom: 18px; }
@@ -153,41 +197,50 @@ body {
 </head>
 <body>
 
-<nav class="topnav">
-  <span class="brand">📋 광수 Online 교무실</span>
-  <a href="index.html">검색</a>
-  <a href="calender.html" class="active">캘린더</a>
-  <a href="schedule.html">학사일정(목록)</a>
-  <a href="minutes.html">회의록</a>
-</nav>
+<div class="sticky-header">
+  <nav class="topnav">
+    <span class="brand">📋 광수 Online 교무실</span>
+    <a href="index.html">검색</a>
+    <a href="calender.html" class="active">캘린더</a>
+    <a href="schedule.html">학사일정(목록)</a>
+    <a href="minutes.html">회의록</a>
+  </nav>
+
+  <div class="mode-bar">
+    <a class="sheet-link-btn" href="https://docs.google.com/spreadsheets/d/1hvpMzy02s-SEwAV4lllpiRZhtFy0og3WX8wEXzpTejI/edit?usp=sharing" target="_blank" rel="noopener">📝 스프레드시트에서 직접 편집하기</a>
+    <button class="mode-toggle" id="modeToggleBtn" onclick="showDeviceModal()">화면 모드: <span id="modeLabel">-</span> (변경)</button>
+  </div>
+
+  <div class="sem-tabs">
+    <button class="sem-tab active" onclick="switchSem(1)">1학기</button>
+    <button class="sem-tab" onclick="switchSem(2)">2학기</button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-dot" style="background:#1a3d7c"></div> 학사일정</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2e7d32"></div> 전교사일정</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e65100"></div> 학년별/학생일정</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6a1b9a"></div> 기타일정</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-dot bg-sat"></div> 토요일</div>
+      <div class="legend-item"><div class="legend-dot bg-holiday"></div> 일요일·공휴일</div>
+      <div class="legend-item"><div class="legend-dot bg-vacation"></div> 방학</div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-item">🟪 광장</div>
+      <div class="legend-item">🟥 대형세미나실</div>
+      <div class="legend-item">🟧 중형세미나실</div>
+      <div class="legend-item">🟨 소형세미나실</div>
+      <div class="legend-item">💃 댄스실</div>
+    </div>
+  </div>
+</div>
 
 <div id="inappBanner">
   <p>⚠️ 카카오톡 등 메신저 안에서 열면 데이터를 불러오지 못할 수 있어요.<br>아래 버튼으로 외부 브라우저(Chrome/Safari)에서 열어주세요.</p>
   <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
-</div>
-
-<div class="mode-bar">
-  <button class="mode-toggle" id="modeToggleBtn" onclick="showDeviceModal()">화면 모드: <span id="modeLabel">-</span> (변경)</button>
-</div>
-
-<div class="sem-tabs">
-  <button class="sem-tab active" onclick="switchSem(1)">1학기</button>
-  <button class="sem-tab" onclick="switchSem(2)">2학기</button>
-</div>
-
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#1a3d7c"></div> 학사일정</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#2e7d32"></div> 전교사일정</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#e65100"></div> 학년별/학생일정</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#6a1b9a"></div> 기타일정</div>
-  <div class="legend-item"><div class="legend-dot bg-sat"></div> 토요일</div>
-  <div class="legend-item"><div class="legend-dot bg-holiday"></div> 일요일·공휴일</div>
-  <div class="legend-item"><div class="legend-dot bg-vacation"></div> 방학</div>
-  <div class="legend-item">🟪 광장</div>
-  <div class="legend-item">🟥 대형세미나실</div>
-  <div class="legend-item">🟧 중형세미나실</div>
-  <div class="legend-item">🟨 소형세미나실</div>
-  <div class="legend-item">💃 댄스실</div>
 </div>
 
 <div class="cal-wrap" id="calWrap">
@@ -200,6 +253,40 @@ body {
     <button class="modal-close" onclick="closeDayModal()">✕</button>
     <h3 id="dayModalDate"></h3>
     <div id="dayModalBody"></div>
+    <button class="edit-trigger-btn" onclick="openEditModal()">✏️ 이 날짜에 일정/예약 추가하기</button>
+  </div>
+</div>
+
+<!-- 일정/실 예약 추가(편집) 팝업 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box edit-modal-box">
+    <button class="modal-close" onclick="closeEditModal()">✕</button>
+    <h3 id="editModalDate"></h3>
+    <p class="edit-hint">입력한 내용은 기존 내용을 지우지 않고, 줄바꿈 후 뒤에 추가됩니다.</p>
+
+    <label class="edit-label">분류</label>
+    <select id="editCategorySelect" class="edit-select">
+      <option value="school">학사일정</option>
+      <option value="teacher">전교사일정</option>
+      <option value="grade">학년별/학생일정</option>
+      <option value="other">기타일정</option>
+    </select>
+    <textarea id="editCategoryText" class="edit-textarea" rows="3" placeholder="추가할 내용을 입력하세요 (선택)"></textarea>
+
+    <button class="room-toggle-btn" id="roomToggleBtn" onclick="toggleRoomSection()">🏫 실 예약하기 ▾</button>
+    <div class="room-edit-section" id="roomEditSection" style="display:none">
+      <div class="room-edit-row"><span class="room-edit-label">🟪 광장</span><input class="room-edit-input" data-room="plaza" placeholder="예약 내용"></div>
+      <div class="room-edit-row"><span class="room-edit-label">🟥 대형세미나실</span><input class="room-edit-input" data-room="large" placeholder="예약 내용"></div>
+      <div class="room-edit-row"><span class="room-edit-label">🟧 중형세미나실</span><input class="room-edit-input" data-room="medium" placeholder="예약 내용"></div>
+      <div class="room-edit-row"><span class="room-edit-label">🟨 소형세미나실</span><input class="room-edit-input" data-room="small" placeholder="예약 내용"></div>
+      <div class="room-edit-row"><span class="room-edit-label">💃 댄스실</span><input class="room-edit-input" data-room="dance" placeholder="예약 내용"></div>
+    </div>
+
+    <div class="edit-actions">
+      <button class="edit-save-btn" onclick="saveDayEdit()">저장</button>
+      <button class="edit-cancel-btn" onclick="closeEditModal()">취소</button>
+    </div>
+    <div id="editStatusMsg" class="edit-status-msg"></div>
   </div>
 </div>
 
@@ -257,6 +344,11 @@ function isVacationDate(dateKey) {
 
 const MODE_KEY = 'gwangsu_calendar_device_mode';
 const MAX_CHARS = { pc: 9, mobile: 5 };
+
+// 일정/실 예약 추가 기능은 시트 쓰기 권한이 필요해 gviz 직접 읽기와 달리
+// Apps Script 웹앱(doPost)을 거칩니다. Code.gs를 Apps Script 에디터에 다시
+// 붙여넣고 새 버전으로 배포해야 이 URL이 실제로 동작합니다.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
 // ───────────────────────────────────────────────────────────
 
 function detectInAppBrowser() {
@@ -456,7 +548,10 @@ function formatDateKorean(dateKey) {
   return `${y}년 ${m}월 ${d}일 (${dow})`;
 }
 
+let currentModalDate = null;
+
 function openDayModal(dateKey) {
+  currentModalDate = dateKey;
   const evs = (currentEventsMap && currentEventsMap[dateKey]) || [];
   const dayRooms = (currentRoomsMap && currentRoomsMap[dateKey]) || [];
   document.getElementById('dayModalDate').textContent = formatDateKorean(dateKey);
@@ -482,6 +577,70 @@ function openDayModal(dateKey) {
 }
 function closeDayModal() {
   document.getElementById('dayModal').style.display = 'none';
+}
+
+// ── 일정/실 예약 추가(편집) 팝업 ──────────────────────────────
+function openEditModal() {
+  if (!currentModalDate) return;
+  document.getElementById('editModalDate').textContent = formatDateKorean(currentModalDate);
+  document.getElementById('editCategorySelect').value = 'school';
+  document.getElementById('editCategoryText').value = '';
+  document.querySelectorAll('.room-edit-input').forEach(i => i.value = '');
+  document.getElementById('roomEditSection').style.display = 'none';
+  document.getElementById('roomToggleBtn').textContent = '🏫 실 예약하기 ▾';
+  document.getElementById('editStatusMsg').textContent = '';
+  closeDayModal();
+  document.getElementById('editModal').style.display = 'flex';
+}
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+function toggleRoomSection() {
+  const sec = document.getElementById('roomEditSection');
+  const willOpen = sec.style.display === 'none';
+  sec.style.display = willOpen ? 'block' : 'none';
+  document.getElementById('roomToggleBtn').textContent = willOpen ? '🏫 실 예약하기 ▴' : '🏫 실 예약하기 ▾';
+}
+
+async function saveDayEdit() {
+  const category = document.getElementById('editCategorySelect').value;
+  const text = document.getElementById('editCategoryText').value.trim();
+  const rooms = {};
+  document.querySelectorAll('.room-edit-input').forEach(input => {
+    const v = input.value.trim();
+    if (v) rooms[input.dataset.room] = v;
+  });
+
+  const statusEl = document.getElementById('editStatusMsg');
+  if (!text && Object.keys(rooms).length === 0) {
+    statusEl.textContent = '입력한 내용이 없습니다.';
+    return;
+  }
+
+  statusEl.textContent = '저장 중...';
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // CORS preflight 회피용 — Apps Script doPost 관행
+      body: JSON.stringify({
+        action: 'addCalendarEntry',
+        sem: currentSem,
+        date: currentModalDate,
+        category: text ? category : null,
+        text: text || null,
+        rooms,
+      }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    delete semCache[currentSem]; // 캐시 무효화 후 최신 데이터로 다시 불러오기
+    statusEl.textContent = '저장되었습니다.';
+    loadAndRender(currentSem);
+    closeEditModal();
+  } catch (err) {
+    statusEl.textContent = '저장 실패: ' + (err.message || String(err));
+  }
 }
 
 function showTooltip(x, y, text, cat) {
@@ -546,6 +705,9 @@ window.onload = function() {
   // 모달 바깥(배경) 클릭 시 닫기
   document.getElementById('dayModal').addEventListener('click', (e) => {
     if (e.target.id === 'dayModal') closeDayModal();
+  });
+  document.getElementById('editModal').addEventListener('click', (e) => {
+    if (e.target.id === 'editModal') closeEditModal();
   });
 
   loadAndRender(1);
