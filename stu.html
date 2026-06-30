@@ -97,7 +97,7 @@ table.stu-table tr:nth-child(even) { background: #fafbfd; }
   </div>
 
   <div class="filter-card">
-    <div class="filter-row-label">주제선택 / 동아리 (학년별로 한 프로그램을 선택하면 그 그룹 학생만 모아 보여줍니다)</div>
+    <div class="filter-row-label">주제선택 / 동아리 (학년마다 항목이 다릅니다 — 1학년: 주제선택(화)·주제선택(금), 3학년: 동아리, 2학년: 없음)</div>
     <div id="electiveRow" class="activity-row"></div>
   </div>
 
@@ -189,10 +189,17 @@ function gradesAvailable() {
 function bansForGrade(grade) {
   return uniqueSorted(allStudents.filter(s => String(s.grade) === String(grade)).map(s => String(s.ban)));
 }
-function electiveOptionsForGrade(grade) {
+// 학년마다 "주제선택"인지 "동아리"인지, 필드가 몇 개인지(1학년은 화/금 2개) 다르므로
+// 한 학년의 학생 데이터에 실제로 들어있는 extras 구조(라벨 목록)를 그대로 기준으로 삼는다.
+function extraFieldDefsForGrade(grade) {
+  const sample = allStudents.find(s => String(s.grade) === String(grade));
+  if (!sample) return [];
+  return sample.sem1.extras.map((e, idx) => ({ label: e.label, idx }));
+}
+function electiveOptionsForGradeField(grade, idx) {
   const vals = [];
   allStudents.filter(s => String(s.grade) === String(grade)).forEach(s => {
-    [s.sem1, s.sem2].forEach(sem => sem.extras.forEach(e => { if (e.value) vals.push(e.value); }));
+    [s.sem1, s.sem2].forEach(sem => { const e = sem.extras[idx]; if (e && e.value) vals.push(e.value); });
   });
   return uniqueSorted(vals);
 }
@@ -248,12 +255,19 @@ function renderActivitySelects() {
 
   const electiveRow = document.getElementById('electiveRow');
   electiveRow.innerHTML = grades.map(g => {
-    const opts = electiveOptionsForGrade(g);
-    const selected = activityFilter && activityFilter.type === 'elective' && String(activityFilter.grade) === g;
-    return `<select class="activity-select${selected ? ' locked' : ''}" data-grade="${g}" data-type="elective" onchange="onActivitySelect(this)">
-      <option value="">${g}학년 주제선택/동아리</option>
-      ${opts.map(o => `<option value="${escAttr(o)}"${selected && activityFilter.value === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}
-    </select>`;
+    const fields = extraFieldDefsForGrade(g);
+    return fields.map(f => {
+      const opts = electiveOptionsForGradeField(g, f.idx);
+      const selected = activityFilter && activityFilter.type === 'elective'
+        && String(activityFilter.grade) === g && activityFilter.fieldIdx === f.idx;
+      if (!opts.length) {
+        return `<select class="activity-select" disabled><option>${g}학년 ${esc(f.label)} (없음)</option></select>`;
+      }
+      return `<select class="activity-select${selected ? ' locked' : ''}" data-grade="${g}" data-type="elective" data-field-idx="${f.idx}" data-field-label="${escAttr(f.label)}" onchange="onActivitySelect(this)">
+        <option value="">${g}학년 ${esc(f.label)}</option>
+        ${opts.map(o => `<option value="${escAttr(o)}"${selected && activityFilter.value === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+      </select>`;
+    }).join('');
   }).join('');
 
   const sportRow = document.getElementById('sportRow');
@@ -278,7 +292,13 @@ function clearActivityFilterSelects() {
 function onActivitySelect(selectEl) {
   const value = selectEl.value;
   if (!value) { activityFilter = null; renderAll(); return; }
-  activityFilter = { grade: selectEl.dataset.grade, type: selectEl.dataset.type, value };
+  activityFilter = {
+    grade: selectEl.dataset.grade,
+    type: selectEl.dataset.type,
+    value,
+    fieldIdx: selectEl.dataset.fieldIdx !== undefined ? Number(selectEl.dataset.fieldIdx) : undefined,
+    fieldLabel: selectEl.dataset.fieldLabel,
+  };
   activeGrade = selectEl.dataset.grade;
   activeBan = '';
   // 다른 드롭다운들은 선택 해제(한 번에 하나의 활동 그룹만 본다)
@@ -303,7 +323,7 @@ function renderAll() {
 function renderActiveFilterBanner() {
   const banner = document.getElementById('activeFilterBanner');
   if (!activityFilter) { banner.style.display = 'none'; return; }
-  const typeLabel = activityFilter.type === 'sport' ? '스포츠클럽' : '주제선택/동아리';
+  const typeLabel = activityFilter.type === 'sport' ? '스포츠클럽' : (activityFilter.fieldLabel || '주제선택/동아리');
   document.getElementById('activeFilterText').textContent =
     `${activityFilter.grade}학년 ${typeLabel} "${activityFilter.value}" 그룹만 표시 중`;
   banner.style.display = 'flex';
@@ -321,7 +341,10 @@ function studentMatchesActivity(s) {
   if (activityFilter.type === 'sport') {
     return s.sem1.sport === activityFilter.value || s.sem2.sport === activityFilter.value;
   }
-  return [s.sem1, s.sem2].some(sem => sem.extras.some(e => e.value === activityFilter.value));
+  return [s.sem1, s.sem2].some(sem => {
+    const e = sem.extras[activityFilter.fieldIdx];
+    return e && e.value === activityFilter.value;
+  });
 }
 
 function renderResults() {
