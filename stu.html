@@ -52,6 +52,30 @@ body {
   padding: 10px 14px; margin-bottom: 10px; font-size: 0.85rem; color: #1a3d7c;
   display: none; align-items: center; justify-content: space-between; gap: 10px;
 }
+.edit-mode-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.edit-mode-btn {
+  padding: 8px 16px; border-radius: 999px; background: #1a3d7c; color: #fff;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
+}
+#editModeBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#editSummaryText { font-size: 0.85rem; color: #444; font-weight: 600; }
+.edit-mode-save-btn {
+  padding: 7px 16px; border-radius: 999px; background: #1a7c4a; color: #fff;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
+}
+.edit-mode-cancel-btn {
+  padding: 7px 16px; border-radius: 999px; background: #f0f2f6; color: #555;
+  font-size: 0.85rem; cursor: pointer; border: none;
+}
+.edit-status-msg { font-size: 0.82rem; color: #1a7c4a; }
+.edit-field-select {
+  padding: 4px 6px; border: 1px solid #d0d6e2; border-radius: 6px; font-size: 0.8rem;
+  background: #fff; max-width: 160px;
+}
+.edit-field-select.dirty { border-color: #1a7c4a; background: #eafaf1; }
+.edit-elective-field { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+.edit-elective-field:last-child { margin-bottom: 0; }
+.edit-elective-label { font-size: 0.72rem; color: #888; white-space: nowrap; }
 .list-wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px 40px; overflow-x: auto; }
 .result-count { font-size: 0.82rem; color: #888; margin: 4px 2px 10px; }
 table.stu-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.85rem; }
@@ -85,6 +109,16 @@ table.stu-table tr:last-child td { border-bottom: none; }
 
 <div class="filter-wrap">
   <input id="searchBox" class="search-box" type="text" placeholder="이름, 학번, 반, 동아리/스포츠클럽 등으로 검색">
+
+  <div class="filter-card edit-mode-card">
+    <button id="editModeToggleBtn" class="edit-mode-btn" onclick="enterEditMode()">✏️ 수정모드</button>
+    <div id="editModeBar" style="display:none">
+      <span id="editSummaryText">변경 0건</span>
+      <button class="edit-mode-save-btn" onclick="saveEditedFields()">✅ 수정 완료</button>
+      <button class="edit-mode-cancel-btn" onclick="exitEditMode()">취소</button>
+    </div>
+    <div id="editStatusMsg" class="edit-status-msg"></div>
+  </div>
 
   <div class="filter-card">
     <div class="filter-row-label">학년</div>
@@ -169,11 +203,16 @@ const ACTION_MAP = { getStudentRoster: (runner) => runner.getStudentRoster() };
 const BAN_COLORS = ['#eef3fc', '#fdf2e9', '#eafaf1', '#fbeee6', '#f5eef8', '#eafafa'];
 
 let allStudents = [];
+let studentById = {};
 let activeGrade = '';
 let activeBan = '';
 // 활동(주제선택/동아리/스포츠클럽) 단위로 학생을 모아볼 때 사용 — 설정되면 학년/반 필터보다 우선한다.
 // type: 'elective' | 'sport'
 let activityFilter = null; // { grade, type, value }
+
+// 수정모드 — 여러 학생을 동시에 고친 뒤 "수정 완료" 한 번으로 일괄 저장한다.
+let editMode = false;
+let pendingEdits = {}; // key: `${id}|${sem}|${label}` -> { id, grade, sem, label, value }
 
 function studentSearchText(s) {
   const sem1Extras = s.sem1.extras.map(e => e.value).join(' ');
@@ -386,14 +425,140 @@ function renderResults() {
     const cell = (v) => v ? esc(v) : '<span class="cell-empty">미배정</span>';
     const banKey = `${s.grade}-${s.ban}`;
     if (banKey !== prevBanKey) { banColorIdx = (banColorIdx + 1) % BAN_COLORS.length; prevBanKey = banKey; }
+    const sportCell = (semKey) => editMode ? editableSportSelect(s, semKey) : cell(s[semKey].sport);
+    const electiveCell = (semKey) => editMode ? editableElectiveSelects(s, semKey) : cell(semExtraText(s[semKey]));
     return `<tr style="background:${BAN_COLORS[banColorIdx]}">
       <td>${esc(s.grade)}</td><td>${esc(s.ban)}</td><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td>
-      <td>${cell(s.sem1.sport)}</td><td>${cell(semExtraText(s.sem1))}</td>
-      <td>${cell(s.sem2.sport)}</td><td>${cell(semExtraText(s.sem2))}</td>
+      <td>${sportCell('sem1')}</td><td>${electiveCell('sem1')}</td>
+      <td>${sportCell('sem2')}</td><td>${electiveCell('sem2')}</td>
     </tr>`;
   }).join('');
   html += '</tbody></table>';
   wrap.innerHTML = html;
+}
+
+// ── 수정모드 ──────────────────────────────
+// semKey: 'sem1' | 'sem2'
+function pendingKey(id, sem, label) { return `${id}|${sem}|${label}`; }
+
+function editableSportSelect(s, semKey) {
+  const sem = semKey === 'sem1' ? 1 : 2;
+  const key = pendingKey(s.id, sem, '스포츠클럽');
+  const current = key in pendingEdits ? pendingEdits[key].value : s[semKey].sport;
+  const opts = uniqueSorted([...sportOptionsForGrade(s.grade), current]);
+  const dirty = key in pendingEdits;
+  return `<select class="edit-field-select${dirty ? ' dirty' : ''}"
+      data-id="${escAttr(s.id)}" data-grade="${esc(s.grade)}" data-sem="${sem}" data-label="스포츠클럽"
+      onchange="onEditFieldChange(this)">
+    <option value=""${!current ? ' selected' : ''}>미배정</option>
+    ${opts.map(o => `<option value="${escAttr(o)}"${o === current ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+  </select>`;
+}
+
+function editableElectiveSelects(s, semKey) {
+  const sem = semKey === 'sem1' ? 1 : 2;
+  const extras = s[semKey].extras;
+  if (!extras.length) return '<span class="cell-empty">해당없음</span>';
+  return extras.map((e, idx) => {
+    const key = pendingKey(s.id, sem, e.label);
+    const current = key in pendingEdits ? pendingEdits[key].value : e.value;
+    const opts = uniqueSorted([...electiveOptionsForGradeField(s.grade, idx), current]);
+    const dirty = key in pendingEdits;
+    return `<div class="edit-elective-field">
+      <span class="edit-elective-label">${esc(e.label)}</span>
+      <select class="edit-field-select${dirty ? ' dirty' : ''}"
+          data-id="${escAttr(s.id)}" data-grade="${esc(s.grade)}" data-sem="${sem}" data-label="${escAttr(e.label)}"
+          onchange="onEditFieldChange(this)">
+        <option value=""${!current ? ' selected' : ''}>미배정</option>
+        ${opts.map(o => `<option value="${escAttr(o)}"${o === current ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function originalFieldValue(student, sem, label) {
+  const semObj = sem === 1 ? student.sem1 : student.sem2;
+  if (label === '스포츠클럽') return semObj.sport;
+  const e = semObj.extras.find(x => x.label === label);
+  return e ? e.value : '';
+}
+
+function onEditFieldChange(selectEl) {
+  const id = selectEl.dataset.id;
+  const grade = selectEl.dataset.grade;
+  const sem = Number(selectEl.dataset.sem);
+  const label = selectEl.dataset.label;
+  const value = selectEl.value;
+  const key = pendingKey(id, sem, label);
+  const student = studentById[id];
+  const orig = originalFieldValue(student, sem, label);
+
+  if (value === (orig || '')) {
+    delete pendingEdits[key];
+    selectEl.classList.remove('dirty');
+  } else {
+    pendingEdits[key] = { id, grade, sem, label, value };
+    selectEl.classList.add('dirty');
+  }
+  updateEditSummary();
+}
+
+function updateEditSummary() {
+  const n = Object.keys(pendingEdits).length;
+  document.getElementById('editSummaryText').textContent = `변경 ${n}건`;
+}
+
+function enterEditMode() {
+  editMode = true;
+  document.getElementById('editModeToggleBtn').style.display = 'none';
+  document.getElementById('editModeBar').style.display = 'flex';
+  updateEditSummary();
+  renderResults();
+}
+
+function exitEditMode() {
+  editMode = false;
+  pendingEdits = {};
+  document.getElementById('editModeToggleBtn').style.display = 'inline-block';
+  document.getElementById('editModeBar').style.display = 'none';
+  document.getElementById('editStatusMsg').textContent = '';
+  renderResults();
+}
+
+async function saveEditedFields() {
+  const changes = Object.values(pendingEdits);
+  const statusEl = document.getElementById('editStatusMsg');
+  if (!changes.length) { statusEl.textContent = '변경된 내용이 없습니다.'; return; }
+  statusEl.textContent = '저장 중...';
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'updateStudentFields', changes }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (data.errors && data.errors.length) {
+      statusEl.textContent = `${data.updated}건 저장, ${data.errors.length}건 실패: ${data.errors.join(', ')}`;
+    } else {
+      statusEl.textContent = `${data.updated}건 저장되었습니다.`;
+    }
+    pendingEdits = {};
+    updateEditSummary();
+    await reloadRoster();
+  } catch (err) {
+    statusEl.textContent = '저장 실패: ' + (err.message || String(err));
+  }
+}
+
+function reloadRoster() {
+  return callApi('getStudentRoster', {}, { scriptUrl: APPS_SCRIPT_URL, actionMap: ACTION_MAP })
+    .then(data => {
+      allStudents = (data.students || []).map(s => ({ ...s, _searchText: '' }));
+      allStudents.forEach(s => { s._searchText = studentSearchText(s); });
+      studentById = Object.fromEntries(allStudents.map(s => [s.id, s]));
+      renderAll();
+    });
 }
 
 let debounceTimer = null;
@@ -404,16 +569,10 @@ document.getElementById('searchBox').addEventListener('input', () => {
 
 window.onload = function() {
   showExternalBrowserBannerIfNeeded('inappBanner');
-  callApi('getStudentRoster', {}, { scriptUrl: APPS_SCRIPT_URL, actionMap: ACTION_MAP })
-    .then(data => {
-      allStudents = (data.students || []).map(s => ({ ...s, _searchText: '' }));
-      allStudents.forEach(s => { s._searchText = studentSearchText(s); });
-      renderAll();
-    })
-    .catch(err => {
-      document.getElementById('listWrap').innerHTML =
-        `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`;
-    });
+  reloadRoster().catch(err => {
+    document.getElementById('listWrap').innerHTML =
+      `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`;
+  });
 };
 </script>
 </body>
