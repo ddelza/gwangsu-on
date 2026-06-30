@@ -84,10 +84,11 @@ body {
 .day-cell.today { border-color: #1a3d7c; border-width: 2px; }
 .day-cell.has-events { cursor: pointer; }
 .day-cell.has-events:hover { box-shadow: 0 0 0 2px #1a3d7c inset; }
-/* 방학: 회색 배경 */
-.day-cell.vacation { background: #e2e2e2; }
+/* 토요일: 옅은 하늘색 배경 / 일요일·공휴일: 옅은 빨간 배경 / 방학: 회색 배경(우선순위 가장 높음 — 아래에 선언) */
+.day-cell.saturday { background: #d6eaf9; }
+.day-cell.holiday { background: #fad9d7; }
+.day-cell.vacation { background: #d6d6d6; }
 .day-num { font-size: 0.8rem; font-weight: 600; margin-bottom: 2px; line-height: 1; }
-/* 토요일: 옅은 하늘색 글자 / 일요일·공휴일: 빨간 글자 */
 .day-num.saturday { color: #1565c0; }
 .day-num.holiday { color: #e53935; }
 .chip {
@@ -225,8 +226,16 @@ const DAY_HEADERS = ['일','월','화','수','목','금','토'];
 // 방학/공휴일은 시트에 별도 열이 없어 학사일정 텍스트의 키워드로 판별합니다.
 // (시트 표기가 달라지면 이 목록을 갱신해야 인식됩니다.)
 const HOLIDAY_KEYWORDS = ['공휴일','광복절','개천절','한글날','추석','설날','어린이날','현충일','부처님','성탄절','신정','삼일절','제헌절'];
-const VACATION_KEYWORD = '방학';
-const VACATION_EXCLUDE = '방학식'; // 방학식 당일은 등교일이므로 제외
+
+// 방학 기간은 시트 텍스트만으로는 정확히 판별되지 않아 날짜 범위로 직접 지정합니다.
+// 매년 갱신 시 이 배열의 날짜만 새 학사일정에 맞게 바꾸면 됩니다. end가 null이면 종료일 미정(이후 모든 날짜를 방학으로 처리).
+const VACATION_RANGES = [
+  { start: '2026-07-22', end: '2026-08-17' }, // 여름방학
+  { start: '2027-01-06', end: null },          // 겨울방학 (종료일 미정)
+];
+function isVacationDate(dateKey) {
+  return VACATION_RANGES.some(r => dateKey >= r.start && (r.end === null || dateKey <= r.end));
+}
 
 const MODE_KEY = 'gwangsu_calendar_device_mode';
 const MAX_CHARS = { pc: 9, mobile: 5 };
@@ -335,9 +344,6 @@ function getMonthsFromEvents(events) {
 function isHolidayText(evs) {
   return evs.some(ev => HOLIDAY_KEYWORDS.some(k => ev.text.includes(k)));
 }
-function isVacationText(evs) {
-  return evs.some(ev => ev.text.includes(VACATION_KEYWORD) && !ev.text.includes(VACATION_EXCLUDE));
-}
 
 function renderCalendar(events) {
   const months = getMonthsFromEvents(events);
@@ -367,11 +373,13 @@ function renderCalendar(events) {
       const isToday = key === todayKey;
       const holiday = dow === 0 || isHolidayText(evs);
       const saturday = dow === 6;
-      const vacation = isVacationText(evs);
+      const vacation = isVacationDate(key);
 
       let cellClass = 'day-cell';
       if (isToday) cellClass += ' today';
-      if (vacation) cellClass += ' vacation';
+      if (saturday) cellClass += ' saturday';
+      if (holiday) cellClass += ' holiday';
+      if (vacation) cellClass += ' vacation'; // 방학 배경이 요일 배경보다 항상 우선(CSS에서 vacation을 마지막에 선언)
       if (evs.length) cellClass += ' has-events';
 
       let numClass = 'day-num';
