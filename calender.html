@@ -141,7 +141,12 @@ body {
   flex-shrink: 0; color: #fff; font-size: 0.72rem; font-weight: 700;
   padding: 3px 8px; border-radius: 999px; white-space: nowrap;
 }
-.day-modal-text { font-size: 0.92rem; line-height: 1.5; white-space: pre-line; }
+.day-modal-text { font-size: 0.92rem; line-height: 1.5; white-space: pre-line; flex: 1; }
+.entry-edit-btn {
+  flex-shrink: 0; margin-left: auto; background: none; border: none; cursor: pointer;
+  font-size: 0.9rem; opacity: 0.55; padding: 2px 4px;
+}
+.entry-edit-btn:hover { opacity: 1; }
 
 /* 일정 추가/편집 팝업 */
 .edit-modal-box { max-width: 380px; text-align: left; }
@@ -287,6 +292,21 @@ body {
       <button class="edit-cancel-btn" onclick="closeEditModal()">취소</button>
     </div>
     <div id="editStatusMsg" class="edit-status-msg"></div>
+  </div>
+</div>
+
+<!-- 기존 항목 수정 팝업(연필 아이콘) -->
+<div class="modal-overlay" id="entryEditModal">
+  <div class="modal-box edit-modal-box">
+    <button class="modal-close" onclick="closeEntryEditModal()">✕</button>
+    <h3 id="entryEditModalTitle"></h3>
+    <p class="edit-hint">이 내용은 기존 내용을 덮어씁니다 (수정).</p>
+    <textarea id="entryEditText" class="edit-textarea" rows="5"></textarea>
+    <div class="edit-actions">
+      <button class="edit-save-btn" onclick="saveEntryEdit()">저장</button>
+      <button class="edit-cancel-btn" onclick="closeEntryEditModal()">취소</button>
+    </div>
+    <div id="entryEditStatusMsg" class="edit-status-msg"></div>
   </div>
 </div>
 
@@ -563,6 +583,7 @@ function openDayModal(dateKey) {
         <div class="day-modal-item">
           <span class="day-modal-tag" style="background:${ev.color}">${esc(ev.label)}</span>
           <span class="day-modal-text">${esc(ev.text)}</span>
+          <button class="entry-edit-btn" data-kind="cat" data-key="${esc(ev.key)}" data-label="${escAttr(ev.label)}" data-full="${escAttr(ev.text)}">✏️</button>
         </div>`).join('');
   }
   if (dayRooms.length) {
@@ -570,13 +591,63 @@ function openDayModal(dateKey) {
         <div class="day-modal-item">
           <span class="day-modal-tag" style="background:#555">${r.emoji} ${esc(r.label)}</span>
           <span class="day-modal-text">${esc(r.text)}</span>
+          <button class="entry-edit-btn" data-kind="room" data-key="${esc(r.key)}" data-label="${escAttr(r.emoji + ' ' + r.label)}" data-full="${escAttr(r.text)}">✏️</button>
         </div>`).join('');
   }
   body.innerHTML = html || '<div class="empty-state">등록된 일정이 없습니다.</div>';
+  body.querySelectorAll('.entry-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openEntryEditModal(btn.dataset.kind, btn.dataset.key, btn.dataset.label, btn.dataset.full);
+    });
+  });
   document.getElementById('dayModal').style.display = 'flex';
 }
 function closeDayModal() {
   document.getElementById('dayModal').style.display = 'none';
+}
+
+// ── 기존 일정/실 예약 항목 수정 팝업(연필 아이콘) ──────────────────────────────
+// addCalendarEntry(추가, append)와 달리 이건 해당 칸 내용을 사용자가 입력한 값으로 그대로 덮어쓴다.
+let entryEditCtx = null;
+function openEntryEditModal(kind, key, label, fullText) {
+  entryEditCtx = { kind, key };
+  document.getElementById('entryEditModalTitle').textContent = `${formatDateKorean(currentModalDate)} · ${label}`;
+  document.getElementById('entryEditText').value = fullText;
+  document.getElementById('entryEditStatusMsg').textContent = '';
+  closeDayModal();
+  document.getElementById('entryEditModal').style.display = 'flex';
+}
+function closeEntryEditModal() {
+  document.getElementById('entryEditModal').style.display = 'none';
+}
+async function saveEntryEdit() {
+  if (!entryEditCtx) return;
+  const text = document.getElementById('entryEditText').value;
+  const statusEl = document.getElementById('entryEditStatusMsg');
+  statusEl.textContent = '저장 중...';
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'setCalendarEntry',
+        sem: currentSem,
+        date: currentModalDate,
+        kind: entryEditCtx.kind,
+        key: entryEditCtx.key,
+        text,
+      }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    delete semCache[currentSem];
+    statusEl.textContent = '저장되었습니다.';
+    loadAndRender(currentSem);
+    closeEntryEditModal();
+  } catch (err) {
+    statusEl.textContent = '저장 실패: ' + (err.message || String(err));
+  }
 }
 
 // ── 일정/실 예약 추가(편집) 팝업 ──────────────────────────────
@@ -708,6 +779,9 @@ window.onload = function() {
   });
   document.getElementById('editModal').addEventListener('click', (e) => {
     if (e.target.id === 'editModal') closeEditModal();
+  });
+  document.getElementById('entryEditModal').addEventListener('click', (e) => {
+    if (e.target.id === 'entryEditModal') closeEntryEditModal();
   });
 
   loadAndRender(1);
