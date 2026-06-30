@@ -1,23 +1,38 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>학생 정보 조회 — 광수 Online 교무실</title>
 <style>
 * { box-sizing: border-box; }
+
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --nav-bg: #1a3d7c; --nav-text: #d8e3ff; --accent: #1a3d7c; --accent-soft: #e6ebf5;
+}
+:root[data-theme="teal"] { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"] { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#9aa3b2; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#92a89c; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#ab9fb4; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+
 body {
   margin: 0;
   font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  background: #f5f6f8;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--text);
 }
 .topnav {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
-  background: #1a3d7c; padding: 12px 16px;
+  background: var(--nav-bg); padding: 12px 16px;
 }
 .topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
-.topnav a { color: #d8e3ff; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
+.topnav a { color: var(--nav-text); text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
 .topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
 #inappBanner {
   display: none; background: #fff3e0; border: 2px solid #ffb74d; border-radius: 12px;
@@ -29,32 +44,32 @@ body {
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
 .filter-wrap { max-width: 1000px; margin: 0 auto; padding: 16px 16px 8px; }
-.search-box { width: 100%; padding: 12px 14px; font-size: 1rem; border: 2px solid #d0d6e2; border-radius: 12px; outline: none; margin-bottom: 10px; }
-.search-box:focus { border-color: #1a3d7c; }
-.filter-card { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.filter-row-label { font-size: 0.78rem; color: #888; font-weight: 700; margin-bottom: 6px; }
+.search-box { width: 100%; padding: 12px 14px; font-size: 1rem; border: 2px solid var(--border); border-radius: 12px; outline: none; margin-bottom: 10px; }
+.search-box:focus { border-color: var(--accent); }
+.filter-card { background: var(--surface); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.filter-row-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { padding: 6px 14px; border-radius: 999px; background: #e6ebf5; color: #1a3d7c; font-size: 0.85rem; cursor: pointer; border: none; }
-.chip.active { background: #1a3d7c; color: #fff; }
+.chip { padding: 6px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.85rem; cursor: pointer; border: none; }
+.chip.active { background: var(--accent); color: #fff; }
 .ban-row { margin-top: 10px; }
 .activity-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .activity-select {
-  flex: 1; min-width: 140px; padding: 8px 10px; border: 1px solid #d0d6e2; border-radius: 8px;
-  font-size: 0.85rem; background: #fff; color: #1a1a1a;
+  flex: 1; min-width: 140px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 0.85rem; background: var(--surface); color: var(--text);
 }
-.activity-select.locked { border-color: #1a3d7c; background: #eef2fb; }
+.activity-select.locked { border-color: var(--accent); background: var(--accent-soft); }
 .reset-btn {
   padding: 6px 14px; border-radius: 999px; background: #fdecea; color: #c0392b;
   font-size: 0.82rem; cursor: pointer; border: none; font-weight: 600;
 }
 .active-filter-banner {
-  display: none; background: #eef2fb; border: 1px solid #1a3d7c; border-radius: 10px;
-  padding: 10px 14px; margin-bottom: 10px; font-size: 0.85rem; color: #1a3d7c;
+  display: none; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 10px; font-size: 0.85rem; color: var(--accent);
   display: none; align-items: center; justify-content: space-between; gap: 10px;
 }
 .edit-mode-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .edit-mode-btn {
-  padding: 8px 16px; border-radius: 999px; background: #1a3d7c; color: #fff;
+  padding: 8px 16px; border-radius: 999px; background: var(--accent); color: #fff;
   font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
 }
 #editModeBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -69,21 +84,21 @@ body {
 }
 .edit-status-msg { font-size: 0.82rem; color: #1a7c4a; }
 .edit-field-select {
-  padding: 4px 6px; border: 1px solid #d0d6e2; border-radius: 6px; font-size: 0.8rem;
-  background: #fff; max-width: 160px;
+  padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem;
+  background: var(--surface); max-width: 160px;
 }
 .edit-field-select.dirty { border-color: #1a7c4a; background: #eafaf1; }
 .edit-elective-field { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
 .edit-elective-field:last-child { margin-bottom: 0; }
-.edit-elective-label { font-size: 0.72rem; color: #888; white-space: nowrap; }
+.edit-elective-label { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
 .list-wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px 40px; overflow-x: auto; }
-.result-count { font-size: 0.82rem; color: #888; margin: 4px 2px 10px; }
-table.stu-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.85rem; }
+.result-count { font-size: 0.82rem; color: var(--text-muted); margin: 4px 2px 10px; }
+table.stu-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.85rem; }
 table.stu-table th, table.stu-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
-table.stu-table th { background: #1a3d7c; color: #fff; font-size: 0.78rem; position: sticky; top: 0; }
+table.stu-table th { background: var(--accent); color: #fff; font-size: 0.78rem; position: sticky; top: 0; }
 table.stu-table tr:last-child td { border-bottom: none; }
 .cell-empty { color: #bbb; }
-.empty-state { text-align: center; color: #888; padding: 40px 0; }
+.empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
 @media (max-width: 600px) {
   .topnav { padding: 10px 12px; }
   .topnav .brand { width: 100%; margin-bottom: 6px; }
@@ -101,6 +116,7 @@ table.stu-table tr:last-child td { border-bottom: none; }
   <a href="minutes.html">회의록</a>
   <a href="stu.html" class="active">학생 정보 조회</a>
   <a href="phone.html">내선번호</a>
+  <a href="settings.html">⚙️ 설정</a>
 </nav>
 
 <div id="inappBanner">

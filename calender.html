@@ -1,23 +1,38 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>학사일정 — 광수 Online 교무실</title>
 <style>
 * { box-sizing: border-box; }
+
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --nav-bg: #1a3d7c; --nav-text: #d8e3ff; --accent: #1a3d7c; --accent-soft: #e6ebf5;
+}
+:root[data-theme="teal"] { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"] { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#9aa3b2; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#92a89c; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#ab9fb4; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+
 body {
   margin: 0;
   font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  background: #f5f6f8;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--text);
 }
 .topnav {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
-  background: #1a3d7c; padding: 12px 16px;
+  background: var(--nav-bg); padding: 12px 16px;
 }
 .topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
-.topnav a { color: #d8e3ff; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
+.topnav a { color: var(--nav-text); text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
 .topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
 #inappBanner {
   display: none; background: #fff3e0; border: 2px solid #ffb74d; border-radius: 12px;
@@ -31,7 +46,7 @@ body {
 
 /* 스크롤해도 상단에 고정되는 헤더(네비+모드바+학기탭+범례) */
 .sticky-header {
-  position: sticky; top: 0; z-index: 500; background: #f5f6f8;
+  position: sticky; top: 0; z-index: 500; background: var(--bg);
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
@@ -41,26 +56,26 @@ body {
   max-width: 960px; margin: 0 auto; padding: 12px 16px 0;
 }
 .mode-toggle {
-  background: #fff; border: 1px solid #d0d6e2; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
   padding: 6px 14px; font-size: 0.78rem; color: #555; cursor: pointer;
 }
-.mode-toggle:hover { border-color: #1a3d7c; color: #1a3d7c; }
+.mode-toggle:hover { border-color: var(--accent); color: var(--accent); }
 .sheet-link-btn {
-  background: #fff; border: 1px solid #1a3d7c; border-radius: 999px;
-  padding: 6px 14px; font-size: 0.78rem; color: #1a3d7c; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--accent); border-radius: 999px;
+  padding: 6px 14px; font-size: 0.78rem; color: var(--accent); font-weight: 600;
   text-decoration: none; cursor: pointer; white-space: nowrap;
 }
-.sheet-link-btn:hover { background: #1a3d7c; color: #fff; }
+.sheet-link-btn:hover { background: var(--accent); color: #fff; }
 
 /* 학기 탭 */
 .sem-tabs {
   display: flex; gap: 8px; padding: 12px 16px 8px; max-width: 960px; margin: 0 auto;
 }
 .sem-tab {
-  padding: 8px 24px; border: 2px solid #1a3d7c; border-radius: 999px; background: #fff;
-  color: #1a3d7c; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.15s;
+  padding: 8px 24px; border: 2px solid var(--accent); border-radius: 999px; background: var(--surface);
+  color: var(--accent); font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.15s;
 }
-.sem-tab.active { background: #1a3d7c; color: #fff; }
+.sem-tab.active { background: var(--accent); color: #fff; }
 
 /* 범례 */
 .legend { padding: 0 16px 12px; max-width: 960px; margin: 0 auto; }
@@ -75,26 +90,26 @@ body {
 .cal-wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 40px; }
 .month-block { margin-bottom: 24px; }
 .month-title {
-  font-size: 1rem; font-weight: 700; color: #1a3d7c;
-  padding: 8px 0 6px; border-bottom: 2px solid #1a3d7c; margin-bottom: 8px;
+  font-size: 1rem; font-weight: 700; color: var(--accent);
+  padding: 8px 0 6px; border-bottom: 2px solid var(--accent); margin-bottom: 8px;
 }
 .cal-grid {
   display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px;
 }
 .day-header {
   text-align: center; font-size: 0.75rem; font-weight: 700;
-  padding: 4px 0; color: #888;
+  padding: 4px 0; color: var(--text-muted);
 }
 .day-header:first-child { color: #c62828; }
 .day-header:last-child { color: #1565c0; }
 .day-cell {
-  min-height: 64px; background: #fff; border-radius: 6px; padding: 4px;
+  min-height: 64px; background: var(--surface); border-radius: 6px; padding: 4px;
   position: relative; border: 1px solid #e8eaf0; min-width: 0; overflow: hidden;
 }
 .day-cell.empty { background: transparent; border-color: transparent; }
-.day-cell.today { border-color: #1a3d7c; border-width: 2px; }
+.day-cell.today { border-color: var(--accent); border-width: 2px; }
 .day-cell.has-events { cursor: pointer; }
-.day-cell.has-events:hover { box-shadow: 0 0 0 2px #1a3d7c inset; }
+.day-cell.has-events:hover { box-shadow: 0 0 0 2px var(--accent) inset; }
 /* 토요일: 옅은 하늘색 배경 / 일요일·공휴일: 옅은 빨간 배경 / 방학: 회색 배경(우선순위 가장 높음 — 아래에 선언) */
 .day-cell.saturday { background: #d6eaf9; }
 .day-cell.holiday { background: #fad9d7; }
@@ -111,11 +126,11 @@ body {
 .room-icons { display: flex; flex-wrap: wrap; gap: 1px; margin-top: 2px; line-height: 1; }
 .room-icon { font-size: 0.72rem; cursor: pointer; }
 
-.empty-state { text-align: center; color: #888; padding: 40px 0; }
+.empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
 
 /* 커서 추적 툴팁 (PC 전용) */
 .hover-tooltip {
-  position: fixed; display: none; max-width: 260px; background: #1a1a1a; color: #fff;
+  position: fixed; display: none; max-width: 260px; background: var(--text); color: #fff;
   font-size: 0.8rem; line-height: 1.4; padding: 8px 10px; border-radius: 8px;
   pointer-events: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
@@ -128,14 +143,14 @@ body {
   align-items: center; justify-content: center; z-index: 2000; padding: 20px;
 }
 .modal-box {
-  background: #fff; border-radius: 16px; padding: 22px; max-width: 420px; width: 100%;
+  background: var(--surface); border-radius: 16px; padding: 22px; max-width: 420px; width: 100%;
   max-height: 80vh; overflow-y: auto; position: relative;
 }
 .modal-close {
   position: absolute; top: 12px; right: 14px; background: none; border: none;
-  font-size: 1.2rem; cursor: pointer; color: #888;
+  font-size: 1.2rem; cursor: pointer; color: var(--text-muted);
 }
-.modal-box h3 { margin: 0 0 14px; font-size: 1.1rem; color: #1a3d7c; padding-right: 24px; }
+.modal-box h3 { margin: 0 0 14px; font-size: 1.1rem; color: var(--accent); padding-right: 24px; }
 .day-modal-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
 .day-modal-tag {
   flex-shrink: 0; color: #fff; font-size: 0.72rem; font-weight: 700;
@@ -151,21 +166,21 @@ body {
 .edit-modal-box { max-width: 380px; text-align: left; }
 .edit-trigger-btn {
   display: block; width: 100%; margin-top: 14px; padding: 10px; border: none;
-  border-radius: 10px; background: #1a3d7c; color: #fff; font-size: 0.88rem;
+  border-radius: 10px; background: var(--accent); color: #fff; font-size: 0.88rem;
   font-weight: 700; cursor: pointer;
 }
 .edit-trigger-btn:hover { background: #122b59; }
-.edit-hint { font-size: 0.76rem; color: #888; line-height: 1.5; margin: 0 0 14px; }
+.edit-hint { font-size: 0.76rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 14px; }
 .edit-label { display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 4px; }
 .edit-select, .edit-textarea, .room-edit-input {
-  width: 100%; border: 1px solid #d0d6e2; border-radius: 8px; padding: 8px 10px;
+  width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
   font-size: 0.88rem; font-family: inherit; box-sizing: border-box;
 }
 .edit-select { margin-bottom: 10px; }
 .edit-textarea { resize: vertical; margin-bottom: 14px; }
 .room-toggle-btn {
-  width: 100%; padding: 9px; border: 1px dashed #1a3d7c; border-radius: 8px;
-  background: #fff; color: #1a3d7c; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  width: 100%; padding: 9px; border: 1px dashed var(--accent); border-radius: 8px;
+  background: var(--surface); color: var(--accent); font-size: 0.85rem; font-weight: 600; cursor: pointer;
   margin-bottom: 10px;
 }
 .room-edit-section { margin-bottom: 12px; }
@@ -175,20 +190,20 @@ body {
 .edit-save-btn, .edit-cancel-btn {
   flex: 1; padding: 11px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer;
 }
-.edit-save-btn { border: none; background: #1a3d7c; color: #fff; }
+.edit-save-btn { border: none; background: var(--accent); color: #fff; }
 .edit-save-btn:hover { background: #122b59; }
-.edit-cancel-btn { border: 1px solid #d0d6e2; background: #fff; color: #555; }
-.edit-status-msg { margin-top: 10px; font-size: 0.8rem; color: #888; text-align: center; min-height: 1.2em; }
+.edit-cancel-btn { border: 1px solid var(--border); background: var(--surface); color: #555; }
+.edit-status-msg { margin-top: 10px; font-size: 0.8rem; color: var(--text-muted); text-align: center; min-height: 1.2em; }
 
 /* 모드 선택 모달 */
 .device-modal-box { max-width: 360px; text-align: center; }
 .device-modal-box p { color: #666; font-size: 0.88rem; line-height: 1.5; margin-bottom: 18px; }
 .device-modal-actions { display: flex; gap: 10px; }
 .device-modal-actions button {
-  flex: 1; padding: 14px 8px; border-radius: 12px; border: 2px solid #1a3d7c;
-  background: #fff; color: #1a3d7c; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  flex: 1; padding: 14px 8px; border-radius: 12px; border: 2px solid var(--accent);
+  background: var(--surface); color: var(--accent); font-size: 0.95rem; font-weight: 700; cursor: pointer;
 }
-.device-modal-actions button:hover { background: #1a3d7c; color: #fff; }
+.device-modal-actions button:hover { background: var(--accent); color: #fff; }
 
 @media (max-width: 600px) {
   .topnav { padding: 10px 12px; }
@@ -210,6 +225,7 @@ body {
     <a href="minutes.html">회의록</a>
     <a href="stu.html">학생 정보 조회</a>
     <a href="phone.html">내선번호</a>
+    <a href="settings.html">⚙️ 설정</a>
   </nav>
 
   <div class="mode-bar">
@@ -224,7 +240,7 @@ body {
 
   <div class="legend">
     <div class="legend-row">
-      <div class="legend-item"><div class="legend-dot" style="background:#1a3d7c"></div> 학사일정</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> 학사일정</div>
       <div class="legend-item"><div class="legend-dot" style="background:#2e7d32"></div> 전교사일정</div>
       <div class="legend-item"><div class="legend-dot" style="background:#e65100"></div> 학년별/학생일정</div>
       <div class="legend-item"><div class="legend-dot" style="background:#6a1b9a"></div> 기타일정</div>
@@ -325,7 +341,7 @@ body {
 const SS_CALENDAR = '1hvpMzy02s-SEwAV4lllpiRZhtFy0og3WX8wEXzpTejI';
 
 const CATS = [
-  { key: 'school',  label: '학사',   color: '#1a3d7c' },
+  { key: 'school',  label: '학사',   color: 'var(--accent)' },
   { key: 'teacher', label: '전교사', color: '#2e7d32' },
   { key: 'grade',   label: '학년',   color: '#e65100' },
   { key: 'other',   label: '기타',   color: '#6a1b9a' },

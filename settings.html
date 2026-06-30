@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>설정 — 광수 Online 교무실</title>
+<style>
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --nav-bg: #1a3d7c; --nav-text: #d8e3ff; --accent: #1a3d7c; --accent-soft: #e6ebf5;
+}
+:root[data-theme="teal"] { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"] { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#9aa3b2; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#92a89c; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#ab9fb4; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.topnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  background: var(--nav-bg); padding: 12px 16px;
+}
+.topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
+.topnav a { color: var(--nav-text); text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
+.topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
+
+.wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+.wrap h2 { font-size: 1.2rem; margin-bottom: 4px; }
+.wrap .sub { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
+.wrap .note {
+  font-size: 0.8rem; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; margin: 14px 0 22px; line-height: 1.6;
+}
+.section-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin: 24px 0 10px; }
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+.theme-card {
+  border: 2px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer;
+  background: var(--surface); transition: transform 0.1s, box-shadow 0.1s;
+}
+.theme-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.theme-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.theme-preview { height: 56px; display: flex; }
+.theme-preview .nav-strip { flex: 1; }
+.theme-preview .body-strip { width: 36px; display: flex; align-items: center; justify-content: center; }
+.theme-preview .accent-dot { width: 16px; height: 16px; border-radius: 50%; }
+.theme-name { padding: 10px 12px; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.theme-name .check { color: var(--accent); font-weight: 700; visibility: hidden; }
+.theme-card.selected .check { visibility: visible; }
+@media (max-width: 600px) {
+  .topnav { padding: 10px 12px; }
+  .topnav .brand { width: 100%; margin-bottom: 6px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <span class="brand">📋 광수 Online 교무실</span>
+  <a href="index.html">검색</a>
+  <a href="calender.html">캘린더</a>
+  <a href="schedule.html">학사일정</a>
+  <a href="minutes.html">회의록</a>
+  <a href="stu.html">학생 정보 조회</a>
+  <a href="phone.html">내선번호</a>
+  <a href="settings.html" class="active">⚙️ 설정</a>
+</nav>
+
+<div class="wrap">
+  <h2>화면 테마</h2>
+  <p class="sub">마음에 드는 색상 테마를 골라보세요.</p>
+  <div class="note">
+    ⚠️ 이 설정은 <b>이 브라우저(이 기기)</b>에만 저장됩니다. 다른 컴퓨터/스마트폰으로 접속하면 기본 테마로 보여요.
+    같은 기기, 같은 브라우저로 다시 들어오면 골라두신 테마가 그대로 적용됩니다.
+  </div>
+
+  <div class="section-label">밝은 테마</div>
+  <div class="theme-grid" id="lightGrid"></div>
+
+  <div class="section-label">어두운 테마</div>
+  <div class="theme-grid" id="darkGrid"></div>
+</div>
+
+<script>
+const THEMES = [
+  { key: '',             name: '클래식 블루', group: 'light' },
+  { key: 'teal',         name: '소프트 틸',   group: 'light' },
+  { key: 'coral',        name: '웜 코랄',     group: 'light' },
+  { key: 'lavender',     name: '라벤더',      group: 'light' },
+  { key: 'forest',       name: '포레스트 그린', group: 'light' },
+  { key: 'slate',        name: '슬레이트 그레이', group: 'light' },
+  { key: 'dark-navy',    name: '다크 네이비',  group: 'dark' },
+  { key: 'dark-forest',  name: '다크 포레스트', group: 'dark' },
+  { key: 'dark-plum',    name: '다크 플럼',    group: 'dark' },
+];
+
+function currentTheme() {
+  try { return localStorage.getItem('gwangsu_theme') || ''; } catch (e) { return ''; }
+}
+
+function applyTheme(key) {
+  if (key) document.documentElement.setAttribute('data-theme', key);
+  else document.documentElement.removeAttribute('data-theme');
+  try { localStorage.setItem('gwangsu_theme', key); } catch (e) {}
+  renderGrids();
+}
+
+function themeCardHtml(t, selected) {
+  // 해당 테마의 실제 색상값을 미리 보여주기 위해, data-theme 속성으로 임시 스코프를 만들어 그 안에서 CSS 변수를 읽는다
+  return `<div class="theme-card${selected ? ' selected' : ''}" data-theme="${t.key}" onclick="applyTheme('${t.key}')">
+    <div class="theme-preview">
+      <div class="nav-strip"></div>
+      <div class="body-strip"><div class="accent-dot"></div></div>
+    </div>
+    <div class="theme-name"><span class="check">✓</span> ${t.name}</div>
+  </div>`;
+}
+
+function renderGrids() {
+  const sel = currentTheme();
+  document.getElementById('lightGrid').innerHTML =
+    THEMES.filter(t => t.group === 'light').map(t => themeCardHtml(t, t.key === sel)).join('');
+  document.getElementById('darkGrid').innerHTML =
+    THEMES.filter(t => t.group === 'dark').map(t => themeCardHtml(t, t.key === sel)).join('');
+
+  // 각 카드의 미리보기 색을 칠한다. 변수가 :root[data-theme]에 걸려 있어서(중첩 div에는 안 먹음)
+  // <html>의 data-theme을 잠깐 바꿔가며 getComputedStyle로 읽고 곧바로 원래 값으로 되돌린다
+  // (전부 동기 코드라 화면에 깜빡임 없이 끝난다).
+  const root = document.documentElement;
+  const originalTheme = root.getAttribute('data-theme');
+  document.querySelectorAll('.theme-card').forEach(card => {
+    const key = card.dataset.theme;
+    if (key) root.setAttribute('data-theme', key); else root.removeAttribute('data-theme');
+    const cs = getComputedStyle(root);
+    const navBg = cs.getPropertyValue('--nav-bg').trim();
+    const bodyBg = cs.getPropertyValue('--bg').trim();
+    const accent = cs.getPropertyValue('--accent').trim();
+
+    card.querySelector('.nav-strip').style.background = navBg;
+    card.querySelector('.body-strip').style.background = bodyBg;
+    card.querySelector('.accent-dot').style.background = accent;
+  });
+  if (originalTheme) root.setAttribute('data-theme', originalTheme); else root.removeAttribute('data-theme');
+}
+
+renderGrids();
+</script>
+</body>
+</html>

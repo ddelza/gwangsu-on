@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>광수 Online 교무실</title>
@@ -9,18 +10,32 @@
      보장되지 않아 두 환경 모두에서 동일하게 동작하도록 직접 삽입한다. style.css 수정 시 같이 갱신할 것. -->
 <style>
 * { box-sizing: border-box; }
+
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --nav-bg: #1a3d7c; --nav-text: #d8e3ff; --accent: #1a3d7c; --accent-soft: #e6ebf5;
+}
+:root[data-theme="teal"] { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"] { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#9aa3b2; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#92a89c; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#ab9fb4; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+
 body {
   margin: 0;
   font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  background: #f5f6f8;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--text);
 }
 .topnav {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
-  background: #1a3d7c; padding: 12px 16px;
+  background: var(--nav-bg); padding: 12px 16px;
 }
 .topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
-.topnav a { color: #d8e3ff; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
+.topnav a { color: var(--nav-text); text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
 .topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
 #inappBanner {
   display: none; background: #fff3e0; border: 2px solid #ffb74d; border-radius: 12px;
@@ -32,24 +47,24 @@ body {
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
 .search-wrap { padding: 20px 16px 8px; max-width: 960px; margin: 0 auto; }
-.search-box { width: 100%; padding: 14px 16px; font-size: 1.05rem; border: 2px solid #d0d6e2; border-radius: 12px; outline: none; }
-.search-box:focus { border-color: #1a3d7c; }
+.search-box { width: 100%; padding: 14px 16px; font-size: 1.05rem; border: 2px solid var(--border); border-radius: 12px; outline: none; }
+.search-box:focus { border-color: var(--accent); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-.chip { padding: 6px 14px; border-radius: 999px; background: #e6ebf5; color: #1a3d7c; font-size: 0.85rem; cursor: pointer; border: none; }
-.chip.active { background: #1a3d7c; color: #fff; }
+.chip { padding: 6px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.85rem; cursor: pointer; border: none; }
+.chip.active { background: var(--accent); color: #fff; }
 .card-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
   max-width: 960px; margin: 0 auto; padding: 8px 16px 40px;
 }
 .card {
-  display: block; background: #fff; border-radius: 12px; padding: 16px; text-decoration: none;
-  color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.15s, transform 0.15s;
+  display: block; background: var(--surface); border-radius: 12px; padding: 16px; text-decoration: none;
+  color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.15s, transform 0.15s;
 }
 .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); }
-.card .cat { font-size: 0.75rem; color: #1a3d7c; font-weight: 700; margin-bottom: 4px; }
+.card .cat { font-size: 0.75rem; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
 .card .title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
 .card .desc { font-size: 0.85rem; color: #666; line-height: 1.4; }
-.empty-state { text-align: center; color: #888; padding: 40px 0; }
+.empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
 @media (max-width: 600px) {
   .topnav { padding: 10px 12px; }
   .topnav .brand { width: 100%; margin-bottom: 6px; }
@@ -68,6 +83,7 @@ body {
   <a href="minutes.html">회의록</a>
   <a href="stu.html">학생 정보 조회</a>
   <a href="phone.html">내선번호</a>
+  <a href="settings.html">⚙️ 설정</a>
 </nav>
 
 <div id="inappBanner">
