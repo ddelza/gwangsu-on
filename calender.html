@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학사일정 — 광수 Online 교무실</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: #f5f6f8;
+  color: #1a1a1a;
+}
+.topnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  background: #1a3d7c; padding: 12px 16px;
+}
+.topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
+.topnav a { color: #d8e3ff; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
+.topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
+#inappBanner {
+  display: none; background: #fff3e0; border: 2px solid #ffb74d; border-radius: 12px;
+  padding: 16px 20px; margin: 16px; text-align: center;
+}
+#inappBanner p { font-size: 0.9rem; color: #e65100; margin-bottom: 10px; line-height: 1.5; }
+#inappBanner button {
+  padding: 9px 18px; background: #e65100; color: white; border: none;
+  border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+}
+
+/* 학기 탭 */
+.sem-tabs {
+  display: flex; gap: 8px; padding: 16px 16px 8px; max-width: 960px; margin: 0 auto;
+}
+.sem-tab {
+  padding: 8px 24px; border: 2px solid #1a3d7c; border-radius: 999px; background: #fff;
+  color: #1a3d7c; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.15s;
+}
+.sem-tab.active { background: #1a3d7c; color: #fff; }
+
+/* 범례 */
+.legend {
+  display: flex; flex-wrap: wrap; gap: 10px; padding: 0 16px 12px; max-width: 960px; margin: 0 auto;
+}
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* 캘린더 */
+.cal-wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 40px; }
+.month-block { margin-bottom: 24px; }
+.month-title {
+  font-size: 1rem; font-weight: 700; color: #1a3d7c;
+  padding: 8px 0 6px; border-bottom: 2px solid #1a3d7c; margin-bottom: 8px;
+}
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+}
+.day-header {
+  text-align: center; font-size: 0.75rem; font-weight: 700;
+  padding: 4px 0; color: #888;
+}
+.day-header:first-child { color: #c62828; }
+.day-header:last-child { color: #1565c0; }
+.day-cell {
+  min-height: 64px; background: #fff; border-radius: 6px; padding: 4px;
+  position: relative; border: 1px solid #e8eaf0;
+}
+.day-cell.empty { background: transparent; border-color: transparent; }
+.day-cell.today { border-color: #1a3d7c; border-width: 2px; }
+.day-num {
+  font-size: 0.8rem; font-weight: 600; margin-bottom: 2px; line-height: 1;
+}
+.day-cell:nth-child(7n+1) .day-num { color: #c62828; }
+.day-cell:nth-child(7n) .day-num { color: #1565c0; }
+.day-cell.other-month { opacity: 0.3; }
+.chip {
+  display: block; font-size: 0.68rem; line-height: 1.3; padding: 1px 4px;
+  border-radius: 3px; margin-bottom: 2px; color: #fff; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; cursor: default;
+}
+.chip:hover { overflow: visible; white-space: normal; z-index: 10; position: relative; }
+
+.empty-state { text-align: center; color: #888; padding: 40px 0; }
+
+@media (max-width: 600px) {
+  .topnav { padding: 10px 12px; }
+  .topnav .brand { width: 100%; margin-bottom: 6px; }
+  .day-cell { min-height: 52px; padding: 3px 2px; }
+  .day-num { font-size: 0.75rem; }
+  .chip { font-size: 0.62rem; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <span class="brand">📋 광수 Online 교무실</span>
+  <a href="index.html">검색</a>
+  <a href="schedule.html">학사일정(목록)</a>
+  <a href="calender.html" class="active">캘린더</a>
+  <a href="minutes.html">회의록</a>
+</nav>
+
+<div id="inappBanner">
+  <p>⚠️ 카카오톡 등 메신저 안에서 열면 데이터를 불러오지 못할 수 있어요.<br>아래 버튼으로 외부 브라우저(Chrome/Safari)에서 열어주세요.</p>
+  <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
+</div>
+
+<div class="sem-tabs">
+  <button class="sem-tab active" onclick="switchSem(1)">1학기</button>
+  <button class="sem-tab" onclick="switchSem(2)">2학기</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1a3d7c"></div> 학사일정</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2e7d32"></div> 전교사일정</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e65100"></div> 학년별/학생일정</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6a1b9a"></div> 기타일정</div>
+</div>
+
+<div class="cal-wrap" id="calWrap">
+  <div class="empty-state">불러오는 중...</div>
+</div>
+
+<script>
+// ─── 설정 ──────────────────────────────────────────────────
+// 매년 새 학사일정 시트로 교체할 때 이 ID만 바꾸면 됩니다.
+const SS_CALENDAR = '1hvpMzy02s-SEwAV4lllpiRZhtFy0og3WX8wEXzpTejI';
+
+const CATS = [
+  { key: 'school',  label: '학사',   color: '#1a3d7c' },
+  { key: 'teacher', label: '전교사', color: '#2e7d32' },
+  { key: 'grade',   label: '학년',   color: '#e65100' },
+  { key: 'other',   label: '기타',   color: '#6a1b9a' },
+];
+
+const DAY_HEADERS = ['일','월','화','수','목','금','토'];
+// ───────────────────────────────────────────────────────────
+
+function detectInAppBrowser() {
+  return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent || '');
+}
+function openInExternalBrowser() {
+  const url = window.location.href;
+  const ua = navigator.userAgent || '';
+  if (/KAKAOTALK/i.test(ua)) window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+  else if (/NAVER/i.test(ua)) window.location.href = 'naversearchapp://inappbrowser?app=naversearchapp&url=' + encodeURIComponent(url);
+  else window.location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+}
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let semCache = {};
+let currentSem = 1;
+
+async function fetchSemester(sem) {
+  if (semCache[sem]) return semCache[sem];
+  const sheetName = sem === 1 ? '1학기 종합' : '2학기 종합';
+  const url = `https://docs.google.com/spreadsheets/d/${SS_CALENDAR}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`서버 응답 오류 (${res.status})`);
+  const text = await res.text();
+  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);\s*$/, ''));
+  if (json.status !== 'ok') throw new Error('시트 데이터를 읽을 수 없습니다. 학교 Google 계정으로 로그인되어 있는지 확인하세요.');
+  const parsed = parseTable(json.table);
+  semCache[sem] = parsed;
+  return parsed;
+}
+
+function parseTable(table) {
+  const cols = table.cols;
+  const idx = {};
+  cols.forEach((c, i) => {
+    const label = (c.label || '').trim().replace(/\n.*/,'');
+    if (label === '학사일정') idx.school = i;
+    else if (label === '전교사일정') idx.teacher = i;
+    else if (label.includes('학년') || label === '학생일정') idx.grade = i;
+    else if (label.includes('기타')) idx.other = i;
+  });
+
+  const events = {};
+  for (const row of (table.rows || [])) {
+    if (!row.c || !row.c[0] || !row.c[0].v) continue;
+    const m = String(row.c[0].v).match(/Date\((\d+),(\d+),(\d+)\)/);
+    if (!m) continue;
+    const year = +m[1], month = +m[2] + 1, day = +m[3];
+    const key = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+
+    const dayEvs = [];
+    for (const cat of CATS) {
+      const ci = idx[cat.key];
+      if (ci === undefined) continue;
+      const cell = row.c[ci];
+      if (!cell || !cell.v) continue;
+      const text = String(cell.v).trim();
+      if (text) dayEvs.push({ ...cat, text });
+    }
+    if (dayEvs.length) events[key] = (events[key] || []).concat(dayEvs);
+  }
+  return events;
+}
+
+function getMonthsFromEvents(events) {
+  const set = new Set();
+  for (const key of Object.keys(events)) {
+    set.add(key.substring(0, 7)); // 'YYYY-MM'
+  }
+  return [...set].sort();
+}
+
+function renderCalendar(events) {
+  const months = getMonthsFromEvents(events);
+  if (!months.length) {
+    return '<div class="empty-state">일정 데이터가 없습니다.</div>';
+  }
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  let html = '';
+  for (const ym of months) {
+    const [year, mon] = ym.split('-').map(Number);
+    const monthName = `${year}년 ${mon}월`;
+    const firstDay = new Date(year, mon - 1, 1);
+    const lastDay = new Date(year, mon, 0);
+    const startDow = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+
+    html += `<div class="month-block"><div class="month-title">${monthName}</div><div class="cal-grid">`;
+    html += DAY_HEADERS.map(d => `<div class="day-header">${d}</div>`).join('');
+
+    // empty cells before 1st
+    for (let i = 0; i < startDow; i++) html += `<div class="day-cell empty"></div>`;
+
+    for (let d = 1; d <= totalDays; d++) {
+      const key = `${year}-${String(mon).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = key === todayKey;
+      const evs = events[key] || [];
+      html += `<div class="day-cell${isToday ? ' today' : ''}">`;
+      html += `<div class="day-num">${d}</div>`;
+      for (const ev of evs) {
+        html += `<span class="chip" style="background:${ev.color}" title="${esc(ev.text)}">${esc(ev.label)}: ${esc(ev.text)}</span>`;
+      }
+      html += `</div>`;
+    }
+
+    // trailing empty
+    const lastDow = lastDay.getDay();
+    if (lastDow < 6) {
+      for (let i = lastDow + 1; i <= 6; i++) html += `<div class="day-cell empty"></div>`;
+    }
+
+    html += `</div></div>`;
+  }
+  return html;
+}
+
+function switchSem(sem) {
+  currentSem = sem;
+  document.querySelectorAll('.sem-tab').forEach((btn, i) => {
+    btn.classList.toggle('active', i + 1 === sem);
+  });
+  loadAndRender(sem);
+}
+
+function loadAndRender(sem) {
+  const wrap = document.getElementById('calWrap');
+  wrap.innerHTML = '<div class="empty-state">불러오는 중...</div>';
+  fetchSemester(sem)
+    .then(events => { wrap.innerHTML = renderCalendar(events); })
+    .catch(err => { wrap.innerHTML = `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`; });
+}
+
+window.onload = function() {
+  if (detectInAppBrowser()) {
+    const el = document.getElementById('inappBanner');
+    if (el) el.style.display = 'block';
+  }
+  loadAndRender(1);
+};
+</script>
+</body>
+</html>
