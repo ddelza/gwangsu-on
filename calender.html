@@ -142,11 +142,10 @@ body {
   padding: 3px 8px; border-radius: 999px; white-space: nowrap;
 }
 .day-modal-text { font-size: 0.92rem; line-height: 1.5; white-space: pre-line; flex: 1; }
-.entry-edit-btn {
-  flex-shrink: 0; margin-left: auto; background: none; border: none; cursor: pointer;
-  font-size: 0.9rem; opacity: 0.55; padding: 2px 4px;
-}
-.entry-edit-btn:hover { opacity: 1; }
+.day-edit-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.day-edit-row select.edit-select { margin: 0; }
+.day-edit-row textarea.edit-textarea { margin: 0; }
+#dayModalViewActions, #dayModalEditActions { display: flex; flex-direction: column; gap: 8px; }
 
 /* 일정 추가/편집 팝업 */
 .edit-modal-box { max-width: 380px; text-align: left; }
@@ -258,7 +257,15 @@ body {
     <button class="modal-close" onclick="closeDayModal()">✕</button>
     <h3 id="dayModalDate"></h3>
     <div id="dayModalBody"></div>
-    <button class="edit-trigger-btn" onclick="openEditModal()">✏️ 이 날짜에 일정/예약 추가하기</button>
+    <div id="dayModalViewActions">
+      <button class="edit-trigger-btn" id="dayEditEnterBtn" onclick="enterDayEditMode()" style="display:none">✏️ 이 날짜 편집</button>
+      <button class="edit-trigger-btn" onclick="openEditModal()">➕ 이 날짜에 일정/예약 추가하기</button>
+    </div>
+    <div id="dayModalEditActions" class="edit-actions" style="display:none">
+      <button class="edit-save-btn" onclick="saveDayEditMode()">✅ 편집 완료</button>
+      <button class="edit-cancel-btn" onclick="cancelDayEditMode()">취소</button>
+    </div>
+    <div id="dayEditStatusMsg" class="edit-status-msg"></div>
   </div>
 </div>
 
@@ -292,21 +299,6 @@ body {
       <button class="edit-cancel-btn" onclick="closeEditModal()">취소</button>
     </div>
     <div id="editStatusMsg" class="edit-status-msg"></div>
-  </div>
-</div>
-
-<!-- 기존 항목 수정 팝업(연필 아이콘) -->
-<div class="modal-overlay" id="entryEditModal">
-  <div class="modal-box edit-modal-box">
-    <button class="modal-close" onclick="closeEntryEditModal()">✕</button>
-    <h3 id="entryEditModalTitle"></h3>
-    <p class="edit-hint">이 내용은 기존 내용을 덮어씁니다 (수정).</p>
-    <textarea id="entryEditText" class="edit-textarea" rows="5"></textarea>
-    <div class="edit-actions">
-      <button class="edit-save-btn" onclick="saveEntryEdit()">저장</button>
-      <button class="edit-cancel-btn" onclick="closeEntryEditModal()">취소</button>
-    </div>
-    <div id="entryEditStatusMsg" class="edit-status-msg"></div>
   </div>
 </div>
 
@@ -569,73 +561,116 @@ function formatDateKorean(dateKey) {
 }
 
 let currentModalDate = null;
+let dayEditMode = false;
+let currentDayEvs = [];
+let currentDayRooms = [];
+
+const CATEGORY_OPTIONS = [
+  { key: 'school', label: '학사일정' },
+  { key: 'teacher', label: '전교사일정' },
+  { key: 'grade', label: '학년별/학생일정' },
+  { key: 'other', label: '기타일정' },
+];
+const ROOM_OPTIONS = [
+  { key: 'plaza', label: '🟪 광장' },
+  { key: 'large', label: '🟥 대형세미나실' },
+  { key: 'medium', label: '🟧 중형세미나실' },
+  { key: 'small', label: '🟨 소형세미나실' },
+  { key: 'dance', label: '💃 댄스실' },
+];
 
 function openDayModal(dateKey) {
   currentModalDate = dateKey;
-  const evs = (currentEventsMap && currentEventsMap[dateKey]) || [];
-  const dayRooms = (currentRoomsMap && currentRoomsMap[dateKey]) || [];
+  currentDayEvs = (currentEventsMap && currentEventsMap[dateKey]) || [];
+  currentDayRooms = (currentRoomsMap && currentRoomsMap[dateKey]) || [];
+  dayEditMode = false;
   document.getElementById('dayModalDate').textContent = formatDateKorean(dateKey);
-  const body = document.getElementById('dayModalBody');
-
-  let html = '';
-  if (evs.length) {
-    html += evs.map(ev => `
-        <div class="day-modal-item">
-          <span class="day-modal-tag" style="background:${ev.color}">${esc(ev.label)}</span>
-          <span class="day-modal-text">${esc(ev.text)}</span>
-          <button class="entry-edit-btn" data-kind="cat" data-key="${esc(ev.key)}" data-label="${escAttr(ev.label)}" data-full="${escAttr(ev.text)}">✏️</button>
-        </div>`).join('');
-  }
-  if (dayRooms.length) {
-    html += dayRooms.map(r => `
-        <div class="day-modal-item">
-          <span class="day-modal-tag" style="background:#555">${r.emoji} ${esc(r.label)}</span>
-          <span class="day-modal-text">${esc(r.text)}</span>
-          <button class="entry-edit-btn" data-kind="room" data-key="${esc(r.key)}" data-label="${escAttr(r.emoji + ' ' + r.label)}" data-full="${escAttr(r.text)}">✏️</button>
-        </div>`).join('');
-  }
-  body.innerHTML = html || '<div class="empty-state">등록된 일정이 없습니다.</div>';
-  body.querySelectorAll('.entry-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      openEntryEditModal(btn.dataset.kind, btn.dataset.key, btn.dataset.label, btn.dataset.full);
-    });
-  });
+  renderDayModalBody();
   document.getElementById('dayModal').style.display = 'flex';
 }
 function closeDayModal() {
   document.getElementById('dayModal').style.display = 'none';
 }
 
-// ── 기존 일정/실 예약 항목 수정 팝업(연필 아이콘) ──────────────────────────────
-// addCalendarEntry(추가, append)와 달리 이건 해당 칸 내용을 사용자가 입력한 값으로 그대로 덮어쓴다.
-let entryEditCtx = null;
-function openEntryEditModal(kind, key, label, fullText) {
-  entryEditCtx = { kind, key };
-  document.getElementById('entryEditModalTitle').textContent = `${formatDateKorean(currentModalDate)} · ${label}`;
-  document.getElementById('entryEditText').value = fullText;
-  document.getElementById('entryEditStatusMsg').textContent = '';
-  closeDayModal();
-  document.getElementById('entryEditModal').style.display = 'flex';
+function renderDayModalBody() {
+  const body = document.getElementById('dayModalBody');
+  const hasItems = currentDayEvs.length || currentDayRooms.length;
+
+  if (!dayEditMode) {
+    let html = '';
+    html += currentDayEvs.map(ev => `
+        <div class="day-modal-item">
+          <span class="day-modal-tag" style="background:${ev.color}">${esc(ev.label)}</span>
+          <span class="day-modal-text">${esc(ev.text)}</span>
+        </div>`).join('');
+    html += currentDayRooms.map(r => `
+        <div class="day-modal-item">
+          <span class="day-modal-tag" style="background:#555">${r.emoji} ${esc(r.label)}</span>
+          <span class="day-modal-text">${esc(r.text)}</span>
+        </div>`).join('');
+    body.innerHTML = html || '<div class="empty-state">등록된 일정이 없습니다.</div>';
+
+    document.getElementById('dayEditEnterBtn').style.display = hasItems ? 'block' : 'none';
+    document.getElementById('dayModalViewActions').style.display = 'flex';
+    document.getElementById('dayModalEditActions').style.display = 'none';
+    document.getElementById('dayEditStatusMsg').textContent = '';
+  } else {
+    let html = '';
+    html += currentDayEvs.map(ev => `
+        <div class="day-edit-row" data-kind="cat">
+          <select class="edit-select day-edit-key">
+            ${CATEGORY_OPTIONS.map(o => `<option value="${o.key}"${o.key === ev.key ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}
+          </select>
+          <textarea class="edit-textarea day-edit-text" rows="3">${esc(ev.text)}</textarea>
+        </div>`).join('');
+    html += currentDayRooms.map(r => `
+        <div class="day-edit-row" data-kind="room">
+          <select class="edit-select day-edit-key">
+            ${ROOM_OPTIONS.map(o => `<option value="${o.key}"${o.key === r.key ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}
+          </select>
+          <textarea class="edit-textarea day-edit-text" rows="3">${esc(r.text)}</textarea>
+        </div>`).join('');
+    body.innerHTML = html || '<div class="empty-state">편집할 일정이 없습니다.</div>';
+
+    document.getElementById('dayModalViewActions').style.display = 'none';
+    document.getElementById('dayModalEditActions').style.display = 'flex';
+    document.getElementById('dayEditStatusMsg').textContent = '';
+  }
 }
-function closeEntryEditModal() {
-  document.getElementById('entryEditModal').style.display = 'none';
+
+function enterDayEditMode() {
+  dayEditMode = true;
+  renderDayModalBody();
 }
-async function saveEntryEdit() {
-  if (!entryEditCtx) return;
-  const text = document.getElementById('entryEditText').value;
-  const statusEl = document.getElementById('entryEditStatusMsg');
+function cancelDayEditMode() {
+  dayEditMode = false;
+  renderDayModalBody();
+}
+
+async function saveDayEditMode() {
+  const originalKeys = currentDayEvs.map(ev => ({ kind: 'cat', key: ev.key }))
+    .concat(currentDayRooms.map(r => ({ kind: 'room', key: r.key })));
+
+  const entries = [];
+  document.querySelectorAll('#dayModalBody .day-edit-row').forEach(row => {
+    const kind = row.dataset.kind;
+    const key = row.querySelector('.day-edit-key').value;
+    const text = row.querySelector('.day-edit-text').value;
+    entries.push({ kind, key, text });
+  });
+
+  const statusEl = document.getElementById('dayEditStatusMsg');
   statusEl.textContent = '저장 중...';
   try {
     const res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
-        action: 'setCalendarEntry',
+        action: 'setCalendarDayEntries',
         sem: currentSem,
         date: currentModalDate,
-        kind: entryEditCtx.kind,
-        key: entryEditCtx.key,
-        text,
+        originalKeys,
+        entries,
       }),
     });
     const data = await res.json();
@@ -644,7 +679,7 @@ async function saveEntryEdit() {
     delete semCache[currentSem];
     statusEl.textContent = '저장되었습니다.';
     loadAndRender(currentSem);
-    closeEntryEditModal();
+    closeDayModal();
   } catch (err) {
     statusEl.textContent = '저장 실패: ' + (err.message || String(err));
   }
@@ -779,9 +814,6 @@ window.onload = function() {
   });
   document.getElementById('editModal').addEventListener('click', (e) => {
     if (e.target.id === 'editModal') closeEditModal();
-  });
-  document.getElementById('entryEditModal').addEventListener('click', (e) => {
-    if (e.target.id === 'entryEditModal') closeEntryEditModal();
   });
 
   loadAndRender(1);
