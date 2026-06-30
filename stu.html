@@ -58,7 +58,6 @@ table.stu-table { width: 100%; border-collapse: collapse; background: #fff; bord
 table.stu-table th, table.stu-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
 table.stu-table th { background: #1a3d7c; color: #fff; font-size: 0.78rem; position: sticky; top: 0; }
 table.stu-table tr:last-child td { border-bottom: none; }
-table.stu-table tr:nth-child(even) { background: #fafbfd; }
 .cell-empty { color: #bbb; }
 .empty-state { text-align: center; color: #888; padding: 40px 0; }
 @media (max-width: 600px) {
@@ -165,6 +164,9 @@ function fuzzySearch(items, query, fields) {
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
 const ACTION_MAP = { getStudentRoster: (runner) => runner.getStudentRoster() };
+
+// 같은 학년 내 반 구분용 색상 팔레트 (반이 바뀔 때마다 순환 적용)
+const BAN_COLORS = ['#eef3fc', '#fdf2e9', '#eafaf1', '#fbeee6', '#f5eef8', '#eafafa'];
 
 let allStudents = [];
 let activeGrade = '';
@@ -377,9 +379,14 @@ function renderResults() {
   html += '<th>1학기 스포츠클럽</th><th>1학기 주제선택/동아리</th>';
   html += '<th>2학기 스포츠클럽</th><th>2학기 주제선택/동아리</th>';
   html += '</tr></thead><tbody>';
+  // 같은 학년 안에서 반이 바뀔 때마다 색을 한 칸씩 순환시켜 반 구분을 눈에 띄게 한다.
+  let prevBanKey = null;
+  let banColorIdx = -1;
   html += results.map(s => {
     const cell = (v) => v ? esc(v) : '<span class="cell-empty">미배정</span>';
-    return `<tr>
+    const banKey = `${s.grade}-${s.ban}`;
+    if (banKey !== prevBanKey) { banColorIdx = (banColorIdx + 1) % BAN_COLORS.length; prevBanKey = banKey; }
+    return `<tr style="background:${BAN_COLORS[banColorIdx]}">
       <td>${esc(s.grade)}</td><td>${esc(s.ban)}</td><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td>
       <td>${cell(s.sem1.sport)}</td><td>${cell(semExtraText(s.sem1))}</td>
       <td>${cell(s.sem2.sport)}</td><td>${cell(semExtraText(s.sem2))}</td>
