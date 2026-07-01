@@ -5,9 +5,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>상장 조회 — 광수 Online 교무실</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo&family=Noto+Sans+KR:wght@400;600;700&family=Noto+Serif+KR:wght@400;500;700&family=Sunflower:wght@300;500;700&display=swap" rel="stylesheet">
+<script>
+(function(){
+  var F={
+    'claude':      'Nanum+Myeongjo',
+    'notion':      'Noto+Sans+KR:wght@400;600;700',
+    'figma':       'IBM+Plex+Sans+KR:wght@400;500',
+    'starbucks':   'Gowun+Dodum',
+    'lamborghini': 'Black+Han+Sans',
+    'ferrari':     'Noto+Serif+KR:wght@400;500;700',
+    'bugatti':     'Gowun+Batang',
+    'spotify':     'Nanum+Gothic:wght@400;700',
+    'nvidia':      'Do+Hyeon',
+    'airbnb':      'Sunflower:wght@300;500;700'
+  };
+  try{
+    var t=localStorage.getItem('gwangsu_theme')||'';
+    if(F[t]){
+      var p=document.createElement('link');p.rel='preconnect';p.href='https://fonts.googleapis.com';document.head.appendChild(p);
+      var q=document.createElement('link');q.rel='preconnect';q.href='https://fonts.gstatic.com';q.crossOrigin='';document.head.appendChild(q);
+      var l=document.createElement('link');l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family='+F[t]+'&display=swap';
+      document.head.appendChild(l);
+    }
+  }catch(e){}
+})();
+</script>
 <style>
 * { box-sizing: border-box; }
 
@@ -21,16 +44,16 @@
 :root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
 :root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
 :root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
-:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#9aa3b2; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
-:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#92a89c; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
-:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#ab9fb4; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#adb8c8; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#a8beaa; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#bdb3c8; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
 :root[data-theme="apple"] { --bg:#f5f5f7; --surface:#ffffff; --text:#1d1d1f; --text-muted:#6e6e73; --border:#d2d2d7; --nav-bg:#000000; --nav-text:rgba(255,255,255,0.85); --accent:#0066cc; --accent-soft:rgba(0,102,204,0.1); --font-body:-apple-system,"SF Pro Display","SF Pro Text",BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 :root[data-theme="claude"] { --bg:#faf9f5; --surface:#f0e9df; --text:#141413; --text-muted:#8a7a65; --border:#ddd4c4; --nav-bg:#181715; --nav-text:#faf9f5; --accent:#cc785c; --accent-soft:#f5ede3; --font-body:"Nanum Myeongjo",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
 :root[data-theme="notion"] { --bg:#ffffff; --surface:#f6f5f4; --text:#1a1a1a; --text-muted:#787671; --border:#e5e3df; --nav-bg:#0a1530; --nav-text:#ffffff; --accent:#5645d4; --accent-soft:#ede9fa; --font-body:"Noto Sans KR","Segoe UI",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 :root[data-theme="figma"] { --bg:#ffffff; --surface:#f7f7f5; --text:#000000; --text-muted:#787878; --border:#e6e6e6; --nav-bg:#000000; --nav-text:#ffffff; --accent:#6e5ff3; --accent-soft:#dceeb1; --font-body:"IBM Plex Sans KR","Helvetica Neue",Arial,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 :root[data-theme="starbucks"] { --bg:#f2f0eb; --surface:#ffffff; --text:#1f1f1d; --text-muted:#5a7a6a; --border:#c8d8cc; --nav-bg:#1e3932; --nav-text:#ffffff; --accent:#00754a; --accent-soft:#d4e9e2; --font-body:"Gowun Dodum","Trebuchet MS","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
-:root[data-theme="lamborghini"] { --bg:#000000; --surface:#202020; --text:#ffffff; --text-muted:#7d7d7d; --border:#303030; --nav-bg:#000000; --nav-text:#ffffff; --accent:#ffc000; --accent-soft:rgba(255,192,0,0.12); --font-body:"Black Han Sans",Impact,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
-:root[data-theme="ferrari"] { --bg:#181818; --surface:#303030; --text:#ffffff; --text-muted:#666666; --border:#303030; --nav-bg:#181818; --nav-text:#ffffff; --accent:#da291c; --accent-soft:rgba(218,41,28,0.15); --font-body:"Noto Serif KR",Georgia,"Times New Roman","Batang",serif; }
+:root[data-theme="lamborghini"] { --bg:#000000; --surface:#202020; --text:#ffffff; --text-muted:#7d7d7d; --border:#2a2a2a; --nav-bg:#000000; --nav-text:#ffffff; --accent:#ffc000; --accent-soft:rgba(255,192,0,0.12); --font-body:"Black Han Sans",Impact,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="ferrari"] { --bg:#181818; --surface:#2c2c2c; --text:#ffffff; --text-muted:#a0a0a0; --border:#3d3d3d; --nav-bg:#181818; --nav-text:#ffffff; --accent:#da291c; --accent-soft:rgba(218,41,28,0.15); --font-body:"Noto Serif KR",Georgia,"Times New Roman","Batang",serif; }
 :root[data-theme="bugatti"] { --bg:#000000; --surface:#141414; --text:#ffffff; --text-muted:#999999; --border:#262626; --nav-bg:#000000; --nav-text:#cccccc; --accent:#c3d9f3; --accent-soft:rgba(195,217,243,0.08); --font-body:"Gowun Batang",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
 :root[data-theme="spotify"] { --bg:#121212; --surface:#181818; --text:#ffffff; --text-muted:#b3b3b3; --border:#4d4d4d; --nav-bg:#000000; --nav-text:#ffffff; --accent:#1ed760; --accent-soft:rgba(30,215,96,0.12); --font-body:"Nanum Gothic","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 :root[data-theme="nvidia"] { --bg:#ffffff; --surface:#f7f7f7; --text:#1a1a1a; --text-muted:#757575; --border:#cccccc; --nav-bg:#000000; --nav-text:#ffffff; --accent:#76b900; --accent-soft:rgba(118,185,0,0.1); --font-body:"Do Hyeon","Roboto","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
