@@ -211,6 +211,32 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
 .overflow-tags { display:flex; flex-wrap:wrap; gap:6px; }
 .overflow-tag { background:#fbbf24; color:#1a1a1a; padding:4px 10px; border-radius:999px; font-size:0.82rem; font-weight:600; }
 
+/* ── Constraint Panel ── */
+.constraint-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; }
+.constraint-panel > summary { padding:12px 16px; cursor:pointer; font-weight:700; color:var(--accent); display:flex; align-items:center; gap:8px; list-style:none; user-select:none; }
+.constraint-panel > summary::-webkit-details-marker { display:none; }
+.constraint-panel > summary::after { content:'▸'; margin-left:auto; font-size:0.9rem; transition:transform 0.2s; }
+.constraint-panel[open] > summary::after { transform:rotate(90deg); }
+.cpanel-body { padding:0 16px 16px; border-top:1px solid var(--border); }
+.cpanel-badge { background:var(--accent); color:var(--on-accent,#fff); border-radius:999px; padding:2px 8px; font-size:0.75rem; font-weight:700; }
+.copt { border-top:1px solid var(--border); padding:10px 0; }
+.copt:first-child { border-top:none; padding-top:12px; }
+.copt-toggle { display:flex; align-items:flex-start; gap:8px; cursor:pointer; }
+.copt-toggle input[type=checkbox] { margin-top:3px; accent-color:var(--accent); flex-shrink:0; }
+.copt-label { font-size:0.9rem; font-weight:600; }
+.copt-body { display:none; margin-top:8px; padding-left:20px; }
+.copt-body.open { display:block; }
+.copt-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap; font-size:0.85rem; }
+.cs-sel { padding:5px 8px; border:1px solid var(--border); border-radius:7px; background:var(--bg); color:var(--text); font-size:0.84rem; cursor:pointer; max-width:165px; }
+.cs-between { color:var(--text-muted); white-space:nowrap; }
+.btn-del-copt { background:none; border:none; color:#e53e3e; cursor:pointer; font-size:0.9rem; padding:3px 6px; border-radius:4px; }
+.btn-del-copt:hover { background:#ffe4e4; }
+.btn-add-copt { margin-top:4px; padding:5px 12px; border:1.5px dashed var(--border); border-radius:7px; background:none; cursor:pointer; color:var(--text-muted); font-size:0.82rem; font-family:inherit; transition:all 0.15s; }
+.btn-add-copt:hover { border-color:var(--accent); color:var(--accent); }
+.cpanel-footer { margin-top:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.cpanel-note { font-size:0.79rem; color:var(--text-muted); }
+.constraint-warn { margin-top:12px; padding:10px 14px; background:#fff8e1; border:1px solid #fbbf24; border-radius:8px; font-size:0.84rem; color:#92400e; display:none; }
+
 /* ── Mobile ── */
 @media (max-width:640px) {
   .app-layout { flex-direction:column; height:auto; overflow:visible; }
@@ -323,10 +349,70 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
     <section id="step3" class="step-section">
       <div class="step-title">자리 랜덤배치</div>
 
+      <details class="constraint-panel" id="cpanel">
+        <summary>⚙️ 배치 옵션 설정 <span class="cpanel-badge" id="cpBadge" style="display:none"></span></summary>
+        <div class="cpanel-body">
+
+          <div class="copt">
+            <label class="copt-toggle">
+              <input type="checkbox" id="optFixEn" onchange="toggleOptBody('fixBody',this)">
+              <span class="copt-label">(1) 특정 학생 행 / 열 고정</span>
+            </label>
+            <div class="copt-body" id="fixBody">
+              <div id="fixList"></div>
+              <button class="btn-add-copt" onclick="addFixRow()">+ 고정 추가</button>
+            </div>
+          </div>
+
+          <div class="copt">
+            <label class="copt-toggle">
+              <input type="checkbox" id="optApartEn" onchange="toggleOptBody('apartBody',this)">
+              <span class="copt-label">(2) 특정 두 학생 인접 금지</span>
+            </label>
+            <div class="copt-body" id="apartBody">
+              <div id="apartList"></div>
+              <button class="btn-add-copt" onclick="addApartRow()">+ 인접금지 추가</button>
+            </div>
+          </div>
+
+          <div class="copt">
+            <label class="copt-toggle">
+              <input type="checkbox" id="optTogetherEn" onchange="toggleOptBody('togetherBody',this)">
+              <span class="copt-label">(3) 특정 두 학생 인접 배치</span>
+            </label>
+            <div class="copt-body" id="togetherBody">
+              <div id="togetherList"></div>
+              <button class="btn-add-copt" onclick="addTogetherRow()">+ 인접배치 추가</button>
+            </div>
+          </div>
+
+          <div class="copt">
+            <label class="copt-toggle">
+              <input type="checkbox" id="optSameEn" onchange="onGenderCheck('same',this)">
+              <span class="copt-label">(4) 같은 성별끼리 짝꿍 만들기 <small style="font-weight:400;color:var(--text-muted)">(남는 학생은 혼성 가능)</small></span>
+            </label>
+          </div>
+
+          <div class="copt">
+            <label class="copt-toggle">
+              <input type="checkbox" id="optDiffEn" onchange="onGenderCheck('diff',this)">
+              <span class="copt-label">(5) 다른 성별끼리 짝꿍 만들기 <small style="font-weight:400;color:var(--text-muted)">(남는 학생은 혼성 가능)</small></span>
+            </label>
+          </div>
+
+          <div class="cpanel-footer">
+            <button class="btn-primary" onclick="doConstrainedAssign()">✅ 옵션 적용하여 배치</button>
+            <span class="cpanel-note">※ 500회 시도 후 조건을 가장 많이 만족하는 결과를 반영합니다</span>
+          </div>
+        </div>
+      </details>
+
       <div class="step3-toolbar">
-        <button class="btn-primary" onclick="doRandomAssign()">🔀 랜덤 배치</button>
-        <button class="btn-secondary" id="reshuffleBtn" style="display:none" onclick="doRandomAssign()">↺ 다시 섞기</button>
+        <button class="btn-primary" onclick="doRandomAssign()">🔀 랜덤 배치 (옵션 없이)</button>
+        <button class="btn-secondary" id="reshuffleBtn" style="display:none" onclick="reshuffleLast()">↺ 다시 섞기</button>
       </div>
+
+      <div id="constraintWarn" class="constraint-warn"></div>
 
       <div id="seatingWrap" style="display:none;">
         <div class="desk-grid-wrap">
@@ -595,68 +681,295 @@ function confirmStep2() {
   goStep(3);
 }
 
-// ── STEP 3: RANDOM SEATING ────────────────────────────────────
+// ── STEP 3: RANDOM & CONSTRAINED SEATING ─────────────────────
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+let lastMode = 'random'; // 'random' | 'constrained'
+function reshuffleLast() {
+  lastMode === 'constrained' ? doConstrainedAssign() : doRandomAssign();
+}
+
+// ── 옵션 UI ──────────────────────────────────────────────────
+let genderMode = null; // 'same' | 'diff' | null
+let fixCnt = 0, apCnt = 0, tgCnt = 0;
+
+function toggleOptBody(bodyId, cb) {
+  document.getElementById(bodyId).classList.toggle('open', cb.checked);
+  updateBadge();
+}
+
+function onGenderCheck(mode, cb) {
+  if (cb.checked) {
+    genderMode = mode;
+    document.getElementById(mode === 'same' ? 'optDiffEn' : 'optSameEn').checked = false;
+  } else {
+    if (genderMode === mode) genderMode = null;
+  }
+  updateBadge();
+}
+
+function updateBadge() {
+  let n = ['optFixEn','optApartEn','optTogetherEn'].filter(id => document.getElementById(id)?.checked).length;
+  if (genderMode) n++;
+  const el = document.getElementById('cpBadge');
+  el.textContent = n + '개 활성'; el.style.display = n ? '' : 'none';
+}
+
+function makeStuSel(id) {
+  const opts = students.map(s =>
+    `<option value="${esc(s.name)}">${esc(s.name)} (${esc(s.gender)})</option>`).join('');
+  return `<select id="${id}" class="cs-sel">${opts}</select>`;
+}
+
+function addFixRow() {
+  const id = 'fx' + (fixCnt++);
+  const rowOpts = Array.from({length:gridRows},(_,i)=>`<option value="${i}">${i+1}행</option>`).join('');
+  const colOpts = Array.from({length:gridCols},(_,i)=>`<option value="${i}">${i+1}열</option>`).join('');
+  const div = document.createElement('div');
+  div.className = 'copt-row'; div.id = id;
+  div.innerHTML =
+    makeStuSel(id+'_s') + ' 을(를) ' +
+    `<select class="cs-sel" id="${id}_t" onchange="toggleFixSel('${id}')">` +
+      `<option value="row">행</option><option value="col">열</option></select>` +
+    `<select class="cs-sel" id="${id}_r">${rowOpts}</select>` +
+    `<select class="cs-sel" id="${id}_c" style="display:none">${colOpts}</select>` +
+    ' 에 고정' +
+    `<button class="btn-del-copt" onclick="document.getElementById('${id}').remove()">✕</button>`;
+  document.getElementById('fixList').appendChild(div);
+}
+
+function toggleFixSel(id) {
+  const t = document.getElementById(id+'_t').value;
+  document.getElementById(id+'_r').style.display = t==='row'?'':'none';
+  document.getElementById(id+'_c').style.display = t==='col'?'':'none';
+}
+
+function addApartRow() {
+  const id = 'ap' + (apCnt++);
+  const div = document.createElement('div');
+  div.className = 'copt-row'; div.id = id;
+  div.innerHTML =
+    makeStuSel(id+'_a') + '<span class="cs-between">와</span>' +
+    makeStuSel(id+'_b') + '<span class="cs-between">인접 금지</span>' +
+    `<button class="btn-del-copt" onclick="document.getElementById('${id}').remove()">✕</button>`;
+  document.getElementById('apartList').appendChild(div);
+}
+
+function addTogetherRow() {
+  const id = 'tg' + (tgCnt++);
+  const div = document.createElement('div');
+  div.className = 'copt-row'; div.id = id;
+  div.innerHTML =
+    makeStuSel(id+'_a') + '<span class="cs-between">와</span>' +
+    makeStuSel(id+'_b') + '<span class="cs-between">인접 배치</span>' +
+    `<button class="btn-del-copt" onclick="document.getElementById('${id}').remove()">✕</button>`;
+  document.getElementById('togetherList').appendChild(div);
+}
+
+function collectConstraints() {
+  const c = { fixed:[], apart:[], together:[], genderPairing: genderMode };
+  if (document.getElementById('optFixEn')?.checked) {
+    document.querySelectorAll('#fixList .copt-row').forEach(row => {
+      const id = row.id;
+      const name = document.getElementById(id+'_s')?.value;
+      const type = document.getElementById(id+'_t')?.value;
+      const val  = +(document.getElementById(id+(type==='row'?'_r':'_c'))?.value ?? 0);
+      if (name) c.fixed.push({ studentName:name, fixType:type, value:val });
+    });
+  }
+  if (document.getElementById('optApartEn')?.checked) {
+    document.querySelectorAll('#apartList .copt-row').forEach(row => {
+      const a = document.getElementById(row.id+'_a')?.value;
+      const b = document.getElementById(row.id+'_b')?.value;
+      if (a && b && a!==b) c.apart.push({a,b});
+    });
+  }
+  if (document.getElementById('optTogetherEn')?.checked) {
+    document.querySelectorAll('#togetherList .copt-row').forEach(row => {
+      const a = document.getElementById(row.id+'_a')?.value;
+      const b = document.getElementById(row.id+'_b')?.value;
+      if (a && b && a!==b) c.together.push({a,b});
+    });
+  }
+  return c;
+}
+
+// ── 옵션 없는 랜덤 ──────────────────────────────────────────
 function doRandomAssign() {
-  // Collect active seat positions
+  lastMode = 'random';
+  document.getElementById('constraintWarn').style.display = 'none';
   const seats = [];
   for (let r = 0; r < gridRows; r++)
     for (let c = 0; c < gridCols; c++)
-      if (deskActive[r][c]) seats.push([r, c]);
+      if (deskActive[r][c]) seats.push([r,c]);
+  const shuffled = shuffle([...students]);
+  const map = {}; const overflow = [];
+  shuffled.forEach((s,i) => {
+    if (i < seats.length) { const [r,c] = seats[i]; map[`${r},${c}`] = s.name; }
+    else overflow.push(s.name);
+  });
+  renderSeating(map, overflow);
+}
 
-  // Shuffle students (Fisher-Yates)
-  const shuffled = [...students];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
+// ── 옵션 적용 랜덤 ──────────────────────────────────────────
+function doConstrainedAssign() {
+  lastMode = 'constrained';
+  const seats = [];
+  for (let r = 0; r < gridRows; r++)
+    for (let cc = 0; cc < gridCols; cc++)
+      if (deskActive[r][cc]) seats.push({r, c:cc});
 
-  // Map seats → students
-  const seatingMap = {};
-  const overflow   = [];
-  shuffled.forEach((stu, i) => {
-    if (i < seats.length) {
-      const [r, c] = seats[i];
-      seatingMap[`${r},${c}`] = stu.name;
-    } else {
-      overflow.push(stu.name);
-    }
+  const con = collectConstraints();
+  const keyMap = new Map();
+  seats.forEach((s,i) => keyMap.set(`${s.r},${s.c}`, i));
+
+  const nameIdx = new Map();
+  students.forEach((s,i) => nameIdx.set(s.name, i));
+
+  const areAdj = (i,j) =>
+    Math.abs(seats[i].r-seats[j].r)<=1 && Math.abs(seats[i].c-seats[j].c)<=1;
+
+  // 수평 짝꿍 쌍 찾기
+  const hPairs=[]; const inPair=new Set();
+  seats.forEach((s,i)=>{
+    if(inPair.has(i)) return;
+    const ri = keyMap.get(`${s.r},${s.c+1}`);
+    if(ri!==undefined){ hPairs.push([i,ri]); inPair.add(i); inPair.add(ri); }
   });
 
-  // Render seating grid
+  let bestAsgn=null, bestViol=Infinity;
+  for (let t=0; t<500; t++) {
+    const asgn = tryAssign(seats, con, keyMap, hPairs, nameIdx);
+    if (!asgn) continue;
+    const viol = calcViol(asgn, con, hPairs, areAdj, nameIdx);
+    if (viol < bestViol) { bestViol=viol; bestAsgn=[...asgn]; }
+    if (bestViol===0) break;
+  }
+  if (!bestAsgn) { doRandomAssign(); return; }
+
+  const map = {}; const placed = new Set();
+  bestAsgn.forEach((si,idx)=>{
+    if(si!=null){ const {r,c}=seats[idx]; map[`${r},${c}`]=students[si].name; placed.add(students[si].name); }
+  });
+  const overflow = students.filter(s=>!placed.has(s.name)).map(s=>s.name);
+  renderSeating(map, overflow);
+
+  const warn = document.getElementById('constraintWarn');
+  if (bestViol > 0) {
+    warn.textContent = `⚠ ${bestViol}개 조건을 완전히 만족하지 못했습니다. 조건이 서로 충돌하거나 자리 구성상 불가능할 수 있습니다.`;
+    warn.style.display = '';
+  } else { warn.style.display = 'none'; }
+}
+
+function tryAssign(seats, con, keyMap, hPairs, nameIdx) {
+  const asgn = new Array(seats.length).fill(null);
+  const placed = new Set();
+
+  // 1. 고정 배치
+  for (const fix of shuffle([...con.fixed])) {
+    const si = nameIdx.get(fix.studentName);
+    if (si==null||placed.has(si)) continue;
+    const valid = seats.map((_,i)=>i)
+      .filter(i=> asgn[i]===null && (fix.fixType==='row'? seats[i].r===fix.value : seats[i].c===fix.value));
+    if (!valid.length) return null;
+    const chosen = valid[Math.floor(Math.random()*valid.length)];
+    asgn[chosen]=si; placed.add(si);
+  }
+
+  // 2. 성별 짝꿍 배치
+  if (con.genderPairing) {
+    const pools = {
+      '남': shuffle(students.map((_,i)=>i).filter(i=>!placed.has(i)&&students[i].gender==='남')),
+      '여': shuffle(students.map((_,i)=>i).filter(i=>!placed.has(i)&&students[i].gender==='여')),
+      '기': shuffle(students.map((_,i)=>i).filter(i=>!placed.has(i)&&students[i].gender!=='남'&&students[i].gender!=='여'))
+    };
+    const pop = ()=>{ for(const k of['남','여','기']){ if(pools[k].length) return pools[k].shift(); } return null; };
+
+    for (const [a,b] of shuffle([...hPairs])) {
+      if (asgn[a]!==null||asgn[b]!==null) continue;
+      let sa,sb;
+      if (con.genderPairing==='same') {
+        if (pools['남'].length>=2){ sa=pools['남'].shift(); sb=pools['남'].shift(); }
+        else if(pools['여'].length>=2){ sa=pools['여'].shift(); sb=pools['여'].shift(); }
+        else { sa=pop(); sb=pop(); }
+      } else {
+        if(pools['남'].length&&pools['여'].length){ sa=pools['남'].shift(); sb=pools['여'].shift(); }
+        else { sa=pop(); sb=pop(); }
+      }
+      if(sa!=null){ asgn[a]=sa; placed.add(sa); }
+      if(sb!=null){ asgn[b]=sb; placed.add(sb); }
+    }
+    // 나머지 빈자리 채우기
+    const rem = shuffle([...pools['남'],...pools['여'],...pools['기']]);
+    const freeSeats = shuffle(asgn.map((v,i)=>({v,i})).filter(({v})=>v===null).map(({i})=>i));
+    freeSeats.forEach((si,k)=>{ if(k<rem.length){ asgn[si]=rem[k]; placed.add(rem[k]); } });
+  }
+
+  // 3. 나머지 랜덤 채우기
+  const rem = shuffle(students.map((_,i)=>i).filter(i=>!placed.has(i)));
+  const free = shuffle(asgn.map((v,i)=>({v,i})).filter(({v})=>v===null).map(({i})=>i));
+  rem.forEach((si,k)=>{ if(k<free.length) asgn[free[k]]=si; });
+  return asgn;
+}
+
+function calcViol(asgn, con, hPairs, areAdj, nameIdx) {
+  let v=0;
+  const pos=new Map();
+  asgn.forEach((si,idx)=>{ if(si!=null) pos.set(si,idx); });
+  for(const {a,b} of con.apart){
+    const ai=nameIdx.get(a), bi=nameIdx.get(b);
+    if(ai==null||bi==null) continue;
+    const ap=pos.get(ai), bp=pos.get(bi);
+    if(ap!=null&&bp!=null&&areAdj(ap,bp)) v++;
+  }
+  for(const {a,b} of con.together){
+    const ai=nameIdx.get(a), bi=nameIdx.get(b);
+    if(ai==null||bi==null) continue;
+    const ap=pos.get(ai), bp=pos.get(bi);
+    if(ap==null||bp==null||!areAdj(ap,bp)) v++;
+  }
+  if(con.genderPairing){
+    for(const [a,b] of hPairs){
+      const sa=asgn[a], sb=asgn[b];
+      if(sa==null||sb==null) continue;
+      const ga=students[sa].gender, gb=students[sb].gender;
+      if(ga==='미기재'||gb==='미기재') continue;
+      if(con.genderPairing==='same'&&ga!==gb) v++;
+      if(con.genderPairing==='diff'&&ga===gb) v++;
+    }
+  }
+  return v;
+}
+
+// ── 공통 렌더링 ───────────────────────────────────────────────
+function renderSeating(seatingMap, overflow) {
   const grid = document.getElementById('seatingGrid');
   grid.style.gridTemplateColumns = `repeat(${gridCols}, 72px)`;
   grid.innerHTML = '';
-  for (let r = 0; r < gridRows; r++) {
-    for (let c = 0; c < gridCols; c++) {
+  for (let r=0; r<gridRows; r++) {
+    for (let c=0; c<gridCols; c++) {
       const cell = document.createElement('div');
-      if (!deskActive[r][c]) {
-        cell.className = 'seat-cell no-desk';
-      } else {
+      if (!deskActive[r][c]) { cell.className='seat-cell no-desk'; }
+      else {
         const name = seatingMap[`${r},${c}`];
-        if (name) {
-          cell.className = 'seat-cell occupied';
-          cell.textContent = name;
-        } else {
-          cell.className = 'seat-cell empty-desk';
-          cell.textContent = '빈자리';
-        }
+        cell.className = name ? 'seat-cell occupied' : 'seat-cell empty-desk';
+        cell.textContent = name || '빈자리';
       }
       grid.appendChild(cell);
     }
   }
-
-  // Overflow students
-  const box  = document.getElementById('overflowBox');
-  const tags = document.getElementById('overflowTags');
-  if (overflow.length) {
-    box.style.display = '';
-    tags.innerHTML = overflow.map(n => `<span class="overflow-tag">${esc(n)}</span>`).join('');
-  } else {
-    box.style.display = 'none';
-  }
-
-  document.getElementById('seatingWrap').style.display = '';
-  document.getElementById('reshuffleBtn').style.display = '';
+  const box=document.getElementById('overflowBox'), tags=document.getElementById('overflowTags');
+  if (overflow.length) { box.style.display=''; tags.innerHTML=overflow.map(n=>`<span class="overflow-tag">${esc(n)}</span>`).join(''); }
+  else box.style.display='none';
+  document.getElementById('seatingWrap').style.display='';
+  document.getElementById('reshuffleBtn').style.display='';
 }
 </script>
 </body>
