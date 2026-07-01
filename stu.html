@@ -113,6 +113,10 @@ body {
   padding: 8px 16px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff);
   font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
 }
+.print-btn {
+  padding: 8px 16px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+}
 #editModeBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 #editSummaryText { font-size: 0.85rem; color: #444; font-weight: 600; }
 .edit-mode-save-btn {
@@ -169,6 +173,7 @@ table.stu-table tr.ban-start td { border-top: 2px solid var(--text-muted); }
 
   <div class="filter-card edit-mode-card">
     <button id="editModeToggleBtn" class="edit-mode-btn" onclick="enterEditMode()">✏️ 수정모드</button>
+    <button class="print-btn" onclick="printAttendance()">🖨️ 출석부 출력</button>
     <div id="editModeBar" style="display:none">
       <span id="editSummaryText">변경 0건</span>
       <button class="edit-mode-save-btn" onclick="saveEditedFields()">✅ 수정 완료</button>
@@ -614,6 +619,84 @@ async function saveEditedFields() {
   } catch (err) {
     statusEl.textContent = '저장 실패: ' + (err.message || String(err));
   }
+}
+
+function printAttendance() {
+  const q = document.getElementById('searchBox').value;
+  let results = allStudents;
+  if (activityFilter) {
+    results = results.filter(studentMatchesActivity);
+  } else {
+    if (activeGrade) results = results.filter(s => String(s.grade) === activeGrade);
+    if (activeBan)   results = results.filter(s => String(s.ban) === activeBan);
+  }
+  results = fuzzySearch(results, q, ['_searchText']);
+  results = results.slice().sort((a, b) => {
+    if (a.grade !== b.grade) return a.grade - b.grade;
+    if (a.ban   !== b.ban)   return a.ban - b.ban;
+    return a.num - b.num;
+  });
+  if (!results.length) { alert('출력할 학생이 없습니다.'); return; }
+
+  // 반별로 그룹화
+  const classMap = new Map();
+  results.forEach(s => {
+    const key = `${s.grade}학년 ${s.ban}반`;
+    if (!classMap.has(key)) classMap.set(key, []);
+    classMap.get(key).push(s);
+  });
+
+  const today = new Date().toLocaleDateString('ko-KR');
+  const days = Array.from({length: 31}, (_, i) => i + 1);
+
+  const pages = [...classMap.entries()].map(([className, students], pi) => {
+    const rows = students.map(s => `
+      <tr>
+        <td class="c-num">${s.num}</td>
+        <td class="c-name">${s.name}</td>
+        ${days.map(() => '<td></td>').join('')}
+      </tr>`).join('');
+    return `
+    <div class="page${pi > 0 ? ' break' : ''}">
+      <div class="ph">
+        <span class="ph-title">광수중학교 ${className} 출석부</span>
+        <span class="ph-date">${today} 출력 &nbsp;·&nbsp; ${students.length}명</span>
+      </div>
+      <table>
+        <thead><tr>
+          <th class="c-num">번호</th><th class="c-name">이름</th>
+          ${days.map(d => `<th class="c-day">${d}</th>`).join('')}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>출석부</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:9.5pt;color:#000;background:#fff}
+.page{padding:8mm 8mm 6mm}
+.break{page-break-before:always}
+.ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.ph-title{font-size:13pt;font-weight:700}
+.ph-date{font-size:8pt;color:#555}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #000;text-align:center;vertical-align:middle;padding:2px 1px;height:22px}
+th{background:#e8e8e8;font-size:8.5pt;font-weight:700}
+td{font-size:9pt}
+.c-num{width:24px}
+.c-name{width:52px;text-align:left;padding-left:4px}
+.c-day{width:auto;font-size:7.5pt}
+@page{size:A4 landscape;margin:5mm}
+</style>
+</head><body>
+${pages}
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);
+  win.document.close();
 }
 
 function reloadRoster() {
