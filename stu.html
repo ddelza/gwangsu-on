@@ -138,6 +138,7 @@ table.stu-table { width: 100%; border-collapse: collapse; background: var(--surf
 table.stu-table th, table.stu-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
 table.stu-table th { background: var(--accent); color: var(--on-accent, #fff); font-size: 0.78rem; position: sticky; top: 0; }
 table.stu-table tr:last-child td { border-bottom: none; }
+table.stu-table tr.ban-start td { border-top: 2px solid var(--text-muted); }
 .cell-empty { color: #bbb; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
 @media (max-width: 600px) {
@@ -487,10 +488,11 @@ function renderResults() {
   html += results.map(s => {
     const cell = (v) => v ? esc(v) : '<span class="cell-empty">미배정</span>';
     const banKey = `${s.grade}-${s.ban}`;
-    if (banKey !== prevBanKey) { banColorIdx = (banColorIdx + 1) % BAN_COLORS.length; prevBanKey = banKey; }
+    const isBanStart = banKey !== prevBanKey;
+    if (isBanStart) { prevBanKey = banKey; }
     const sportCell = (semKey) => editMode ? editableSportSelect(s, semKey) : cell(s[semKey].sport);
     const electiveCell = (semKey) => editMode ? editableElectiveSelects(s, semKey) : cell(semExtraText(s[semKey]));
-    return `<tr style="background:${BAN_COLORS[banColorIdx]}">
+    return `<tr class="${isBanStart ? 'ban-start' : ''}">
       <td>${esc(s.grade)}</td><td>${esc(s.ban)}</td><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td>
       <td>${sportCell('sem1')}</td><td>${electiveCell('sem1')}</td>
       <td>${sportCell('sem2')}</td><td>${electiveCell('sem2')}</td>
