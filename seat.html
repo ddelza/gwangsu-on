@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자리 배치 — 광수 Online 교무실</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --nav-bg: #1a3d7c; --nav-text: #d8e3ff; --accent: #1a3d7c; --accent-soft: #e6ebf5;
+}
+:root[data-theme="teal"] { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"] { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#9aa3b2; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#92a89c; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#ab9fb4; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+
+body { font-family: -apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; background:var(--bg); color:var(--text); }
+
+/* ── Nav ── */
+.topnav { display:flex; flex-wrap:wrap; align-items:center; gap:4px; background:var(--nav-bg); padding:12px 16px; }
+.topnav .brand { display:inline-flex; align-items:center; gap:8px; color:#fff; font-weight:700; font-size:1.05rem; margin-right:16px; white-space:nowrap; text-decoration:none; }
+.brand-logo { height:28px; width:auto; display:block; }
+.gen1-link { margin-left:auto; font-size:0.8rem; opacity:0.85; }
+.topnav a { color:var(--nav-text); text-decoration:none; padding:8px 12px; border-radius:8px; font-size:0.92rem; }
+.topnav a:hover, .topnav a.active { background:rgba(255,255,255,0.15); color:#fff; }
+
+/* ── App shell ── */
+.app-layout { display:flex; height:calc(100vh - 52px); overflow:hidden; }
+
+/* ── Sidebar ── */
+.sidebar { width:176px; min-width:176px; background:var(--surface); border-right:1px solid var(--border); padding:12px 0; overflow-y:auto; }
+.step-btn {
+  display:flex; align-items:center; gap:10px;
+  padding:13px 14px; cursor:pointer;
+  border-left:3px solid transparent;
+  font-size:0.88rem; font-weight:600; color:var(--text-muted);
+  transition:all 0.15s; user-select:none;
+}
+.step-btn:hover { background:var(--accent-soft); color:var(--text); }
+.step-btn.active { border-left-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+.step-btn.done .step-dot { background:#48bb78; }
+.step-btn.locked { opacity:0.35; cursor:not-allowed; pointer-events:none; }
+.step-dot { width:8px; height:8px; border-radius:50%; background:var(--border); flex-shrink:0; transition:background 0.2s; }
+.step-btn.active .step-dot { background:var(--accent); }
+
+/* ── Main panel ── */
+.main-panel { flex:1; overflow-y:auto; background:var(--bg); }
+.step-section { display:none; padding:24px; }
+.step-section.active { display:block; }
+.step-title { font-size:1.15rem; font-weight:700; color:var(--accent); margin-bottom:18px; }
+
+/* ── Shared buttons ── */
+.btn-primary {
+  padding:10px 22px; background:var(--accent); color:#fff;
+  border:none; border-radius:10px; cursor:pointer; font-size:0.92rem; font-weight:700;
+}
+.btn-primary:hover { opacity:0.88; }
+.btn-secondary {
+  padding:9px 18px; border:2px solid var(--border); border-radius:10px;
+  background:var(--surface); color:var(--text); cursor:pointer; font-size:0.88rem; font-weight:600;
+}
+.btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
+.btn-excel {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 14px; border-radius:8px; border:none; cursor:pointer;
+  background:#1d6f42; color:#fff; font-size:0.86rem; font-weight:600; text-decoration:none;
+}
+.btn-excel:hover { background:#165a35; }
+
+/* ── Step 1: Toolbar ── */
+.toolbar { display:flex; justify-content:flex-end; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+
+/* Upload zone */
+.upload-zone {
+  border:2px dashed var(--border); border-radius:16px;
+  padding:64px 24px; text-align:center; cursor:pointer;
+  transition:all 0.2s; background:var(--surface); max-width:580px;
+}
+.upload-zone:hover, .upload-zone.drag { border-color:var(--accent); background:var(--accent-soft); }
+.upload-zone-icon { font-size:2.5rem; margin-bottom:10px; }
+.upload-zone-label { font-size:1rem; font-weight:600; margin-bottom:6px; }
+.upload-zone-hint { font-size:0.84rem; color:var(--text-muted); }
+
+/* Student table (direct input & review) */
+.stu-table-wrap { overflow-x:auto; }
+table.stu-table { border-collapse:collapse; min-width:340px; background:var(--surface); border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+.stu-table th { background:var(--accent); color:#fff; padding:9px 12px; text-align:left; font-size:0.84rem; white-space:nowrap; }
+.stu-table td { padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.stu-table tr:last-child td { border-bottom:none; }
+.stu-table td.num-col { color:var(--text-muted); font-size:0.8rem; width:32px; text-align:center; }
+.stu-input {
+  border:1px solid var(--border); border-radius:6px;
+  padding:5px 8px; width:130px; background:var(--bg); color:var(--text);
+  font-size:0.88rem; font-family:inherit;
+}
+.stu-input:focus { outline:none; border-color:var(--accent); }
+.gender-sel {
+  border:1px solid var(--border); border-radius:6px;
+  padding:5px 8px; background:var(--bg); color:var(--text);
+  font-size:0.88rem; cursor:pointer;
+}
+.btn-del { background:none; border:none; color:#e53e3e; cursor:pointer; font-size:1rem; padding:4px 6px; border-radius:4px; }
+.btn-del:hover { background:#ffe4e4; }
+.btn-add-row {
+  margin-top:10px; padding:8px 16px; border:2px dashed var(--border);
+  border-radius:8px; background:none; cursor:pointer; color:var(--text-muted);
+  font-size:0.88rem; font-family:inherit; transition:all 0.15s;
+}
+.btn-add-row:hover { border-color:var(--accent); color:var(--accent); }
+.step1-footer { margin-top:18px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.stu-summary { font-size:0.88rem; color:var(--text-muted); }
+
+/* ── Step 2: Desk grid ── */
+.step2-top { display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+.step2-top label { font-size:0.88rem; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; }
+.grid-sel {
+  padding:6px 10px; border:1px solid var(--border); border-radius:7px;
+  background:var(--bg); color:var(--text); font-size:0.88rem; cursor:pointer;
+}
+.info-pill { background:var(--accent-soft); color:var(--accent); padding:6px 14px; border-radius:8px; font-size:0.84rem; font-weight:700; }
+
+.desk-grid-wrap { display:inline-block; }
+.desk-grid {
+  display:grid; gap:5px; padding:12px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px 12px 0 0; border-bottom:none;
+}
+.desk-cell {
+  width:44px; height:44px; border:2px solid var(--border); border-radius:6px;
+  cursor:pointer; transition:all 0.12s; background:var(--bg);
+}
+.desk-cell:hover { border-color:var(--accent); background:var(--accent-soft); }
+.desk-cell.on { background:var(--accent); border-color:var(--accent); }
+.blackboard {
+  background:#2d5a27; color:#a8e09c; text-align:center;
+  padding:9px 16px; font-weight:700; font-size:0.88rem; letter-spacing:3px;
+  border-radius:0 0 10px 10px;
+}
+
+.step2-footer { margin-top:16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.match-ok { color:#2f855a; font-weight:600; font-size:0.87rem; }
+.match-warn { color:#c05621; font-weight:600; font-size:0.87rem; }
+
+/* ── Step 3: Seating result ── */
+.step3-toolbar { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+.seating-grid {
+  display:grid; gap:5px; padding:12px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px 12px 0 0; border-bottom:none;
+}
+.seat-cell {
+  width:72px; min-height:52px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.8rem; font-weight:600; text-align:center;
+  padding:5px 3px; word-break:break-all; line-height:1.3;
+}
+.seat-cell.occupied { background:var(--accent-soft); border:2px solid var(--accent); color:var(--text); }
+.seat-cell.empty-desk { background:var(--bg); border:2px dashed var(--border); color:var(--text-muted); font-weight:400; font-size:0.76rem; }
+.seat-cell.no-desk { background:transparent; border:none; }
+
+.overflow-box {
+  display:inline-block; margin-top:18px; max-width:640px;
+  background:#fff8e1; border:1px solid #fbbf24; border-radius:10px; padding:14px 16px;
+}
+.overflow-box h4 { margin:0 0 10px; font-size:0.9rem; color:#92400e; }
+.overflow-tags { display:flex; flex-wrap:wrap; gap:6px; }
+.overflow-tag { background:#fbbf24; color:#1a1a1a; padding:4px 10px; border-radius:999px; font-size:0.82rem; font-weight:600; }
+
+/* ── Mobile ── */
+@media (max-width:640px) {
+  .app-layout { flex-direction:column; height:auto; overflow:visible; }
+  .sidebar { width:100%; min-width:0; display:flex; border-right:none; border-bottom:1px solid var(--border); padding:6px 8px; overflow-x:auto; }
+  .step-btn { white-space:nowrap; border-left:none; border-bottom:3px solid transparent; padding:10px 12px; }
+  .step-btn.active { border-left-color:transparent; border-bottom-color:var(--accent); }
+  .main-panel { min-height:70vh; }
+  .desk-cell { width:34px; height:34px; }
+  .seat-cell { width:56px; min-height:44px; font-size:0.72rem; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="brand"><img src="logo.png" alt="" class="brand-logo">광수 Online 교무실 2세대</a>
+  <a href="calender.html">캘린더</a>
+  <a href="stu.html">학생 정보 조회</a>
+  <a href="phone.html">내선번호</a>
+  <a href="tools.html" class="active">행정업무 간소화 도구</a>
+  <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
+</nav>
+
+<div class="app-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="step-btn active" id="btn1" onclick="goStep(1)">
+      <span class="step-dot"></span>학생 이름 입력
+    </div>
+    <div class="step-btn locked" id="btn2" onclick="goStep(2)">
+      <span class="step-dot"></span>책상배치 선택
+    </div>
+    <div class="step-btn locked" id="btn3" onclick="goStep(3)">
+      <span class="step-dot"></span>자리 랜덤배치
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main-panel">
+
+    <!-- ════ STEP 1 ════ -->
+    <section id="step1" class="step-section active">
+      <div class="step-title">학생 이름 입력</div>
+
+      <div class="toolbar">
+        <button class="btn-excel" onclick="downloadTemplate()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          엑셀 다운로드
+        </button>
+        <label class="btn-excel" style="cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          엑셀 업로드
+          <input type="file" id="excelUpload" accept=".xlsx,.xls" style="display:none" onchange="handleFileInput(this)">
+        </label>
+        <button class="btn-secondary" onclick="showDirectInput()">✏️ 직접 입력하기</button>
+      </div>
+
+      <!-- Upload zone -->
+      <div id="uploadZone" class="upload-zone"
+           onclick="document.getElementById('excelUpload').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="event.preventDefault();this.classList.remove('drag');handleDrop(event)">
+        <div class="upload-zone-icon">📋</div>
+        <div class="upload-zone-label">엑셀 파일을 여기에 드래그하거나<br>클릭해서 업로드하세요</div>
+        <div class="upload-zone-hint" style="margin-top:8px">먼저 위의 <b>엑셀 다운로드</b>로 양식을 받아 작성 후 업로드하세요</div>
+      </div>
+
+      <!-- Direct input / editable table (hidden by default) -->
+      <div id="tableWrap" style="display:none;">
+        <div class="stu-table-wrap">
+          <table class="stu-table">
+            <thead><tr><th style="width:36px">#</th><th>이름</th><th>성별</th><th style="width:36px"></th></tr></thead>
+            <tbody id="stuRows"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row" onclick="addRow()">+ 행 추가</button>
+      </div>
+
+      <div id="step1Footer" style="display:none; margin-top:20px;">
+        <div class="stu-summary" id="stuSummary"></div>
+        <button class="btn-primary" onclick="confirmStep1()" style="margin-top:12px;">책상배치 선택하기 →</button>
+      </div>
+    </section>
+
+    <!-- ════ STEP 2 ════ -->
+    <section id="step2" class="step-section">
+      <div class="step-title">책상배치 선택</div>
+      <p style="font-size:0.87rem;color:var(--text-muted);margin-bottom:16px;">격자의 칸을 클릭해서 책상이 있는 자리를 선택하세요. (아래가 칠판 방향)</p>
+
+      <div class="step2-top">
+        <label>행 <select class="grid-sel" id="rowSel" onchange="resizeGrid()"></select></label>
+        <label>열 <select class="grid-sel" id="colSel" onchange="resizeGrid()"></select></label>
+        <div class="info-pill" id="step2Info">학생: 0명 | 선택 자리: 0개</div>
+      </div>
+
+      <div class="desk-grid-wrap">
+        <div id="deskGrid" class="desk-grid"></div>
+        <div class="blackboard">칠판</div>
+      </div>
+
+      <div class="step2-footer">
+        <span id="matchStatus"></span>
+        <button class="btn-primary" onclick="confirmStep2()">자리 저장 →</button>
+      </div>
+    </section>
+
+    <!-- ════ STEP 3 ════ -->
+    <section id="step3" class="step-section">
+      <div class="step-title">자리 랜덤배치</div>
+
+      <div class="step3-toolbar">
+        <button class="btn-primary" onclick="doRandomAssign()">🔀 랜덤 배치</button>
+        <button class="btn-secondary" id="reshuffleBtn" style="display:none" onclick="doRandomAssign()">↺ 다시 섞기</button>
+      </div>
+
+      <div id="seatingWrap" style="display:none;">
+        <div class="desk-grid-wrap">
+          <div id="seatingGrid" class="seating-grid"></div>
+          <div class="blackboard">칠판</div>
+        </div>
+        <div id="overflowBox" style="display:none;" class="overflow-box">
+          <h4>⚠️ 배치되지 못한 학생 (자리 부족)</h4>
+          <div class="overflow-tags" id="overflowTags"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ── STATE ─────────────────────────────────────────────────────
+let students   = [];        // [{name, gender}]
+let gridRows   = 8;
+let gridCols   = 8;
+let deskActive = [];        // deskActive[r][c] = boolean
+let step1Done  = false;
+let step2Done  = false;
+let rowCounter = 0;
+
+// ── HELPERS ───────────────────────────────────────────────────
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function initDesk() {
+  deskActive = [];
+  for (let r = 0; r < gridRows; r++) {
+    deskActive[r] = new Array(gridCols).fill(false);
+  }
+}
+
+function countDesks() {
+  let n = 0;
+  deskActive.forEach(row => row.forEach(v => { if (v) n++; }));
+  return n;
+}
+
+// ── STEP NAVIGATION ───────────────────────────────────────────
+let currentStep = 1;
+
+function goStep(n) {
+  if (n === 2 && !step1Done) return;
+  if (n === 3 && !step2Done) return;
+  currentStep = n;
+  [1, 2, 3].forEach(i => {
+    document.getElementById('step' + i).classList.toggle('active', i === n);
+    const btn = document.getElementById('btn' + i);
+    btn.classList.toggle('active', i === n);
+  });
+}
+
+// ── STEP 1: STUDENT INPUT ─────────────────────────────────────
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['이름', '성별'],
+    ['홍길동', '남'],
+    ['이영희', '여'],
+  ]);
+  ws['!cols'] = [{wch: 16}, {wch: 8}];
+  XLSX.utils.book_append_sheet(wb, ws, '학생명단');
+  XLSX.writeFile(wb, '학생명단_양식.xlsx');
+}
+
+function handleFileInput(input) {
+  if (input.files[0]) processExcelFile(input.files[0]);
+}
+function handleDrop(e) {
+  const file = e.dataTransfer.files[0];
+  if (file) processExcelFile(file);
+}
+
+function processExcelFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      let nameCol = 0, genderCol = 1, headerRow = 0;
+      for (let r = 0; r < Math.min(5, data.length); r++) {
+        const row = data[r].map(v => String(v).replace(/\s/g,''));
+        const ni = row.findIndex(v => v === '이름' || v === '성명');
+        const gi = row.findIndex(v => v === '성별');
+        if (ni >= 0) { nameCol = ni; headerRow = r; }
+        if (gi >= 0) genderCol = gi;
+        if (ni >= 0) break;
+      }
+
+      students = [];
+      for (let r = headerRow + 1; r < data.length; r++) {
+        const row = data[r];
+        const name = String(row[nameCol] || '').trim();
+        const gender = String(row[genderCol] || '').trim() || '미기재';
+        if (name) students.push({ name, gender });
+      }
+
+      if (!students.length) { alert('학생 데이터를 찾지 못했습니다. 이름 열을 확인해주세요.'); return; }
+      populateTable();
+    } catch (err) {
+      alert('파일 파싱 실패: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showDirectInput() {
+  document.getElementById('uploadZone').style.display = 'none';
+  document.getElementById('tableWrap').style.display = '';
+  if (document.getElementById('stuRows').children.length === 0) addRow();
+  updateStep1Footer();
+}
+
+function populateTable() {
+  document.getElementById('uploadZone').style.display = 'none';
+  document.getElementById('tableWrap').style.display = '';
+  document.getElementById('stuRows').innerHTML = '';
+  rowCounter = 0;
+  students.forEach(s => addRow(s.name, s.gender));
+  syncStudents();
+}
+
+function addRow(name = '', gender = '남') {
+  const id = 'sr' + (rowCounter++);
+  const tbody = document.getElementById('stuRows');
+  const tr = document.createElement('tr');
+  tr.id = id;
+  const num = tbody.children.length + 1;
+  tr.innerHTML =
+    `<td class="num-col">${num}</td>` +
+    `<td><input class="stu-input" type="text" placeholder="이름" value="${esc(name)}" oninput="syncStudents()"></td>` +
+    `<td><select class="gender-sel" onchange="syncStudents()">` +
+      `<option${gender==='남'?' selected':''}>남</option>` +
+      `<option${gender==='여'?' selected':''}>여</option>` +
+      `<option${gender==='미기재'?' selected':''}>미기재</option>` +
+    `</select></td>` +
+    `<td><button class="btn-del" onclick="delRow('${id}')" title="삭제">✕</button></td>`;
+  tbody.appendChild(tr);
+  syncStudents();
+}
+
+function delRow(id) {
+  document.getElementById(id)?.remove();
+  renumberRows();
+  syncStudents();
+}
+
+function renumberRows() {
+  Array.from(document.querySelectorAll('#stuRows tr')).forEach((tr, i) => {
+    tr.cells[0].textContent = i + 1;
+  });
+}
+
+function syncStudents() {
+  students = [];
+  document.querySelectorAll('#stuRows tr').forEach(tr => {
+    const name   = (tr.querySelector('input')?.value || '').trim();
+    const gender = tr.querySelector('select')?.value || '미기재';
+    if (name) students.push({ name, gender });
+  });
+  updateStep1Footer();
+}
+
+function updateStep1Footer() {
+  const footer  = document.getElementById('step1Footer');
+  const summary = document.getElementById('stuSummary');
+  if (students.length > 0) {
+    footer.style.display = '';
+    summary.textContent = `총 ${students.length}명 입력됨`;
+  } else {
+    footer.style.display = 'none';
+  }
+}
+
+function confirmStep1() {
+  syncStudents();
+  if (!students.length) { alert('학생을 1명 이상 입력해주세요.'); return; }
+  step1Done = true;
+  const btn2 = document.getElementById('btn2');
+  btn2.classList.remove('locked');
+  btn2.classList.add('done');
+  initDesk();
+  renderDeskGrid();
+  updateMatchStatus();
+  goStep(2);
+}
+
+// ── STEP 2: DESK LAYOUT ───────────────────────────────────────
+function initSelects() {
+  ['rowSel', 'colSel'].forEach(id => {
+    const sel = document.getElementById(id);
+    for (let n = 3; n <= 15; n++) {
+      const opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n;
+      if (n === 8) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  });
+}
+initSelects();
+initDesk();
+
+function resizeGrid() {
+  gridRows = +document.getElementById('rowSel').value;
+  gridCols = +document.getElementById('colSel').value;
+  initDesk();
+  renderDeskGrid();
+}
+
+function renderDeskGrid() {
+  const grid = document.getElementById('deskGrid');
+  grid.style.gridTemplateColumns = `repeat(${gridCols}, 44px)`;
+  grid.innerHTML = '';
+  for (let r = 0; r < gridRows; r++) {
+    for (let c = 0; c < gridCols; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'desk-cell' + (deskActive[r][c] ? ' on' : '');
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      cell.addEventListener('click', function () {
+        const rr = +this.dataset.r, cc = +this.dataset.c;
+        deskActive[rr][cc] = !deskActive[rr][cc];
+        this.classList.toggle('on', deskActive[rr][cc]);
+        updateMatchStatus();
+      });
+      grid.appendChild(cell);
+    }
+  }
+  updateMatchStatus();
+}
+
+function updateMatchStatus() {
+  const d = countDesks(), s = students.length;
+  document.getElementById('step2Info').textContent = `학생: ${s}명 | 선택 자리: ${d}개`;
+  const el = document.getElementById('matchStatus');
+  if (d === 0) { el.textContent = ''; return; }
+  if (d === s) el.innerHTML = '<span class="match-ok">✓ 학생 수와 자리 수가 일치합니다.</span>';
+  else if (d < s) el.innerHTML = `<span class="match-warn">⚠ 자리(${d})가 학생(${s})보다 적습니다. ${s-d}명이 누락될 수 있어요.</span>`;
+  else el.innerHTML = `<span class="match-warn">⚠ 자리(${d})가 학생(${s})보다 많습니다. ${d-s}개 빈자리가 생겨요.</span>`;
+}
+
+function confirmStep2() {
+  const d = countDesks(), s = students.length;
+  if (d === 0) { alert('자리를 1개 이상 선택해주세요.'); return; }
+  if (d !== s) {
+    const msg = d < s
+      ? `자리(${d})가 학생(${s})보다 적어 ${s-d}명이 배치되지 않습니다.\n그래도 진행할까요?`
+      : `자리(${d})가 학생(${s})보다 많아 ${d-s}개의 빈자리가 생깁니다.\n그래도 진행할까요?`;
+    if (!confirm(msg)) return;
+  }
+  step2Done = true;
+  const btn3 = document.getElementById('btn3');
+  btn3.classList.remove('locked');
+  btn3.classList.add('done');
+  goStep(3);
+}
+
+// ── STEP 3: RANDOM SEATING ────────────────────────────────────
+function doRandomAssign() {
+  // Collect active seat positions
+  const seats = [];
+  for (let r = 0; r < gridRows; r++)
+    for (let c = 0; c < gridCols; c++)
+      if (deskActive[r][c]) seats.push([r, c]);
+
+  // Shuffle students (Fisher-Yates)
+  const shuffled = [...students];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  // Map seats → students
+  const seatingMap = {};
+  const overflow   = [];
+  shuffled.forEach((stu, i) => {
+    if (i < seats.length) {
+      const [r, c] = seats[i];
+      seatingMap[`${r},${c}`] = stu.name;
+    } else {
+      overflow.push(stu.name);
+    }
+  });
+
+  // Render seating grid
+  const grid = document.getElementById('seatingGrid');
+  grid.style.gridTemplateColumns = `repeat(${gridCols}, 72px)`;
+  grid.innerHTML = '';
+  for (let r = 0; r < gridRows; r++) {
+    for (let c = 0; c < gridCols; c++) {
+      const cell = document.createElement('div');
+      if (!deskActive[r][c]) {
+        cell.className = 'seat-cell no-desk';
+      } else {
+        const name = seatingMap[`${r},${c}`];
+        if (name) {
+          cell.className = 'seat-cell occupied';
+          cell.textContent = name;
+        } else {
+          cell.className = 'seat-cell empty-desk';
+          cell.textContent = '빈자리';
+        }
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  // Overflow students
+  const box  = document.getElementById('overflowBox');
+  const tags = document.getElementById('overflowTags');
+  if (overflow.length) {
+    box.style.display = '';
+    tags.innerHTML = overflow.map(n => `<span class="overflow-tag">${esc(n)}</span>`).join('');
+  } else {
+    box.style.display = 'none';
+  }
+
+  document.getElementById('seatingWrap').style.display = '';
+  document.getElementById('reshuffleBtn').style.display = '';
+}
+</script>
+</body>
+</html>
