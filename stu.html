@@ -110,7 +110,7 @@ body {
 }
 .edit-mode-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .edit-mode-btn {
-  padding: 8px 16px; border-radius: 999px; background: var(--accent); color: #fff;
+  padding: 8px 16px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff);
   font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
 }
 #editModeBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -136,7 +136,7 @@ body {
 .result-count { font-size: 0.82rem; color: var(--text-muted); margin: 4px 2px 10px; }
 table.stu-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.85rem; }
 table.stu-table th, table.stu-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
-table.stu-table th { background: var(--accent); color: #fff; font-size: 0.78rem; position: sticky; top: 0; }
+table.stu-table th { background: var(--accent); color: var(--on-accent, #fff); font-size: 0.78rem; position: sticky; top: 0; }
 table.stu-table tr:last-child td { border-bottom: none; }
 .cell-empty { color: #bbb; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
