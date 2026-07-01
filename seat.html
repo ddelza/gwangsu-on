@@ -9,34 +9,27 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #f5f5f7; --surface: #ffffff; --text: #1d1d1f; --text-muted: #6e6e73;
-  --border: rgba(0,0,0,0.08); --nav-bg: #000000; --nav-text: rgba(255,255,255,0.85); --accent: #0066cc; --accent-soft: rgba(0,102,204,0.08);
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --nav-bg: #1a3d7c; --nav-text: #d8e3ff; --accent: #1a3d7c; --accent-soft: #e6ebf5;
 }
-:root[data-theme="teal"] { --bg:#f0f7f6; --surface:#ffffff; --text:#1d1d1f; --text-muted:#4a7a74; --border:rgba(0,0,0,0.08); --nav-bg:#00695c; --nav-text:rgba(255,255,255,0.9); --accent:#00695c; --accent-soft:rgba(0,105,92,0.08); }
-:root[data-theme="coral"] { --bg:#fdf5f3; --surface:#ffffff; --text:#1d1d1f; --text-muted:#9a5a4a; --border:rgba(0,0,0,0.08); --nav-bg:#c0392b; --nav-text:rgba(255,255,255,0.9); --accent:#c0392b; --accent-soft:rgba(192,57,43,0.08); }
-:root[data-theme="lavender"] { --bg:#f5f4fb; --surface:#ffffff; --text:#1d1d1f; --text-muted:#6a5a9a; --border:rgba(0,0,0,0.08); --nav-bg:#5b47b0; --nav-text:rgba(255,255,255,0.9); --accent:#5b47b0; --accent-soft:rgba(91,71,176,0.08); }
-:root[data-theme="forest"] { --bg:#f2f7f2; --surface:#ffffff; --text:#1d1d1f; --text-muted:#4a7a5a; --border:rgba(0,0,0,0.08); --nav-bg:#2d6a3f; --nav-text:rgba(255,255,255,0.9); --accent:#2d6a3f; --accent-soft:rgba(45,106,63,0.08); }
-:root[data-theme="slate"] { --bg:#f4f4f6; --surface:#ffffff; --text:#1d1d1f; --text-muted:#5a6070; --border:rgba(0,0,0,0.08); --nav-bg:#3a4252; --nav-text:rgba(255,255,255,0.9); --accent:#3a4252; --accent-soft:rgba(58,66,82,0.08); }
-:root[data-theme="dark-navy"] { --bg:#1c2029; --surface:#232a38; --text:#e8eaed; --text-muted:#8a96aa; --border:rgba(255,255,255,0.08); --nav-bg:#0d1117; --nav-text:rgba(255,255,255,0.85); --accent:#4d9cff; --accent-soft:rgba(77,156,255,0.12); }
-:root[data-theme="dark-forest"] { --bg:#1a2220; --surface:#222e2a; --text:#e4ece6; --text-muted:#7a9a84; --border:rgba(255,255,255,0.08); --nav-bg:#0f1a14; --nav-text:rgba(255,255,255,0.85); --accent:#4caf78; --accent-soft:rgba(76,175,120,0.12); }
-:root[data-theme="dark-plum"] { --bg:#1e1a26; --surface:#26212e; --text:#ece8f0; --text-muted:#9a88b0; --border:rgba(255,255,255,0.08); --nav-bg:#130f1a; --nav-text:rgba(255,255,255,0.85); --accent:#b07ee0; --accent-soft:rgba(176,126,224,0.12); }
+:root[data-theme="teal"] { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"] { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#9aa3b2; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#92a89c; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#ab9fb4; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
 
 body { font-family: -apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; background:var(--bg); color:var(--text); }
 
 /* ── Nav ── */
-.topnav {
-  display: flex; align-items: center; gap: 0;
-  background: var(--nav-bg); padding: 0 22px; height: 44px;
-  position: sticky; top: 0; z-index: 100;
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
-}
-.topnav .brand { display: inline-flex; align-items: center; gap: 7px; color: var(--nav-text); font-weight: 600; font-size: 15px; letter-spacing: -0.3px; margin-right: 8px; white-space: nowrap; text-decoration: none; opacity: 1; }
-.brand-logo { height: 22px; width: auto; display: block; }
-.gen1-link { margin-left: auto; }
-.topnav a { color: var(--nav-text); text-decoration: none; padding: 0 10px; font-size: 12px; font-weight: 400; letter-spacing: -0.12px; line-height: 44px; opacity: 0.85; white-space: nowrap; border-radius: 0; }
-.topnav a:hover { opacity: 1; background: none; color: var(--nav-text); }
-.topnav a.active { opacity: 1; background: none; color: var(--nav-text); font-weight: 600; }
+.topnav { display:flex; flex-wrap:wrap; align-items:center; gap:4px; background:var(--nav-bg); padding:12px 16px; }
+.topnav .brand { display:inline-flex; align-items:center; gap:8px; color:#fff; font-weight:700; font-size:1.05rem; margin-right:16px; white-space:nowrap; text-decoration:none; }
+.brand-logo { height:28px; width:auto; display:block; }
+.gen1-link { margin-left:auto; font-size:0.8rem; opacity:0.85; }
+.topnav a { color:var(--nav-text); text-decoration:none; padding:8px 12px; border-radius:8px; font-size:0.92rem; }
+.topnav a:hover, .topnav a.active { background:rgba(255,255,255,0.15); color:#fff; }
 
 /* ── App shell ── */
 .app-layout { display:flex; height:calc(100vh - 52px); overflow:hidden; }
@@ -195,7 +188,7 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
 <body>
 
 <nav class="topnav">
-  <a href="index.html" class="brand"><img src="logo.png" alt="" class="brand-logo">광수 Online 교무실 2세대</a>
+  <a href="settings.html" class="brand-logo-link"><img src="logo.png" alt="" class="brand-logo"></a><a href="index.html" class="brand">광수 Online 교무실 2세대</a>
   <a href="calender.html">캘린더</a>
   <a href="stu.html">학생 정보 조회</a>
   <a href="phone.html">내선번호</a>
