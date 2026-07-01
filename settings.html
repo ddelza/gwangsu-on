@@ -7,7 +7,7 @@
 <title>설정 — 광수 Online 교무실</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500&family=Nanum+Myeongjo&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo&family=Noto+Sans+KR:wght@400;600;700&family=Noto+Serif+KR:wght@400;500;700&family=Sunflower:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; }
 
@@ -29,6 +29,12 @@
 :root[data-theme="notion"] { --bg:#ffffff; --surface:#f6f5f4; --text:#1a1a1a; --text-muted:#787671; --border:#e5e3df; --nav-bg:#0a1530; --nav-text:#ffffff; --accent:#5645d4; --accent-soft:#ede9fa; --font-body:"Noto Sans KR","Segoe UI",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 :root[data-theme="figma"] { --bg:#ffffff; --surface:#f7f7f5; --text:#000000; --text-muted:#787878; --border:#e6e6e6; --nav-bg:#000000; --nav-text:#ffffff; --accent:#6e5ff3; --accent-soft:#dceeb1; --font-body:"IBM Plex Sans KR","Helvetica Neue",Arial,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 :root[data-theme="starbucks"] { --bg:#f2f0eb; --surface:#ffffff; --text:#1f1f1d; --text-muted:#5a7a6a; --border:#c8d8cc; --nav-bg:#1e3932; --nav-text:#ffffff; --accent:#00754a; --accent-soft:#d4e9e2; --font-body:"Gowun Dodum","Trebuchet MS","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="lamborghini"] { --bg:#000000; --surface:#202020; --text:#ffffff; --text-muted:#7d7d7d; --border:#303030; --nav-bg:#000000; --nav-text:#ffffff; --accent:#ffc000; --accent-soft:rgba(255,192,0,0.12); --font-body:"Black Han Sans",Impact,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="ferrari"] { --bg:#181818; --surface:#303030; --text:#ffffff; --text-muted:#666666; --border:#303030; --nav-bg:#181818; --nav-text:#ffffff; --accent:#da291c; --accent-soft:rgba(218,41,28,0.15); --font-body:"Noto Serif KR",Georgia,"Times New Roman","Batang",serif; }
+:root[data-theme="bugatti"] { --bg:#000000; --surface:#141414; --text:#ffffff; --text-muted:#999999; --border:#262626; --nav-bg:#000000; --nav-text:#cccccc; --accent:#c3d9f3; --accent-soft:rgba(195,217,243,0.08); --font-body:"Gowun Batang",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="spotify"] { --bg:#121212; --surface:#181818; --text:#ffffff; --text-muted:#b3b3b3; --border:#4d4d4d; --nav-bg:#000000; --nav-text:#ffffff; --accent:#1ed760; --accent-soft:rgba(30,215,96,0.12); --font-body:"Nanum Gothic","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="nvidia"] { --bg:#ffffff; --surface:#f7f7f7; --text:#1a1a1a; --text-muted:#757575; --border:#cccccc; --nav-bg:#000000; --nav-text:#ffffff; --accent:#76b900; --accent-soft:rgba(118,185,0,0.1); --font-body:"Do Hyeon","Roboto","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="airbnb"] { --bg:#ffffff; --surface:#f7f7f7; --text:#222222; --text-muted:#6a6a6a; --border:#dddddd; --nav-bg:#222222; --nav-text:#ffffff; --accent:#ff385c; --accent-soft:rgba(255,56,92,0.08); --font-body:"Sunflower","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 
 body {
   margin: 0;
@@ -120,6 +126,12 @@ const THEMES = [
   { key: 'notion',       name: 'Notion',       group: 'brand' },
   { key: 'figma',        name: 'Figma',        group: 'brand' },
   { key: 'starbucks',    name: 'Starbucks',    group: 'brand' },
+  { key: 'lamborghini',  name: 'Lamborghini',  group: 'brand' },
+  { key: 'ferrari',      name: 'Ferrari',      group: 'brand' },
+  { key: 'bugatti',      name: 'Bugatti',      group: 'brand' },
+  { key: 'spotify',      name: 'Spotify',      group: 'brand' },
+  { key: 'nvidia',       name: 'NVIDIA',       group: 'brand' },
+  { key: 'airbnb',       name: 'Airbnb',       group: 'brand' },
 ];
 
 function currentTheme() {
