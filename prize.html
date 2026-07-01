@@ -187,118 +187,101 @@ function esc(s) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── NICE Excel 파서 ──────────────────────────────────────────────
+// ── NICE Excel 파서 (셀 직접 접근 방식) ─────────────────────────
+// sheet_to_json 대신 encode_cell로 직접 접근 — !ref 기준 인덱스 오프셋 문제 회피
+function getCv(ws, r, c) {
+  const cell = ws[XLSX.utils.encode_cell({ r, c })];
+  return (cell != null && cell.v != null) ? cell.v : null;
+}
+
 function parseNice(workbook) {
   const ws = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+  if (!ws || !ws['!ref']) return [];
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  const maxRow = range.e.r;
+  const maxCol = range.e.c;
+
+  // 기본 열 인덱스 (0-based 절대: A=0, B=1, C=2, D=3, E=4, F=5, L=11, N=13, O=14, S=18)
+  // Python/openpyxl 분석 결과 기반
+  let CG = 1, CS = 2, CN = 3, CE = 4; // grade, sem, num, name
+  let CA = 5, CL = 11, CD = 13, CH = 14, CT = 18; // award, level, date, host, target
 
   let classGrade = null, classCls = null;
 
-  // 열 인덱스 (0-based)
-  let colAwardGrade = -1, colAwardSem = -1;
-  let colNum = -1, colName = -1;
-  let colAwardName = -1, colLevel = -1, colDate = -1, colHost = -1, colTarget = -1;
+  // 1단계: 처음 30행에서 학급 헤더 탐지 + 열 헤더 확인
+  for (let r = 0; r <= Math.min(29, maxRow); r++) {
+    // 각 셀 값을 공백 제거 후 문자열로
+    const rowVals = [];
+    for (let c = 0; c <= maxCol; c++) {
+      rowVals.push({ c, raw: getCv(ws, r, c), ns: String(getCv(ws, r, c) || '').replace(/\s+/g, '') });
+    }
 
-  // 1단계: 학급 헤더 + 열 헤더 탐지
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row) continue;
-
-    // 학급 헤더 ("X학년 Y반")
-    for (let j = 0; j < row.length; j++) {
-      const v = String(row[j] == null ? '' : row[j]);
+    // "X학년 Y반" 패턴 탐지
+    for (const { raw } of rowVals) {
+      const v = String(raw || '');
       const m = v.match(/(\d+)\s*학년\s*(\d+)\s*반/);
       if (m) { classGrade = parseInt(m[1]); classCls = parseInt(m[2]); }
     }
 
-    // 열 헤더 행: "번호"와 "이름"과 "수상" 이 모두 있는 행
-    const strs = row.map(v => String(v == null ? '' : v));
-    const hasNum  = strs.some(s => s.includes('번호'));
-    const hasName = strs.some(s => s.includes('이름') || s.includes('  '));
-    const hasAward = strs.some(s => s.includes('수상') || s.includes('상장'));
-    if (hasNum && hasName && hasAward) {
-      for (let j = 0; j < strs.length; j++) {
-        const s = strs[j];
-        if (s.includes('학년') && colAwardGrade === -1) { colAwardGrade = j; colAwardSem = j + 1; }
-        if (s.includes('번호') && colNum === -1) colNum = j;
-        if ((s.includes('이름') || (s.trim() && s.includes('  '))) && colName === -1 && j > colNum) colName = j;
-        if ((s.includes('수상명') || (s.includes('수상') && !s.includes('연월일') && !s.includes('기관'))) && colAwardName === -1) colAwardName = j;
-        if ((s.includes('등급') || s.includes('위')) && !s.includes('학년') && colLevel === -1) colLevel = j;
-        if ((s.includes('연월일') || s.includes('수상일')) && colDate === -1) colDate = j;
-        if ((s.includes('기관') || s.includes('주최') || s.includes('수여')) && colHost === -1) colHost = j;
-        if ((s.includes('참가대상') || s.includes('참가인원')) && colTarget === -1) colTarget = j;
-      }
+    // 열 헤더 행: 공백 제거 후 "번호"+"수상" 포함 여부
+    const nss = rowVals.map(x => x.ns);
+    if (nss.some(s => s.includes('번호')) && nss.some(s => s.includes('수상'))) {
+      rowVals.forEach(({ c, ns: s }) => {
+        if (s.includes('학년') && s.includes('학교') && CG === 1) { CG = c; CS = c + 1; }
+        if (s.includes('번호') && CN === 3) CN = c;
+        if (s.includes('이름') && CE === 4 && c > CN) CE = c;
+        if (s.includes('수상명') && CA === 5) CA = c;
+        if ((s.includes('등급') || (s.includes('위') && s.length < 6)) && CL === 11) CL = c;
+        if (s.includes('연월일') && CD === 13) CD = c;
+        if ((s.includes('참가대상') || s.includes('참가인원')) && CT === 18) CT = c;
+        if ((s.includes('기관') || s.includes('주최')) && CH === 14) CH = c;
+      });
     }
   }
 
-  // 열 인덱스 폴백 (파일 구조가 표준인 경우)
-  if (colAwardGrade === -1) colAwardGrade = 1;
-  if (colAwardSem === -1)   colAwardSem   = 2;
-  if (colNum === -1)        colNum        = 3;
-  if (colName === -1)       colName       = 4;
-  if (colAwardName === -1)  colAwardName  = 5;
-  if (colLevel === -1)      colLevel      = 11;
-  if (colDate === -1)       colDate       = 13;
-  if (colHost === -1)       colHost       = 14;
-  if (colTarget === -1)     colTarget     = 18;
-
   // 2단계: 학생 데이터 파싱
   const students = {};
-  const orderMap = {};
   let currentNum = null;
-  let insertOrder = 0;
-  // 학년/학기는 변경될 때만 값이 있고 나머지는 null인 희소 인코딩 → carry-forward
-  let curAwardGrade = null, curAwardSem = null;
+  let curGrade = null, curSem = null;
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row) continue;
+  for (let r = 0; r <= maxRow; r++) {
+    // 열 헤더 행 스킵: CG 위치가 문자열
+    const gradeCell = getCv(ws, r, CG);
+    if (typeof gradeCell === 'string') continue;
 
-    // 열 헤더 행 스킵: colAwardGrade 위치가 문자열인 경우
-    if (typeof row[colAwardGrade] === 'string') continue;
-    // 페이지 마커 행 스킵: "숫자 / 숫자" 패턴
-    if (typeof row[7] === 'number' && row[8] === '/') continue;
-    if (typeof row[colNum + 4] === 'number' && row[colNum + 5] === '/') continue;
+    // 페이지 마커 스킵: H열 숫자 + I열 '/'
+    const h7 = getCv(ws, r, 7), h8 = getCv(ws, r, 8);
+    if (typeof h7 === 'number' && h8 === '/') continue;
 
-    const awardName = row[colAwardName];
+    const awardName = getCv(ws, r, CA);
     if (!awardName) continue;
 
-    const numVal = row[colNum];
-    if (numVal !== null && numVal !== undefined && typeof numVal === 'number') {
-      currentNum = Math.round(numVal);
-    }
+    // 번호 carry: 새 학생이면 업데이트
+    const numVal = getCv(ws, r, CN);
+    if (typeof numVal === 'number') currentNum = Math.round(numVal);
     if (currentNum === null) continue;
 
     if (!students[currentNum]) {
       students[currentNum] = {
-        grade: classGrade,
-        cls: classCls,
-        num: currentNum,
-        name: row[colName] || '',
-        awards: []
+        grade: classGrade, cls: classCls, num: currentNum,
+        name: String(getCv(ws, r, CE) || ''), awards: []
       };
-      orderMap[currentNum] = insertOrder++;
     }
+    const nameNow = getCv(ws, r, CE);
+    if (!students[currentNum].name && nameNow) students[currentNum].name = String(nameNow);
 
-    // 이름이 늦게 나타날 수 있으므로 처음 나오면 저장
-    if (!students[currentNum].name && row[colName]) {
-      students[currentNum].name = row[colName];
-    }
-
-    // 학년/학기 carry-forward: 값이 있을 때만 갱신
-    const ag = row[colAwardGrade];
-    const as_ = row[colAwardSem];
-    if (ag !== null && ag !== undefined && typeof ag === 'number') curAwardGrade = Math.round(ag);
-    if (as_ !== null && as_ !== undefined && typeof as_ === 'number') curAwardSem = Math.round(as_);
+    // 학년/학기 carry-forward
+    if (typeof gradeCell === 'number') curGrade = Math.round(gradeCell);
+    const semCell = getCv(ws, r, CS);
+    if (typeof semCell === 'number') curSem = Math.round(semCell);
 
     students[currentNum].awards.push({
-      awardGrade: curAwardGrade,
-      awardSem:   curAwardSem,
+      awardGrade: curGrade, awardSem: curSem,
       name: String(awardName),
-      level: row[colLevel] ? String(row[colLevel]) : '',
-      date: row[colDate] ? String(row[colDate]) : '',
-      host: row[colHost] ? String(row[colHost]) : '',
-      target: row[colTarget] ? String(row[colTarget]) : ''
+      level:  String(getCv(ws, r, CL) || ''),
+      date:   String(getCv(ws, r, CD) || ''),
+      host:   String(getCv(ws, r, CH) || ''),
+      target: String(getCv(ws, r, CT) || '')
     });
   }
 
