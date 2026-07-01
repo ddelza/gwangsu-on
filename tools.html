@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>행정업무 간소화 도구 — 광수 Online 교무실</title>
+<style>
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --nav-bg: #1a3d7c; --nav-text: #d8e3ff; --accent: #1a3d7c; --accent-soft: #e6ebf5;
+}
+:root[data-theme="teal"] { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"] { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#9aa3b2; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#92a89c; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#ab9fb4; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.topnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  background: var(--nav-bg); padding: 12px 16px;
+}
+.topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
+.topnav .brand { display: inline-flex; align-items: center; gap: 8px; }
+.brand-logo { height: 28px; width: auto; display: block; }
+.gen1-link { margin-left: auto; font-size: 0.8rem; opacity: 0.85; }
+.topnav a { color: var(--nav-text); text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
+.topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
+
+.page-header {
+  max-width: 960px; margin: 0 auto; padding: 24px 16px 4px;
+}
+.page-header h1 {
+  font-size: 1.25rem; font-weight: 700; margin: 0 0 4px;
+  color: var(--accent);
+}
+.page-header p { font-size: 0.88rem; color: var(--text-muted); margin: 0; }
+
+.search-wrap { padding: 14px 16px 8px; max-width: 960px; margin: 0 auto; }
+.search-box {
+  width: 100%; padding: 13px 16px; font-size: 1rem;
+  border: 2px solid var(--border); border-radius: 12px; outline: none;
+  background: var(--surface); color: var(--text);
+}
+.search-box:focus { border-color: var(--accent); }
+
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;
+  max-width: 960px; margin: 0 auto; padding: 8px 16px 40px;
+}
+.card {
+  display: block; background: var(--surface); border-radius: 14px; padding: 18px 16px;
+  text-decoration: none; color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: box-shadow 0.15s, transform 0.15s;
+  position: relative;
+}
+.card:hover { box-shadow: 0 5px 16px rgba(0,0,0,0.13); transform: translateY(-2px); }
+.card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.card-icon { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; object-fit: contain; }
+.card-badge {
+  font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.card .title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+.card .desc { font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; }
+.card .arrow {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  font-size: 1rem; color: var(--border);
+}
+.empty-state { text-align: center; color: var(--text-muted); padding: 60px 0; grid-column: 1/-1; }
+
+@media (max-width: 600px) {
+  .topnav { padding: 10px 12px; }
+  .topnav .brand { width: 100%; margin-bottom: 6px; }
+  .card-grid { grid-template-columns: 1fr; gap: 10px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="brand"><img src="logo.png" alt="" class="brand-logo">광수 Online 교무실 2세대</a>
+  <a href="calender.html">캘린더</a>
+  <a href="stu.html">학생 정보 조회</a>
+  <a href="phone.html">내선번호</a>
+  <a href="tools.html" class="active">행정업무 간소화 도구</a>
+  <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
+</nav>
+
+<div class="page-header">
+  <h1>행정업무 간소화 도구</h1>
+  <p>자주 쓰는 행정 계산·조회 도구 모음입니다.</p>
+</div>
+
+<div class="search-wrap">
+  <input id="searchBox" class="search-box" type="text" placeholder="도구 이름이나 기능을 검색하세요">
+</div>
+
+<div id="cardGrid" class="card-grid">
+  <div class="empty-state">불러오는 중…</div>
+</div>
+
+<script>
+// ─── 하드코딩된 도구 목록 (색인 시트와 별개로 유지) ────────────
+// 새 도구 추가 시 이 배열에 항목을 추가하세요.
+const TOOLS = [
+  {
+    title: '중학생 상점 계산기 (2026ver)',
+    desc: 'NEIS 상장 조회 엑셀 업로드 → 학급별 학기별 수상 내역 및 상점(최대 2점) 자동 집계',
+    url: 'prize.html',
+    keywords: '상점 상장 수상 NEIS 나이스 학생부 생활기록부'
+  }
+];
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function iconFor(url) {
+  const u = String(url || '');
+  if (u.includes('docs.google.com/presentation'))
+    return '<svg class="card-icon" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#f9ab00"/><rect x="5" y="6" width="14" height="9" rx="1" fill="#fff"/><rect x="9" y="17" width="6" height="2" rx="1" fill="#fff"/></svg>';
+  if (u.includes('docs.google.com/spreadsheets'))
+    return '<svg class="card-icon" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0f9d58"/><rect x="5" y="5" width="14" height="14" rx="1" fill="#fff"/><rect x="5" y="9.3" width="14" height="1.4" fill="#0f9d58"/><rect x="5" y="13.3" width="14" height="1.4" fill="#0f9d58"/><rect x="10.3" y="5" width="1.4" height="14" fill="#0f9d58"/></svg>';
+  return '<img class="card-icon" src="logo.png" alt="">';
+}
+
+function fuzzyMatch(item, q) {
+  if (!q) return true;
+  const qn = q.toLowerCase().replace(/\s+/g,'');
+  const text = (item.title + ' ' + item.desc + ' ' + (item.keywords||'')).toLowerCase();
+  return text.includes(q.toLowerCase()) || text.replace(/\s+/g,'').includes(qn);
+}
+
+function render(q) {
+  const filtered = TOOLS.filter(t => fuzzyMatch(t, q));
+  const grid = document.getElementById('cardGrid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(t => `
+    <a class="card" href="${esc(t.url)}">
+      <div class="card-head">${iconFor(t.url)}<span class="card-badge">도구</span></div>
+      <div class="title">${esc(t.title)}</div>
+      <div class="desc">${esc(t.desc)}</div>
+      <span class="arrow">›</span>
+    </a>
+  `).join('');
+}
+
+let timer = null;
+document.getElementById('searchBox').addEventListener('input', function() {
+  clearTimeout(timer);
+  timer = setTimeout(() => render(this.value.trim()), 150);
+});
+
+render('');
+</script>
+</body>
+</html>
