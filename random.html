@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>랜덤 지목 — 광수 Online 교무실</title>
+<script>
+(function(){
+  var F={'claude':'Nanum+Myeongjo','notion':'Noto+Sans+KR:wght@400;600;700','figma':'IBM+Plex+Sans+KR:wght@400;500','starbucks':'Gowun+Dodum','lamborghini':'Gothic+A1:wght@700','ferrari':'Noto+Serif+KR:wght@400;500;700','bugatti':'Gowun+Batang','spotify':'Nanum+Gothic:wght@400;700','nvidia':'Do+Hyeon','airbnb':'Sunflower:wght@300;500;700'};
+  try{var t=localStorage.getItem('gwangsu_theme')||'';if(F[t]){var p=document.createElement('link');p.rel='preconnect';p.href='https://fonts.googleapis.com';document.head.appendChild(p);var q=document.createElement('link');q.rel='preconnect';q.href='https://fonts.gstatic.com';q.crossOrigin='';document.head.appendChild(q);var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+F[t]+'&display=swap';document.head.appendChild(l);}}catch(e){}
+})();
+</script>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#f5f6f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#888888; --border:#d0d6e2; --nav-bg:#1a3d7c; --nav-text:#d8e3ff; --accent:#1a3d7c; --accent-soft:#e6ebf5; --font-body:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
+:root[data-theme="teal"]        { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"]       { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"]    { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"]      { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"]       { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"]   { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#adb8c8; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#a8beaa; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"]   { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#bdb3c8; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+:root[data-theme="apple"]       { --bg:#f5f5f7; --surface:#ffffff; --text:#1d1d1f; --text-muted:#6e6e73; --border:#d2d2d7; --nav-bg:#000000; --nav-text:rgba(255,255,255,0.85); --accent:#0066cc; --accent-soft:rgba(0,102,204,0.1); --font-body:-apple-system,"SF Pro Display","SF Pro Text",BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="claude"]      { --bg:#faf9f5; --surface:#f0e9df; --text:#141413; --text-muted:#8a7a65; --border:#ddd4c4; --nav-bg:#181715; --nav-text:#faf9f5; --accent:#cc785c; --accent-soft:#f5ede3; --font-body:"Nanum Myeongjo",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="notion"]      { --bg:#ffffff; --surface:#f6f5f4; --text:#1a1a1a; --text-muted:#787671; --border:#e5e3df; --nav-bg:#0a1530; --nav-text:#ffffff; --accent:#5645d4; --accent-soft:#ede9fa; --font-body:"Noto Sans KR","Segoe UI",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="figma"]       { --bg:#ffffff; --surface:#f7f7f5; --text:#000000; --text-muted:#787878; --border:#e6e6e6; --nav-bg:#000000; --nav-text:#ffffff; --accent:#6e5ff3; --accent-soft:#dceeb1; --font-body:"IBM Plex Sans KR","Helvetica Neue",Arial,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="starbucks"]   { --bg:#f2f0eb; --surface:#ffffff; --text:#1f1f1d; --text-muted:#5a7a6a; --border:#c8d8cc; --nav-bg:#1e3932; --nav-text:#ffffff; --accent:#00754a; --accent-soft:#d4e9e2; --font-body:"Gowun Dodum","Trebuchet MS","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="lamborghini"] { --bg:#000000; --surface:#202020; --text:#ffffff; --text-muted:#7d7d7d; --border:#2a2a2a; --nav-bg:#000000; --nav-text:#ffffff; --accent:#ffc000; --accent-soft:rgba(255,192,0,0.12); --on-accent:#000000; --font-body:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="ferrari"]     { --bg:#181818; --surface:#2c2c2c; --text:#ffffff; --text-muted:#a0a0a0; --border:#3d3d3d; --nav-bg:#181818; --nav-text:#ffffff; --accent:#da291c; --accent-soft:rgba(218,41,28,0.15); --font-body:"Noto Serif KR",Georgia,"Times New Roman","Batang",serif; }
+:root[data-theme="bugatti"]     { --bg:#000000; --surface:#141414; --text:#ffffff; --text-muted:#999999; --border:#262626; --nav-bg:#000000; --nav-text:#cccccc; --accent:#c3d9f3; --accent-soft:rgba(195,217,243,0.08); --on-accent:#141414; --font-body:"Gowun Batang",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="spotify"]     { --bg:#121212; --surface:#181818; --text:#ffffff; --text-muted:#b3b3b3; --border:#4d4d4d; --nav-bg:#000000; --nav-text:#ffffff; --accent:#1ed760; --accent-soft:rgba(30,215,96,0.12); --on-accent:#121212; --font-body:"Nanum Gothic","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="nvidia"]      { --bg:#ffffff; --surface:#f7f7f7; --text:#1a1a1a; --text-muted:#757575; --border:#cccccc; --nav-bg:#000000; --nav-text:#ffffff; --accent:#76b900; --accent-soft:rgba(118,185,0,0.1); --on-accent:#000000; --font-body:"Do Hyeon","Roboto","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="airbnb"]      { --bg:#ffffff; --surface:#f7f7f7; --text:#222222; --text-muted:#6a6a6a; --border:#dddddd; --nav-bg:#222222; --nav-text:#ffffff; --accent:#ff385c; --accent-soft:rgba(255,56,92,0.08); --font-body:"Sunflower","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); }
+
+/* ── Nav ── */
+.topnav { display:flex; flex-wrap:wrap; align-items:center; gap:4px; background:var(--nav-bg); padding:12px 16px; }
+.topnav .brand { display:inline-flex; align-items:center; gap:8px; color:#fff; font-weight:700; font-size:1.05rem; margin-right:16px; white-space:nowrap; text-decoration:none; }
+.brand-logo { height:28px; width:auto; display:block; }
+.gen1-link { margin-left:auto; font-size:0.8rem; opacity:0.85; }
+.topnav a { color:var(--nav-text); text-decoration:none; padding:8px 12px; border-radius:8px; font-size:0.92rem; }
+.topnav a:hover, .topnav a.active { background:rgba(255,255,255,0.15); color:#fff; }
+
+/* ── Layout ── */
+.page-wrap {
+  max-width:900px; margin:0 auto; padding:24px 16px;
+  display:grid; grid-template-columns:340px 1fr; gap:20px; align-items:start;
+}
+@media (max-width:700px) { .page-wrap { grid-template-columns:1fr; } }
+
+/* ── Control card ── */
+.ctrl-card { background:var(--surface); border-radius:16px; border:1px solid var(--border); padding:20px; }
+
+.sec-label { font-size:0.8rem; font-weight:800; color:var(--accent); letter-spacing:.06em; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.sec-label::before { content:''; display:inline-block; width:14px; height:2px; background:var(--accent); border-radius:2px; }
+
+/* Import tabs */
+.import-tabs { display:flex; border-radius:8px; overflow:hidden; border:1.5px solid var(--border); margin-bottom:14px; }
+.itab { flex:1; padding:8px; text-align:center; font-size:0.85rem; font-weight:600; cursor:pointer; background:none; border:none; color:var(--text-muted); font-family:inherit; transition:0.12s; }
+.itab.active { background:var(--accent); color:var(--on-accent,#fff); }
+
+/* Name input */
+.name-row { display:flex; gap:8px; margin-bottom:10px; }
+.name-inp { flex:1; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.9rem; font-family:inherit; background:var(--bg); color:var(--text); }
+.name-inp:focus { outline:none; border-color:var(--accent); }
+.btn-add { padding:9px 16px; background:var(--accent); color:var(--on-accent,#fff); border:none; border-radius:8px; font-size:0.85rem; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.btn-add:hover { opacity:0.88; }
+
+/* Sheet form */
+.sheet-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px; background:var(--accent-soft); border-radius:10px; margin-bottom:8px; }
+.sheet-form label { font-size:0.85rem; font-weight:600; }
+.sheet-sel { padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.85rem; font-family:inherit; }
+.btn-load { padding:8px 14px; background:var(--accent); color:var(--on-accent,#fff); border:none; border-radius:8px; font-size:0.83rem; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn-load:disabled { opacity:0.4; cursor:not-allowed; }
+.import-msg { font-size:0.8rem; color:var(--text-muted); min-height:1.1em; margin-bottom:10px; }
+
+/* Name chips */
+.name-chips { display:flex; flex-wrap:wrap; gap:6px; min-height:30px; margin-bottom:14px; }
+.n-chip { display:inline-flex; align-items:center; gap:3px; padding:4px 10px; border-radius:999px; font-size:0.82rem; font-weight:600; background:var(--accent-soft); color:var(--accent); }
+.n-chip .rm { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:0.9rem; padding:0 0 0 2px; line-height:1; font-family:inherit; }
+.n-chip .rm:hover { color:#e53e3e; }
+
+/* Stats */
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.stat-box { text-align:center; background:var(--bg); border-radius:10px; padding:10px 6px; border:1px solid var(--border); }
+.stat-num { font-size:1.55rem; font-weight:800; color:var(--accent); }
+.stat-num.gold { color:#b8880a; }
+.stat-label { font-size:0.7rem; color:var(--text-muted); margin-top:1px; }
+
+/* Spin button */
+.btn-spin {
+  width:100%; padding:14px; background:#c9a227; color:#fff; border:none; border-radius:12px;
+  font-size:1.05rem; font-weight:800; cursor:pointer; font-family:inherit; margin-bottom:10px;
+  transition:opacity 0.15s; box-shadow:0 4px 14px rgba(201,162,39,.35);
+}
+.btn-spin:hover { opacity:0.9; }
+.btn-spin:disabled { opacity:0.38; cursor:not-allowed; box-shadow:none; }
+
+.btn-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px; }
+.btn-minor { padding:9px; border:1.5px solid var(--border); border-radius:10px; background:none; font-size:0.85rem; cursor:pointer; font-family:inherit; color:var(--text); transition:0.12s; }
+.btn-minor:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+.btn-minor.danger { color:#e53e3e; }
+.btn-minor.danger:hover { border-color:#e53e3e; background:#ffe4e4; }
+
+/* Picked list */
+.picked-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.p-chip { padding:4px 12px; border-radius:999px; font-size:0.82rem; font-weight:600; background:#fdf3cf; color:#8a6200; border:1px solid #e5c84a; }
+
+/* ── Slot section ── */
+.slot-section { display:flex; flex-direction:column; align-items:center; gap:0; }
+
+/* Winner bubble */
+.winner-area { min-height:88px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; margin-bottom:4px; width:100%; }
+.winner-label { font-size:0.8rem; color:var(--text-muted); font-weight:600; }
+.winner-bubble {
+  background:#c9a227; color:#fff; font-size:2.1rem; font-weight:800;
+  padding:12px 40px; border-radius:16px; display:none;
+  box-shadow:0 6px 20px rgba(201,162,39,.4);
+  animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes popIn {
+  from { transform:scale(0.6); opacity:0; }
+  to   { transform:scale(1);   opacity:1; }
+}
+
+/* Pointer */
+.slot-pointer {
+  width:0; height:0;
+  border-left:13px solid transparent; border-right:13px solid transparent;
+  border-top:17px solid var(--accent);
+  margin-bottom:-1px; z-index:2;
+}
+
+/* Slot window */
+.slot-window {
+  width:100%; max-width:340px;
+  border:2.5px solid var(--accent); border-radius:16px;
+  overflow:hidden; position:relative; height:192px;
+  background:var(--surface);
+}
+/* Gold stripes marking the middle slot */
+.slot-window::before, .slot-window::after {
+  content:''; position:absolute; left:0; right:0; height:2px;
+  background:#c9a227; z-index:10; pointer-events:none;
+}
+.slot-window::before { top:64px; }
+.slot-window::after  { top:128px; }
+/* Middle highlight band */
+.slot-mid-bg {
+  position:absolute; top:64px; left:0; right:0; height:64px;
+  background:#fdf3cf; pointer-events:none; z-index:1; opacity:0.7;
+}
+.slot-inner { position:absolute; top:0; left:0; right:0; will-change:transform; }
+.slot-item {
+  height:64px; display:flex; align-items:center; justify-content:center;
+  font-size:1.25rem; font-weight:700; color:var(--accent);
+  border-bottom:1px solid var(--border); position:relative; z-index:2;
+}
+
+/* All-chips below slot */
+.all-chips { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:14px; max-width:340px; }
+.a-chip {
+  padding:5px 13px; border-radius:999px; font-size:0.82rem; font-weight:600;
+  border:1.5px solid var(--accent); color:var(--accent); background:var(--surface); transition:0.15s;
+}
+.a-chip.picked { border-color:var(--border); color:var(--text-muted); background:var(--bg); text-decoration:line-through; opacity:0.6; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="settings.html" class="brand-logo-link"><img src="logo.png" alt="" class="brand-logo"></a>
+  <a href="./" class="brand">광수 Online 교무실 2세대</a>
+  <a href="calender.html">캘린더</a>
+  <a href="stu.html">학생 정보 조회</a>
+  <a href="phone.html">내선번호</a>
+  <a href="tools.html" class="active">행정업무 간소화 도구</a>
+  <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- ── 왼쪽: 컨트롤 ── -->
+  <div class="ctrl-card">
+    <div class="sec-label">학생 명단</div>
+
+    <div class="import-tabs">
+      <button class="itab active" id="tabManual" onclick="switchTab('manual')">한 명씩 입력</button>
+      <button class="itab"        id="tabSheet"  onclick="switchTab('sheet')">학년·반 불러오기</button>
+    </div>
+
+    <!-- 한 명씩 입력 -->
+    <div id="panelManual">
+      <div class="name-row">
+        <input type="text" class="name-inp" id="nameInp" placeholder="이름 입력 후 엔터"
+               onkeydown="if(event.key==='Enter')addName()">
+        <button class="btn-add" onclick="addName()">추가</button>
+      </div>
+    </div>
+
+    <!-- 학년·반 불러오기 -->
+    <div id="panelSheet" style="display:none">
+      <div class="sheet-form">
+        <label>학년</label>
+        <select id="impGrade" class="sheet-sel">
+          <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
+        </select>
+        <label>반</label>
+        <select id="impBan" class="sheet-sel">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>6</option><option>7</option><option>8</option><option>9</option>
+        </select>
+        <button class="btn-load" id="btnLoad" onclick="importFromSheet()">불러오기</button>
+      </div>
+      <div class="import-msg" id="importMsg"></div>
+    </div>
+
+    <div class="name-chips" id="nameChips"></div>
+
+    <!-- 통계 -->
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label">명 등록</div></div>
+      <div class="stat-box"><div class="stat-num gold" id="statPicked">0</div><div class="stat-label">명 지목됨</div></div>
+      <div class="stat-box"><div class="stat-num" id="statRemain">0</div><div class="stat-label">명 남음</div></div>
+    </div>
+
+    <button class="btn-spin" id="btnSpin" onclick="spin()" disabled>🎯 돌리기!</button>
+
+    <div class="btn-row">
+      <button class="btn-minor" onclick="addSample()">샘플</button>
+      <button class="btn-minor danger" onclick="resetAll()">전체 초기화</button>
+    </div>
+
+    <div class="sec-label">지목된 학생</div>
+    <div class="picked-chips" id="pickedList">
+      <span style="font-size:0.8rem;color:var(--text-muted)">아직 없음</span>
+    </div>
+  </div>
+
+  <!-- ── 오른쪽: 슬롯 머신 ── -->
+  <div class="slot-section">
+    <div class="winner-area" id="winnerArea">
+      <div class="winner-label" id="winnerLabel" style="display:none">🎯 선택된 학생</div>
+      <div class="winner-bubble" id="winnerBubble"></div>
+    </div>
+
+    <div class="slot-pointer"></div>
+    <div class="slot-window">
+      <div class="slot-mid-bg"></div>
+      <div class="slot-inner" id="slotInner">
+        <div class="slot-item" style="color:var(--text-muted)">—</div>
+        <div class="slot-item" style="color:var(--text-muted)">—</div>
+        <div class="slot-item" style="color:var(--text-muted)">—</div>
+      </div>
+    </div>
+
+    <div class="all-chips" id="allChips"></div>
+  </div>
+
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
+const ITEM_H = 64;
+
+let students = [];
+let picked   = new Set();
+let rosterCache = null;
+let spinning = false;
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── 탭 전환
+function switchTab(tab) {
+  document.getElementById('tabManual').classList.toggle('active', tab==='manual');
+  document.getElementById('tabSheet').classList.toggle('active', tab==='sheet');
+  document.getElementById('panelManual').style.display = tab==='manual' ? '' : 'none';
+  document.getElementById('panelSheet').style.display  = tab==='sheet'  ? '' : 'none';
+}
+
+// ── 이름 추가 / 삭제
+function addName() {
+  const inp = document.getElementById('nameInp');
+  const name = inp.value.trim();
+  if (!name || students.some(s => s.name === name)) { inp.value=''; return; }
+  students.push({name});
+  inp.value = '';
+  render();
+}
+function removeName(name) {
+  students = students.filter(s => s.name !== name);
+  picked.delete(name);
+  render();
+}
+
+// ── 시트에서 불러오기
+async function getRoster() {
+  if (rosterCache) return rosterCache;
+  const url = `${APPS_SCRIPT_URL}?action=getStudentRoster`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    rosterCache = data; return data;
+  } catch(e) {
+    return new Promise((resolve, reject) => {
+      const cb = '__rc_' + Date.now();
+      const to = setTimeout(() => { delete window[cb]; reject(new Error('응답 시간 초과')); }, 8000);
+      window[cb] = d => { clearTimeout(to); delete window[cb]; if(d.error) reject(new Error(d.error)); else { rosterCache=d; resolve(d); } };
+      const sc = document.createElement('script');
+      sc.src = url + '&callback=' + cb;
+      sc.onerror = () => { clearTimeout(to); delete window[cb]; reject(new Error('네트워크 오류')); };
+      document.body.appendChild(sc);
+    });
+  }
+}
+async function importFromSheet() {
+  const grade = document.getElementById('impGrade').value;
+  const ban   = document.getElementById('impBan').value;
+  const msg   = document.getElementById('importMsg');
+  const btn   = document.getElementById('btnLoad');
+  btn.disabled = true; msg.textContent = '불러오는 중...';
+  try {
+    const data = await getRoster();
+    const matched = (data.students||[])
+      .filter(s => String(s.grade)===grade && String(s.ban)===ban)
+      .sort((a,b) => (Number(a.num)||0)-(Number(b.num)||0));
+    if (!matched.length) { msg.textContent = `${grade}학년 ${ban}반 학생을 찾지 못했습니다.`; return; }
+    students = matched.map(s => ({name:s.name}));
+    picked.clear();
+    msg.textContent = `${grade}학년 ${ban}반 ${students.length}명 불러옴`;
+    render();
+  } catch(err) { msg.textContent = '실패: '+(err.message||String(err)); }
+  finally { btn.disabled = false; }
+}
+
+// ── 샘플 / 초기화
+function addSample() {
+  students = ['김민준','이서연','박지호','최수아','정태양','윤하늘','강도현','임서율'].map(n=>({name:n}));
+  picked.clear(); resetSlotView(); render();
+}
+function resetAll() {
+  students = []; picked.clear(); resetSlotView(); render();
+  document.getElementById('winnerBubble').style.display = 'none';
+  document.getElementById('winnerLabel').style.display  = 'none';
+}
+
+// ── 렌더
+function render() {
+  const remain = students.filter(s => !picked.has(s.name)).length;
+  document.getElementById('statTotal').textContent  = students.length;
+  document.getElementById('statPicked').textContent = picked.size;
+  document.getElementById('statRemain').textContent = remain;
+  document.getElementById('btnSpin').disabled = remain === 0 || spinning;
+
+  // 명단 칩
+  document.getElementById('nameChips').innerHTML = students.map(s =>
+    `<span class="n-chip">${esc(s.name)}<button class="rm" onclick="removeName('${esc(s.name)}')">×</button></span>`
+  ).join('') || '<span style="font-size:0.8rem;color:var(--text-muted)">학생을 추가하세요</span>';
+
+  // 전체 칩 (슬롯 아래)
+  document.getElementById('allChips').innerHTML = students.map(s =>
+    `<span class="a-chip${picked.has(s.name)?' picked':''}">${esc(s.name)}</span>`
+  ).join('');
+
+  // 지목된 학생
+  document.getElementById('pickedList').innerHTML = picked.size
+    ? [...picked].map(n=>`<span class="p-chip">${esc(n)}</span>`).join('')
+    : '<span style="font-size:0.8rem;color:var(--text-muted)">아직 없음</span>';
+}
+
+// ── 슬롯 뷰 리셋
+function resetSlotView() {
+  const inner = document.getElementById('slotInner');
+  inner.style.transition = 'none';
+  inner.style.transform  = 'translateY(0)';
+  inner.innerHTML = ['—','—','—'].map(n =>
+    `<div class="slot-item" style="color:var(--text-muted)">${n}</div>`
+  ).join('');
+}
+
+// ── 돌리기!
+function spin() {
+  if (spinning) return;
+  const remaining = students.filter(s => !picked.has(s.name));
+  if (!remaining.length) return;
+
+  spinning = true;
+  document.getElementById('btnSpin').disabled = true;
+  // 이전 당첨자 버블 숨기기
+  const bubble = document.getElementById('winnerBubble');
+  bubble.style.display = 'none';
+  document.getElementById('winnerLabel').style.display = 'none';
+
+  const winner   = remaining[Math.floor(Math.random() * remaining.length)];
+  const allNames = students.map(s => s.name);
+  const n        = allNames.length;
+
+  // 슬롯 리스트 생성:
+  //   PRE개의 랜덤 이름 → [winner 직전 이름] → [winner] → [winner 다음 이름]
+  //   winner는 인덱스 PRE+1 (0-based) → 슬롯 중간 위치에 정착
+  const PRE = 26;
+  const winnerIdx = allNames.indexOf(winner.name);
+  const spinList  = [];
+  for (let i = 0; i < PRE; i++) {
+    spinList.push(allNames[Math.floor(Math.random() * n)]);
+  }
+  spinList.push(allNames[(winnerIdx - 1 + n) % n]); // PRE: 직전
+  spinList.push(winner.name);                        // PRE+1: 당첨 (중간)
+  spinList.push(allNames[(winnerIdx + 1) % n]);      // PRE+2: 직후
+
+  const inner = document.getElementById('slotInner');
+  inner.style.transition = 'none';
+  inner.style.transform  = 'translateY(0)';
+  inner.innerHTML = spinList.map(nm =>
+    `<div class="slot-item">${esc(nm)}</div>`
+  ).join('');
+
+  // winner(인덱스 PRE+1)를 슬롯 중간(position 1)에 오게 translateY 계산
+  // position 1의 top = ITEM_H → inner에서 winner top = (PRE+1)*ITEM_H
+  // translateY = -((PRE+1) - 1) * ITEM_H = -PRE * ITEM_H
+  const targetY = -(PRE * ITEM_H);
+
+  // 이중 rAF: transition 적용 전 reflow 강제
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      inner.style.transition = `transform 3s cubic-bezier(0.05, 0.9, 0.1, 1)`;
+      inner.style.transform  = `translateY(${targetY}px)`;
+    });
+  });
+
+  setTimeout(() => {
+    spinning = false;
+    picked.add(winner.name);
+
+    // 당첨자 버블 표시
+    bubble.textContent    = winner.name;
+    bubble.style.display  = '';
+    // 애니메이션 재실행을 위해 클래스 재적용
+    bubble.style.animation = 'none';
+    requestAnimationFrame(() => { bubble.style.animation = ''; });
+    document.getElementById('winnerLabel').style.display = '';
+
+    render();
+  }, 3200);
+}
+
+// ── 초기화
+resetSlotView();
+render();
+</script>
+</body>
+</html>
