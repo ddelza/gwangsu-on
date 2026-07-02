@@ -170,6 +170,11 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
   background:var(--surface); border:1px solid var(--border);
   border-radius:12px 12px 0 0; border-bottom:none;
 }
+.gl-corner { width:28px; }
+.gl-col { width:44px; font-size:0.68rem; color:var(--text-muted); text-align:center; padding-bottom:2px; }
+.gl-row { width:28px; font-size:0.68rem; color:var(--text-muted); text-align:right; padding-right:5px; display:flex; align-items:center; justify-content:flex-end; }
+.sl-col { width:72px; font-size:0.68rem; color:var(--text-muted); text-align:center; padding-bottom:2px; }
+.sl-row { width:28px; font-size:0.68rem; color:var(--text-muted); text-align:right; padding-right:5px; display:flex; align-items:center; justify-content:flex-end; }
 .desk-cell {
   width:44px; height:44px; border:2px solid var(--border); border-radius:6px;
   cursor:pointer; transition:all 0.12s; background:var(--bg);
@@ -632,14 +637,20 @@ function resizeGrid() {
 
 function renderDeskGrid() {
   const grid = document.getElementById('deskGrid');
-  grid.style.gridTemplateColumns = `repeat(${gridCols}, 44px)`;
+  grid.style.gridTemplateColumns = `28px repeat(${gridCols}, 44px)`;
   grid.innerHTML = '';
+  // 헤더 행: 빈 코너 + 열 레이블
+  grid.appendChild(Object.assign(document.createElement('div'), {className:'gl-corner'}));
+  for (let c = 0; c < gridCols; c++) {
+    grid.appendChild(Object.assign(document.createElement('div'), {className:'gl-col', textContent: (c+1)+'열'}));
+  }
+  // 데이터 행
   for (let r = 0; r < gridRows; r++) {
+    grid.appendChild(Object.assign(document.createElement('div'), {className:'gl-row', textContent: (r+1)+'행'}));
     for (let c = 0; c < gridCols; c++) {
       const cell = document.createElement('div');
       cell.className = 'desk-cell' + (deskActive[r][c] ? ' on' : '');
-      cell.dataset.r = r;
-      cell.dataset.c = c;
+      cell.dataset.r = r; cell.dataset.c = c;
       cell.addEventListener('click', function () {
         const rr = +this.dataset.r, cc = +this.dataset.c;
         deskActive[rr][cc] = !deskActive[rr][cc];
@@ -951,9 +962,14 @@ function calcViol(asgn, con, hPairs, areAdj, nameIdx) {
 // ── 공통 렌더링 ───────────────────────────────────────────────
 function renderSeating(seatingMap, overflow) {
   const grid = document.getElementById('seatingGrid');
-  grid.style.gridTemplateColumns = `repeat(${gridCols}, 72px)`;
+  grid.style.gridTemplateColumns = `28px repeat(${gridCols}, 72px)`;
   grid.innerHTML = '';
+  // 헤더 행
+  grid.appendChild(Object.assign(document.createElement('div'), {className:'gl-corner'}));
+  for (let c=0; c<gridCols; c++)
+    grid.appendChild(Object.assign(document.createElement('div'), {className:'sl-col', textContent:(c+1)+'열'}));
   for (let r=0; r<gridRows; r++) {
+    grid.appendChild(Object.assign(document.createElement('div'), {className:'sl-row', textContent:(r+1)+'행'}));
     for (let c=0; c<gridCols; c++) {
       const cell = document.createElement('div');
       if (!deskActive[r][c]) { cell.className='seat-cell no-desk'; }
