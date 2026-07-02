@@ -441,7 +441,7 @@ async function importFromSheet() {
     const matched = (data.students||[]).filter(s => String(s.grade)===grade && String(s.ban)===ban);
     if (!matched.length) { msg.textContent = `${grade}학년 ${ban}반 학생을 찾지 못했습니다.`; return; }
     matched.sort((a,b) => (Number(a.num)||0)-(Number(b.num)||0));
-    students = matched.map(s => ({ name:s.name, gender:'미기재' }));
+    students = matched.map(s => ({ name:s.name, gender: s.gender || '미기재' }));
     populateTable();
     msg.textContent = `${grade}학년 ${ban}반 ${students.length}명 불러옴`;
     refreshConstraintSelects();
