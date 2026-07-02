@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모둠 짜기 — 광수 Online 교무실</title>
+<script>
+(function(){
+  var F={
+    'claude':'Nanum+Myeongjo','notion':'Noto+Sans+KR:wght@400;600;700',
+    'figma':'IBM+Plex+Sans+KR:wght@400;500','starbucks':'Gowun+Dodum',
+    'lamborghini':'Gothic+A1:wght@700','ferrari':'Noto+Serif+KR:wght@400;500;700',
+    'bugatti':'Gowun+Batang','spotify':'Nanum+Gothic:wght@400;700',
+    'nvidia':'Do+Hyeon','airbnb':'Sunflower:wght@300;500;700'
+  };
+  try{
+    var t=localStorage.getItem('gwangsu_theme')||'';
+    if(F[t]){
+      var p=document.createElement('link');p.rel='preconnect';p.href='https://fonts.googleapis.com';document.head.appendChild(p);
+      var q=document.createElement('link');q.rel='preconnect';q.href='https://fonts.gstatic.com';q.crossOrigin='';document.head.appendChild(q);
+      var l=document.createElement('link');l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family='+F[t]+'&display=swap';document.head.appendChild(l);
+    }
+  }catch(e){}
+})();
+</script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#f5f6f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#888888;
+  --border:#d0d6e2; --nav-bg:#1a3d7c; --nav-text:#d8e3ff; --accent:#1a3d7c; --accent-soft:#e6ebf5;
+  --font-body:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+:root[data-theme="teal"]        { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"]       { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"]    { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"]      { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"]       { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"]   { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#adb8c8; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#a8beaa; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"]   { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#bdb3c8; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+:root[data-theme="apple"]       { --bg:#f5f5f7; --surface:#ffffff; --text:#1d1d1f; --text-muted:#6e6e73; --border:#d2d2d7; --nav-bg:#000000; --nav-text:rgba(255,255,255,0.85); --accent:#0066cc; --accent-soft:rgba(0,102,204,0.1); --font-body:-apple-system,"SF Pro Display","SF Pro Text",BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="claude"]      { --bg:#faf9f5; --surface:#f0e9df; --text:#141413; --text-muted:#8a7a65; --border:#ddd4c4; --nav-bg:#181715; --nav-text:#faf9f5; --accent:#cc785c; --accent-soft:#f5ede3; --font-body:"Nanum Myeongjo",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="notion"]      { --bg:#ffffff; --surface:#f6f5f4; --text:#1a1a1a; --text-muted:#787671; --border:#e5e3df; --nav-bg:#0a1530; --nav-text:#ffffff; --accent:#5645d4; --accent-soft:#ede9fa; --font-body:"Noto Sans KR","Segoe UI",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="figma"]       { --bg:#ffffff; --surface:#f7f7f5; --text:#000000; --text-muted:#787878; --border:#e6e6e6; --nav-bg:#000000; --nav-text:#ffffff; --accent:#6e5ff3; --accent-soft:#dceeb1; --font-body:"IBM Plex Sans KR","Helvetica Neue",Arial,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="starbucks"]   { --bg:#f2f0eb; --surface:#ffffff; --text:#1f1f1d; --text-muted:#5a7a6a; --border:#c8d8cc; --nav-bg:#1e3932; --nav-text:#ffffff; --accent:#00754a; --accent-soft:#d4e9e2; --font-body:"Gowun Dodum","Trebuchet MS","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="lamborghini"] { --bg:#000000; --surface:#202020; --text:#ffffff; --text-muted:#7d7d7d; --border:#2a2a2a; --nav-bg:#000000; --nav-text:#ffffff; --accent:#ffc000; --accent-soft:rgba(255,192,0,0.12); --on-accent:#000000; --font-body:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="ferrari"]     { --bg:#181818; --surface:#2c2c2c; --text:#ffffff; --text-muted:#a0a0a0; --border:#3d3d3d; --nav-bg:#181818; --nav-text:#ffffff; --accent:#da291c; --accent-soft:rgba(218,41,28,0.15); --font-body:"Noto Serif KR",Georgia,"Times New Roman","Batang",serif; }
+:root[data-theme="bugatti"]     { --bg:#000000; --surface:#141414; --text:#ffffff; --text-muted:#999999; --border:#262626; --nav-bg:#000000; --nav-text:#cccccc; --accent:#c3d9f3; --accent-soft:rgba(195,217,243,0.08); --on-accent:#141414; --font-body:"Gowun Batang",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="spotify"]     { --bg:#121212; --surface:#181818; --text:#ffffff; --text-muted:#b3b3b3; --border:#4d4d4d; --nav-bg:#000000; --nav-text:#ffffff; --accent:#1ed760; --accent-soft:rgba(30,215,96,0.12); --on-accent:#121212; --font-body:"Nanum Gothic","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="nvidia"]      { --bg:#ffffff; --surface:#f7f7f7; --text:#1a1a1a; --text-muted:#757575; --border:#cccccc; --nav-bg:#000000; --nav-text:#ffffff; --accent:#76b900; --accent-soft:rgba(118,185,0,0.1); --on-accent:#000000; --font-body:"Do Hyeon","Roboto","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="airbnb"]      { --bg:#ffffff; --surface:#f7f7f7; --text:#222222; --text-muted:#6a6a6a; --border:#dddddd; --nav-bg:#222222; --nav-text:#ffffff; --accent:#ff385c; --accent-soft:rgba(255,56,92,0.08); --font-body:"Sunflower","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); min-height:100vh; }
+.topnav { display:flex; flex-wrap:wrap; align-items:center; gap:4px; background:var(--nav-bg); padding:12px 16px; }
+.topnav .brand { color:#fff; font-weight:700; font-size:1.05rem; margin-right:16px; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; }
+.brand-logo { height:28px; width:auto; display:block; }
+.gen1-link { margin-left:auto; font-size:0.8rem; opacity:0.85; }
+.topnav a { color:var(--nav-text); text-decoration:none; padding:8px 12px; border-radius:8px; font-size:0.92rem; }
+.topnav a:hover, .topnav a.active { background:rgba(255,255,255,0.15); color:#fff; }
+
+.page-wrap { max-width:860px; margin:0 auto; padding:24px 16px 60px; }
+.page-title { font-size:1.5rem; font-weight:800; color:var(--accent); margin-bottom:24px; }
+
+/* Steps */
+.step-section { background:var(--surface); border-radius:16px; padding:20px; margin-bottom:16px; border:1px solid var(--border); }
+.step-title { font-size:1.05rem; font-weight:700; color:var(--accent); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.step-badge { background:var(--accent); color:var(--on-accent,#fff); border-radius:999px; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; flex-shrink:0; }
+
+/* Import section */
+.import-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.import-btn { padding:8px 16px; border-radius:8px; border:1.5px solid var(--accent); background:var(--surface); color:var(--accent); font-size:0.85rem; font-weight:600; cursor:pointer; transition:0.15s; font-family:inherit; }
+.import-btn:hover, .import-btn.active { background:var(--accent); color:var(--on-accent,#fff); }
+.import-panel { display:none; }
+.import-panel.open { display:block; }
+
+/* Sheet import */
+.sheet-import-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px; background:var(--accent-soft); border-radius:10px; margin-bottom:10px; }
+.sheet-import-form label { font-size:0.85rem; font-weight:600; white-space:nowrap; }
+.sheet-import-sel { padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.85rem; font-family:inherit; cursor:pointer; }
+.sheet-import-btn { padding:8px 18px; border-radius:8px; border:none; background:var(--accent); color:var(--on-accent,#fff); font-size:0.85rem; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.sheet-import-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.sheet-import-msg { font-size:0.8rem; color:var(--text-muted); margin-top:6px; min-height:1.2em; }
+
+/* Upload */
+.upload-zone { border:2px dashed var(--border); border-radius:10px; padding:20px; text-align:center; cursor:pointer; color:var(--text-muted); font-size:0.88rem; margin-bottom:10px; transition:0.15s; }
+.upload-zone:hover { border-color:var(--accent); color:var(--accent); }
+
+/* Student table */
+.stu-table-wrap { overflow-x:auto; margin-bottom:10px; }
+table.stu-table { width:100%; border-collapse:collapse; font-size:0.88rem; }
+table.stu-table th { background:var(--accent); color:var(--on-accent,#fff); padding:7px 10px; text-align:left; font-size:0.8rem; }
+table.stu-table td { padding:5px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
+table.stu-table tr:last-child td { border-bottom:none; }
+.stu-input { width:100%; border:none; background:transparent; color:var(--text); font-size:0.88rem; font-family:inherit; padding:2px 0; outline:none; }
+.stu-gender-sel { border:none; background:transparent; color:var(--text); font-size:0.85rem; font-family:inherit; cursor:pointer; padding:2px 4px; }
+.btn-del-row { background:none; border:none; color:#e53e3e; cursor:pointer; font-size:0.9rem; padding:2px 6px; border-radius:4px; }
+.btn-del-row:hover { background:#ffe4e4; }
+.row-num-cell { color:var(--text-muted); font-size:0.78rem; text-align:center; width:32px; }
+
+/* Step footer */
+.step-footer { display:none; margin-top:14px; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.step-footer.visible { display:flex; }
+.stu-summary { font-size:0.88rem; color:var(--text-muted); }
+.btn-add-row { padding:6px 14px; border:1.5px dashed var(--border); border-radius:8px; background:none; cursor:pointer; color:var(--text-muted); font-size:0.82rem; font-family:inherit; transition:0.15s; }
+.btn-add-row:hover { border-color:var(--accent); color:var(--accent); }
+.btn-primary { padding:10px 24px; border-radius:10px; border:none; background:var(--accent); color:var(--on-accent,#fff); font-size:0.95rem; font-weight:700; cursor:pointer; font-family:inherit; transition:0.15s; }
+.btn-primary:hover { filter:brightness(1.15); }
+.btn-primary:disabled { opacity:0.45; cursor:not-allowed; filter:none; }
+
+/* Step 2 — settings */
+.setting-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.setting-label { font-size:0.88rem; font-weight:600; white-space:nowrap; }
+.setting-num { width:72px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.95rem; font-family:inherit; text-align:center; }
+.setting-note { font-size:0.8rem; color:var(--text-muted); }
+.mode-tabs { display:flex; gap:8px; }
+.mode-tab { padding:7px 18px; border:1.5px solid var(--accent); border-radius:999px; background:var(--surface); color:var(--accent); font-size:0.85rem; font-weight:700; cursor:pointer; transition:0.15s; }
+.mode-tab.active { background:var(--accent); color:var(--on-accent,#fff); }
+.gender-opt-row { display:flex; gap:8px; flex-wrap:wrap; }
+.gender-opt-btn { padding:7px 16px; border:1.5px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text); font-size:0.85rem; cursor:pointer; transition:0.15s; font-family:inherit; }
+.gender-opt-btn.active { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:700; }
+.step2-info { font-size:0.85rem; color:var(--text-muted); padding:10px 14px; background:var(--accent-soft); border-radius:8px; margin-bottom:14px; }
+
+/* Step 3 — result */
+.result-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center; }
+.result-summary { font-size:0.88rem; color:var(--text-muted); margin-left:auto; }
+.group-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
+.group-card { background:var(--surface); border-radius:12px; border:2px solid var(--border); overflow:hidden; }
+.group-card-header { padding:10px 14px; font-weight:700; font-size:0.9rem; color:var(--on-accent,#fff); }
+.group-card-body { padding:10px 14px; }
+.group-member { display:flex; align-items:center; gap:6px; padding:4px 0; font-size:0.88rem; border-bottom:1px solid var(--border); }
+.group-member:last-child { border-bottom:none; }
+.gender-badge { font-size:0.7rem; padding:1px 6px; border-radius:999px; font-weight:700; flex-shrink:0; }
+.gender-badge.male { background:#dbeafe; color:#1e40af; }
+.gender-badge.female { background:#fce7f3; color:#9d174d; }
+.gender-badge.none { background:var(--accent-soft); color:var(--accent); }
+.group-num-badge { font-size:0.75rem; color:var(--text-muted); margin-left:auto; }
+.empty-result { text-align:center; color:var(--text-muted); padding:30px 0; }
+
+/* Group colors (header background) */
+.gc-0 { background:#1a3d7c; } .gc-1 { background:#2e7d32; } .gc-2 { background:#b71c1c; }
+.gc-3 { background:#6a1b9a; } .gc-4 { background:#e65100; } .gc-5 { background:#00695c; }
+.gc-6 { background:#c62828; } .gc-7 { background:#283593; } .gc-8 { background:#558b2f; }
+.gc-9 { background:#4a148c; }
+
+@media print {
+  .topnav, .step-section:not(#step3), .result-toolbar { display:none !important; }
+  .page-wrap { padding:0; max-width:100%; }
+  .group-grid { grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); }
+  .page-title { font-size:1.1rem; margin-bottom:12px; }
+}
+@media (max-width:600px) {
+  .page-wrap { padding:16px 12px 40px; }
+  .group-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="settings.html" class="brand-logo-link"><img src="logo.png" alt="" class="brand-logo"></a>
+  <a href="./" class="brand">광수 Online 교무실 2세대</a>
+  <a href="calender.html">캘린더</a>
+  <a href="stu.html">학생 정보 조회</a>
+  <a href="phone.html">내선번호</a>
+  <a href="tools.html">행정업무 간소화 도구</a>
+  <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-title">👥 모둠 짜기</div>
+
+  <!-- Step 1: 명단 등록 -->
+  <section class="step-section" id="step1">
+    <div class="step-title"><span class="step-badge">1</span> 학생 명단 등록</div>
+
+    <div class="import-row">
+      <button class="import-btn" id="btnManual" onclick="switchImportTab('manual')">✏️ 직접 입력</button>
+      <button class="import-btn" id="btnSheet" onclick="switchImportTab('sheet')">📋 학년·반으로 불러오기</button>
+      <button class="import-btn" id="btnExcel" onclick="switchImportTab('excel')">📂 엑셀 업로드</button>
+    </div>
+
+    <!-- 학년·반으로 불러오기 -->
+    <div class="import-panel" id="panelSheet">
+      <div class="sheet-import-form">
+        <label>학년</label>
+        <select id="importGrade" class="sheet-import-sel">
+          <option value="1">1학년</option>
+          <option value="2">2학년</option>
+          <option value="3">3학년</option>
+        </select>
+        <label>반</label>
+        <select id="importBan" class="sheet-import-sel">
+          <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option>
+          <option value="4">4반</option><option value="5">5반</option><option value="6">6반</option>
+          <option value="7">7반</option><option value="8">8반</option><option value="9">9반</option>
+        </select>
+        <button class="sheet-import-btn" id="btnImportSheet" onclick="importFromSheet()">불러오기</button>
+      </div>
+      <div class="sheet-import-msg" id="sheetImportMsg"></div>
+    </div>
+
+    <!-- 엑셀 업로드 -->
+    <div class="import-panel" id="panelExcel">
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('xlsxFile').click()">
+        📂 엑셀(.xlsx/.xls) 또는 CSV 파일을 클릭해 선택하세요<br>
+        <small style="font-size:0.78rem;margin-top:4px;display:block">열 순서 무관 — 이름·성명·학생이름 / 성별·젠더 열을 자동 인식합니다</small>
+      </div>
+      <input type="file" id="xlsxFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(this)">
+    </div>
+
+    <!-- 학생 테이블 -->
+    <div class="stu-table-wrap" id="tableWrap" style="display:none">
+      <table class="stu-table">
+        <thead><tr><th class="row-num-cell">#</th><th>이름</th><th>성별</th><th></th></tr></thead>
+        <tbody id="stuRows"></tbody>
+      </table>
+    </div>
+
+    <div class="step-footer" id="step1Footer">
+      <div>
+        <button class="btn-add-row" onclick="addRow()">+ 행 추가</button>
+        <span class="stu-summary" id="stuSummary" style="margin-left:10px"></span>
+      </div>
+      <button class="btn-primary" onclick="confirmStep1()">다음 단계 →</button>
+    </div>
+  </section>
+
+  <!-- Step 2: 모둠 설정 -->
+  <section class="step-section" id="step2" style="display:none">
+    <div class="step-title"><span class="step-badge">2</span> 모둠 설정</div>
+    <div class="step2-info" id="step2Info">학생 0명</div>
+
+    <div class="setting-row">
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="modeByCount" onclick="switchGroupMode('count')">모둠 수로 나누기</button>
+        <button class="mode-tab" id="modeBySize" onclick="switchGroupMode('size')">인원 수로 나누기</button>
+      </div>
+    </div>
+
+    <div class="setting-row" id="settingCountRow">
+      <span class="setting-label">모둠 수</span>
+      <input type="number" class="setting-num" id="groupCount" value="4" min="2" max="20" oninput="updateStep2Preview()">
+      <span class="setting-note" id="step2PreviewCount"></span>
+    </div>
+
+    <div class="setting-row" id="settingSizeRow" style="display:none">
+      <span class="setting-label">모둠당 인원</span>
+      <input type="number" class="setting-num" id="groupSize" value="4" min="2" max="20" oninput="updateStep2Preview()">
+      <span class="setting-note" id="step2PreviewSize"></span>
+    </div>
+
+    <div class="setting-row">
+      <span class="setting-label">성별 배치 방식</span>
+      <div class="gender-opt-row">
+        <button class="gender-opt-btn active" id="gOptNone" onclick="setGenderOpt('none')">성별 무관 (완전 랜덤)</button>
+        <button class="gender-opt-btn" id="gOptBalance" onclick="setGenderOpt('balance')">각 모둠 성별 균형</button>
+        <button class="gender-opt-btn" id="gOptSame" onclick="setGenderOpt('same')">같은 성별끼리</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="goAssign()">🎲 모둠 배치</button>
+      <button class="btn-primary" style="background:var(--surface);color:var(--accent);border:2px solid var(--accent)" onclick="backToStep1()">← 명단 수정</button>
+    </div>
+  </section>
+
+  <!-- Step 3: 결과 -->
+  <section class="step-section" id="step3" style="display:none">
+    <div class="step-title"><span class="step-badge">3</span> 모둠 배치 결과</div>
+    <div class="result-toolbar">
+      <button class="btn-primary" onclick="goAssign()">🔀 다시 섞기</button>
+      <button class="btn-primary" style="background:var(--surface);color:var(--accent);border:2px solid var(--accent)" onclick="document.getElementById('step2').style.display='';document.getElementById('step3').style.display='none'">⚙️ 설정 변경</button>
+      <button class="btn-primary" style="background:var(--surface);color:var(--accent);border:2px solid var(--accent)" onclick="window.print()">🖨️ 출력</button>
+      <span class="result-summary" id="resultSummary"></span>
+    </div>
+    <div class="group-grid" id="groupGrid"></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ── 상수 ──────────────────────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
+const LS_KEY = 'group_students';
+
+// ── 상태 ──────────────────────────────────────────────────────
+let students = [];   // [{name, gender}]
+let groupMode = 'count';   // 'count' | 'size'
+let genderOpt = 'none';    // 'none' | 'balance' | 'same'
+let rowCounter = 0;
+let rosterCache = null;    // getStudentRoster 결과 캐시
+
+// ── 유틸 ──────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function norm(s) {
+  return String(s||'').replace(/\s/g,'').normalize('NFC').toLowerCase();
+}
+
+// ── 임포트 탭 전환 ──────────────────────────────────────────
+let currentImportTab = 'manual';
+function switchImportTab(tab) {
+  currentImportTab = tab;
+  ['manual','sheet','excel'].forEach(t => {
+    document.getElementById('btn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===tab);
+    const p = document.getElementById('panel'+t.charAt(0).toUpperCase()+t.slice(1));
+    if (p) p.classList.toggle('open', t===tab);
+  });
+  // 직접 입력 탭에서는 테이블 항상 표시
+  if (tab === 'manual') ensureTableVisible();
+}
+
+function ensureTableVisible() {
+  if (document.getElementById('stuRows').children.length === 0) addRow();
+  document.getElementById('tableWrap').style.display = '';
+  updateStep1Footer();
+}
+
+// ── 학년·반으로 시트에서 불러오기 ──────────────────────────────
+function callApiJsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = '__groupCb_' + Date.now();
+    const to = setTimeout(() => {
+      delete window[cbName];
+      reject(new Error('응답 시간 초과'));
+    }, 8000);
+    window[cbName] = (data) => {
+      clearTimeout(to);
+      delete window[cbName];
+      resolve(data);
+    };
+    const sc = document.createElement('script');
+    sc.src = url + '&callback=' + cbName;
+    sc.onerror = () => { clearTimeout(to); delete window[cbName]; reject(new Error('네트워크 오류')); };
+    document.body.appendChild(sc);
+    setTimeout(() => { try { document.body.removeChild(sc); } catch(e){} }, 10000);
+  });
+}
+
+async function getRoster() {
+  if (rosterCache) return rosterCache;
+  const url = `${APPS_SCRIPT_URL}?action=getStudentRoster`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    rosterCache = data;
+    return data;
+  } catch(e) {
+    // fetch 실패 시 JSONP 폴백
+    const data = await callApiJsonp(url);
+    if (data.error) throw new Error(data.error);
+    rosterCache = data;
+    return data;
+  }
+}
+
+async function importFromSheet() {
+  const grade = document.getElementById('importGrade').value;
+  const ban = document.getElementById('importBan').value;
+  const msgEl = document.getElementById('sheetImportMsg');
+  const btn = document.getElementById('btnImportSheet');
+  btn.disabled = true;
+  msgEl.textContent = '불러오는 중...';
+
+  try {
+    const data = await getRoster();
+    const matched = (data.students || []).filter(s =>
+      String(s.grade) === String(grade) && String(s.ban) === String(ban)
+    );
+    if (!matched.length) {
+      msgEl.textContent = `${grade}학년 ${ban}반 학생을 찾지 못했습니다. 시트에 해당 반 데이터가 있는지 확인해주세요.`;
+      return;
+    }
+    // 번호 순 정렬
+    matched.sort((a,b) => (Number(a.num)||0) - (Number(b.num)||0));
+    students = matched.map(s => ({ name: s.name, gender: '미기재' }));
+    populateTable();
+    msgEl.textContent = `${grade}학년 ${ban}반 학생 ${students.length}명을 불러왔습니다.`;
+  } catch(err) {
+    msgEl.textContent = '불러오기 실패: ' + (err.message || String(err));
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── 엑셀 업로드 ──────────────────────────────────────────────
+function handleFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      if (!data || data.length < 2) { alert('데이터를 찾지 못했습니다.'); return; }
+      const header = data[0].map(h => norm(h));
+      const nameCol = header.findIndex(h => ['이름','성명','학생이름','name'].some(k => h.includes(k)));
+      const genderCol = header.findIndex(h => ['성별','젠더','gender'].some(k => h.includes(k)));
+      if (nameCol < 0) { alert('이름 열을 찾지 못했습니다. 헤더에 "이름" 또는 "성명" 열이 있어야 합니다.'); return; }
+      students = [];
+      for (let r = 1; r < data.length; r++) {
+        const name = String(data[r][nameCol] || '').trim();
+        const gender = genderCol >= 0 ? String(data[r][genderCol] || '').trim() || '미기재' : '미기재';
+        if (name) students.push({ name, gender });
+      }
+      if (!students.length) { alert('학생 데이터를 찾지 못했습니다.'); return; }
+      populateTable();
+    } catch(err) { alert('파일 읽기 실패: ' + err.message); }
+  };
+  reader.readAsBinaryString(file);
+  input.value = '';
+}
+
+// ── 테이블 조작 ──────────────────────────────────────────────
+function populateTable() {
+  document.getElementById('tableWrap').style.display = '';
+  document.getElementById('stuRows').innerHTML = '';
+  rowCounter = 0;
+  students.forEach(s => addRow(s.name, s.gender));
+  syncStudents();
+}
+
+function addRow(name='', gender='남') {
+  const id = 'gr' + (rowCounter++);
+  const tr = document.createElement('tr');
+  tr.id = id;
+  tr.innerHTML = `
+    <td class="row-num-cell" id="${id}_n"></td>
+    <td><input class="stu-input" value="${esc(name)}" placeholder="이름" oninput="syncStudents()"></td>
+    <td>
+      <select class="stu-gender-sel" onchange="syncStudents()">
+        <option value="남"${gender==='남'?' selected':''}>남</option>
+        <option value="여"${gender==='여'?' selected':''}>여</option>
+        <option value="미기재"${gender==='미기재'?' selected':''}>-</option>
+      </select>
+    </td>
+    <td><button class="btn-del-row" onclick="document.getElementById('${id}').remove();syncStudents()">✕</button></td>`;
+  document.getElementById('stuRows').appendChild(tr);
+  reNumberRows();
+}
+
+function reNumberRows() {
+  document.querySelectorAll('#stuRows tr').forEach((tr, i) => {
+    const n = tr.querySelector('[id$="_n"]');
+    if (n) n.textContent = i + 1;
+  });
+}
+
+function syncStudents() {
+  students = [];
+  document.querySelectorAll('#stuRows tr').forEach(tr => {
+    const name = (tr.querySelector('input')?.value || '').trim();
+    const gender = tr.querySelector('select')?.value || '미기재';
+    if (name) students.push({ name, gender });
+  });
+  reNumberRows();
+  try { localStorage.setItem(LS_KEY, JSON.stringify(students)); } catch(e) {}
+  updateStep1Footer();
+}
+
+function updateStep1Footer() {
+  const footer = document.getElementById('step1Footer');
+  const summary = document.getElementById('stuSummary');
+  if (students.length > 0) {
+    footer.classList.add('visible');
+    summary.textContent = `총 ${students.length}명`;
+  } else {
+    footer.classList.remove('visible');
+  }
+}
+
+function confirmStep1() {
+  syncStudents();
+  if (!students.length) { alert('학생을 1명 이상 입력해주세요.'); return; }
+  document.getElementById('step2Info').textContent = `학생 ${students.length}명`;
+  document.getElementById('step2').style.display = '';
+  updateStep2Preview();
+  document.getElementById('step2').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function backToStep1() {
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('step3').style.display = 'none';
+}
+
+// ── Step 2 설정 ──────────────────────────────────────────────
+function switchGroupMode(mode) {
+  groupMode = mode;
+  document.getElementById('modeByCount').classList.toggle('active', mode==='count');
+  document.getElementById('modeBySize').classList.toggle('active', mode==='size');
+  document.getElementById('settingCountRow').style.display = mode==='count' ? '' : 'none';
+  document.getElementById('settingSizeRow').style.display = mode==='size' ? '' : 'none';
+  updateStep2Preview();
+}
+
+function setGenderOpt(opt) {
+  genderOpt = opt;
+  ['none','balance','same'].forEach(o => {
+    document.getElementById('gOpt'+o.charAt(0).toUpperCase()+o.slice(1)).classList.toggle('active', o===opt);
+  });
+}
+
+function updateStep2Preview() {
+  const n = students.length;
+  if (!n) return;
+  if (groupMode === 'count') {
+    const gc = Math.max(2, Math.min(20, parseInt(document.getElementById('groupCount').value)||4));
+    const base = Math.floor(n/gc), rem = n%gc;
+    document.getElementById('step2PreviewCount').textContent =
+      rem ? `→ ${rem}개 모둠 ${base+1}명 + ${gc-rem}개 모둠 ${base}명` : `→ 각 모둠 ${base}명`;
+  } else {
+    const gs = Math.max(2, Math.min(20, parseInt(document.getElementById('groupSize').value)||4));
+    const gc = Math.ceil(n/gs);
+    const base = Math.floor(n/gc), rem = n%gc;
+    document.getElementById('step2PreviewSize').textContent =
+      `→ ${gc}개 모둠` + (rem ? ` (${rem}개 모둠 ${base+1}명 + ${gc-rem}개 모둠 ${base}명)` : ` (각 ${base}명)`);
+  }
+}
+
+// ── 배치 알고리즘 ──────────────────────────────────────────────
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function calcGroupCount() {
+  const n = students.length;
+  if (groupMode === 'count') return Math.max(2, Math.min(n, parseInt(document.getElementById('groupCount').value)||4));
+  const gs = Math.max(2, parseInt(document.getElementById('groupSize').value)||4);
+  return Math.max(2, Math.ceil(n/gs));
+}
+
+function assignGroups() {
+  const gc = calcGroupCount();
+  const groups = Array.from({length:gc}, () => []);
+
+  if (genderOpt === 'same') {
+    // 같은 성별끼리 — 성별별 풀을 먼저 분배
+    const males   = shuffle(students.filter(s => s.gender === '남'));
+    const females = shuffle(students.filter(s => s.gender === '여'));
+    const others  = shuffle(students.filter(s => s.gender !== '남' && s.gender !== '여'));
+
+    // 남학생 → 앞 모둠들부터 채우기
+    let gi = 0;
+    males.forEach(s => { groups[gi % gc].push(s); gi++; });
+    females.forEach(s => { groups[gi % gc].push(s); gi++; });
+    others.forEach(s => { groups[gi % gc].push(s); gi++; });
+
+  } else if (genderOpt === 'balance') {
+    // 성별 균형 — 인터리브 방식
+    const males   = shuffle(students.filter(s => s.gender === '남'));
+    const females = shuffle(students.filter(s => s.gender === '여'));
+    const others  = shuffle(students.filter(s => s.gender !== '남' && s.gender !== '여'));
+    // 각 풀을 라운드로빈으로 각 모둠에 배분
+    let gi = 0;
+    males.forEach(s => { groups[gi++ % gc].push(s); });
+    gi = 0;
+    females.forEach(s => { groups[gi++ % gc].push(s); });
+    gi = 0;
+    others.forEach(s => { groups[gi++ % gc].push(s); });
+    // 결과 모둠 안에서 순서 셔플
+    groups.forEach(g => { for(let i=g.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[g[i],g[j]]=[g[j],g[i]];} });
+
+  } else {
+    // 완전 랜덤
+    const pool = shuffle(students);
+    pool.forEach((s, i) => groups[i % gc].push(s));
+  }
+
+  return groups;
+}
+
+function goAssign() {
+  syncStudents();
+  if (!students.length) return;
+  const groups = assignGroups();
+  renderGroups(groups);
+  document.getElementById('step3').style.display = '';
+  document.getElementById('step3').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── 결과 렌더링 ──────────────────────────────────────────────
+const GROUP_COLORS = ['#1a3d7c','#2e7d32','#b71c1c','#6a1b9a','#e65100','#00695c','#c62828','#283593','#558b2f','#4a148c'];
+
+function renderGroups(groups) {
+  const maleCount   = students.filter(s=>s.gender==='남').length;
+  const femaleCount = students.filter(s=>s.gender==='여').length;
+  document.getElementById('resultSummary').textContent =
+    `총 ${students.length}명 → ${groups.length}모둠` +
+    (maleCount||femaleCount ? ` (남 ${maleCount}명 / 여 ${femaleCount}명)` : '');
+
+  let html = '';
+  groups.forEach((g, gi) => {
+    const color = GROUP_COLORS[gi % GROUP_COLORS.length];
+    const mC = g.filter(s=>s.gender==='남').length;
+    const fC = g.filter(s=>s.gender==='여').length;
+    const genderInfo = (mC||fC) ? ` <small style="font-weight:400;opacity:0.75">남${mC} 여${fC}</small>` : '';
+    html += `<div class="group-card">
+      <div class="group-card-header" style="background:${color}">${gi+1}모둠 (${g.length}명)${genderInfo}</div>
+      <div class="group-card-body">`;
+    g.forEach((s, si) => {
+      const gb = s.gender==='남' ? 'male' : s.gender==='여' ? 'female' : 'none';
+      const gl = s.gender==='남' ? '남' : s.gender==='여' ? '여' : '-';
+      html += `<div class="group-member">
+        <span class="gender-badge ${gb}">${gl}</span>
+        <span>${esc(s.name)}</span>
+        <span class="group-num-badge">${si+1}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  document.getElementById('groupGrid').innerHTML = html;
+}
+
+// ── 초기화 ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // 저장된 명단 복원
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_KEY)||'null');
+    if (saved && saved.length) {
+      students = saved;
+      populateTable();
+      const banner = document.createElement('div');
+      banner.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--on-accent,#fff);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:9999;';
+      banner.textContent=`💾 저장된 명단 ${students.length}명을 불러왔습니다`;
+      document.body.appendChild(banner);
+      setTimeout(()=>banner.remove(), 3000);
+      return;
+    }
+  } catch(e) {}
+  // 저장된 명단 없으면 직접 입력 탭 활성화
+  switchImportTab('manual');
+});
+</script>
+</body>
+</html>
