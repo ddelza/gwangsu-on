@@ -640,19 +640,23 @@ function printRoster() {
   });
   if (!results.length) { alert('출력할 학생이 없습니다.'); return; }
 
-  // 반별로 그룹화
-  const classMap = new Map();
-  results.forEach(s => {
-    const key = `${s.grade}학년 ${s.ban}반`;
-    if (!classMap.has(key)) classMap.set(key, []);
-    classMap.get(key).push(s);
-  });
+  // 그룹 결정: 활동 필터 활성화 시 한 장으로, 아니면 반별로
+  const groupMap = new Map();
+  if (activityFilter) {
+    const typeLabel = activityFilter.type === 'sport' ? '스포츠클럽' : (activityFilter.fieldLabel || '');
+    const title = `${activityFilter.grade}학년 ${activityFilter.value}`;
+    groupMap.set(title, results);
+  } else {
+    results.forEach(s => {
+      const key = `${s.grade}학년 ${s.ban}반`;
+      if (!groupMap.has(key)) groupMap.set(key, []);
+      groupMap.get(key).push(s);
+    });
+  }
 
   const today = new Date().toLocaleDateString('ko-KR');
-  // 한 반 최대 인원 기준으로 컬럼 수 결정: 40명 이하→4열, 이상→5열
-  // 각 컬럼은 [번호, 이름, 서명] 구성
 
-  const pages = [...classMap.entries()].map(([className, students], pi) => {
+  const pages = [...groupMap.entries()].map(([className, students], pi) => {
     // 열당 최대 30명, 열 수는 올림
     const PER_COL = 30;
     const COLS = Math.ceil(students.length / PER_COL);
