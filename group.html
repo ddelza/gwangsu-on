@@ -675,9 +675,7 @@ function baseAssign(gc) {
     // 인터리브: 남/여/기타 각각 라운드로빈
     let gi=0;
     shuffle(students.filter(s=>s.gender==='남')).forEach(s=>{groups[gi++%gc].push(s);});
-    gi=0;
     shuffle(students.filter(s=>s.gender==='여')).forEach(s=>{groups[gi++%gc].push(s);});
-    gi=0;
     shuffle(students.filter(s=>s.gender!=='남'&&s.gender!=='여')).forEach(s=>{groups[gi++%gc].push(s);});
     groups.forEach(g=>{for(let i=g.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[g[i],g[j]]=[g[j],g[i]];}});
   } else if (genderOpt==='same') {
