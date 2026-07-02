@@ -86,6 +86,12 @@ body {
 }
 
 .tt-wrap { max-width: 820px; margin: 0 auto; padding: 20px 16px 40px; }
+.tt-mode-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
+.tt-mode-btn {
+  padding: 8px 16px; border-radius: 999px; border: none; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; background: var(--accent-soft); color: var(--accent);
+}
+.tt-mode-btn.active { background: var(--accent); color: var(--on-accent, #fff); }
 .tt-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
 .tt-controls select {
   padding: 10px 14px; font-size: 1rem; border: 2px solid var(--border); border-radius: 10px;
@@ -149,10 +155,15 @@ body {
 </div>
 
 <div class="tt-wrap">
+  <div class="tt-mode-toggle">
+    <button type="button" class="tt-mode-btn active" data-mode="class">반별 조회</button>
+    <button type="button" class="tt-mode-btn" data-mode="teacher">교사별 조회</button>
+  </div>
   <div class="tt-controls">
     <select id="weekSelect"></select>
     <select id="gradeSelect"></select>
     <select id="classSelect"></select>
+    <select id="teacherSelect" style="display:none;"></select>
     <span class="tt-synced" id="syncedLabel"></span>
   </div>
   <div class="tt-card">
@@ -226,6 +237,7 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm5dUC5HkUiHYj
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금'];
 
 let cachedData = null; // { syncedAt, weeks: [{ r, label, startDate, timetable: { grade: { class: [ [day0...],... ] } } }] }
+let currentMode = 'class'; // 'class' | 'teacher'
 
 function loadTimetable() {
   return callApi('cached', {}, { scriptUrl: APPS_SCRIPT_URL, jsonp: true });
@@ -236,10 +248,34 @@ function currentWeek() {
   return cachedData.weeks.find(w => w.r === weekSelect.value) || cachedData.weeks[0];
 }
 
+// 현재 주차의 전체 학년/반을 훑어서 { grade, class, weekday, classTime, subject, teacher } 셀을 하나의 배열로 펼친다.
+function flattenWeekCells(week) {
+  const cells = [];
+  Object.keys(week.timetable).forEach(grade => {
+    Object.keys(week.timetable[grade]).forEach(cls => {
+      const days = week.timetable[grade][cls];
+      days.forEach((day, weekday) => {
+        if (!day) return;
+        day.forEach((cell, period) => {
+          if (cell && cell.subject) cells.push(Object.assign({ weekday, period }, cell));
+        });
+      });
+    });
+  });
+  return cells;
+}
+
+function listTeachers(week) {
+  const names = new Set();
+  flattenWeekCells(week).forEach(cell => { if (cell.teacher) names.add(cell.teacher); });
+  return [...names].sort((a, b) => a.localeCompare(b, 'ko'));
+}
+
 function populateSelectors() {
   const weekSelect = document.getElementById('weekSelect');
   const gradeSelect = document.getElementById('gradeSelect');
   const classSelect = document.getElementById('classSelect');
+  const teacherSelect = document.getElementById('teacherSelect');
 
   if (!cachedData.weeks || cachedData.weeks.length === 0) {
     document.getElementById('tableArea').innerHTML =
@@ -250,6 +286,7 @@ function populateSelectors() {
   const savedWeek = localStorage.getItem('tt_week');
   const savedGrade = localStorage.getItem('tt_grade');
   const savedClass = localStorage.getItem('tt_class');
+  const savedTeacher = localStorage.getItem('tt_teacher');
   const weekRs = cachedData.weeks.map(w => w.r);
 
   weekSelect.innerHTML = cachedData.weeks.map(w => `<option value="${esc(w.r)}">${esc(w.label)}</option>`).join('');
@@ -266,23 +303,72 @@ function populateSelectors() {
     classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}반</option>`).join('');
     classSelect.value = classes.includes(savedClass) ? savedClass : (classes[0] || '');
   }
+  function refreshTeacherOptions() {
+    const teachers = listTeachers(currentWeek());
+    teacherSelect.innerHTML = teachers.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    teacherSelect.value = teachers.includes(savedTeacher) ? savedTeacher : (teachers[0] || '');
+  }
   refreshGradeOptions();
   refreshClassOptions();
+  refreshTeacherOptions();
 
-  weekSelect.onchange = () => { refreshGradeOptions(); refreshClassOptions(); renderTable(); saveSelection(); };
+  weekSelect.onchange = () => { refreshGradeOptions(); refreshClassOptions(); refreshTeacherOptions(); renderTable(); saveSelection(); };
   gradeSelect.onchange = () => { refreshClassOptions(); renderTable(); saveSelection(); };
   classSelect.onchange = () => { renderTable(); saveSelection(); };
+  teacherSelect.onchange = () => { renderTable(); saveSelection(); };
+
+  function applyMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.tt-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    gradeSelect.style.display = mode === 'class' ? '' : 'none';
+    classSelect.style.display = mode === 'class' ? '' : 'none';
+    teacherSelect.style.display = mode === 'teacher' ? '' : 'none';
+  }
+
+  document.querySelectorAll('.tt-mode-btn').forEach(btn => {
+    btn.onclick = () => { applyMode(btn.dataset.mode); renderTable(); saveSelection(); };
+  });
+
+  const savedMode = localStorage.getItem('tt_mode');
+  applyMode(savedMode === 'teacher' ? 'teacher' : 'class');
   return true;
 }
 
 function saveSelection() {
+  localStorage.setItem('tt_mode', currentMode);
   localStorage.setItem('tt_week', document.getElementById('weekSelect').value);
   localStorage.setItem('tt_grade', document.getElementById('gradeSelect').value);
   localStorage.setItem('tt_class', document.getElementById('classSelect').value);
+  localStorage.setItem('tt_teacher', document.getElementById('teacherSelect').value);
 }
 
-function renderTable() {
-  const week = currentWeek();
+function weekdayHeaderHtml(week) {
+  const todayStr = new Date().toDateString();
+  const startDate = week.startDate ? new Date(week.startDate) : null;
+  let html = '<thead><tr><th class="tt-corner"></th>';
+  WEEKDAY_LABELS.forEach((label, idx) => {
+    let dateLabel = label;
+    let isToday = false;
+    if (startDate) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + idx);
+      dateLabel = `${label}(${d.getDate()})`;
+      isToday = d.toDateString() === todayStr;
+    }
+    html += `<th class="${isToday ? 'tt-today' : ''}">${dateLabel}</th>`;
+  });
+  html += '</tr></thead>';
+  return html;
+}
+
+function isTodayColumn(week, weekdayIdx) {
+  if (!week.startDate) return false;
+  const dd = new Date(week.startDate);
+  dd.setDate(dd.getDate() + weekdayIdx);
+  return dd.toDateString() === new Date().toDateString();
+}
+
+function renderClassTable(week) {
   const grade = document.getElementById('gradeSelect').value;
   const cls = document.getElementById('classSelect').value;
   const days = (week.timetable[grade] || {})[cls];
@@ -297,33 +383,12 @@ function renderTable() {
   let maxPeriods = 0;
   days.forEach(day => { if (day) maxPeriods = Math.max(maxPeriods, day.length); });
 
-  const todayStr = new Date().toDateString();
-  const startDate = week.startDate ? new Date(week.startDate) : null;
-
-  let html = '<table class="tt-table"><thead><tr><th class="tt-corner"></th>';
-  WEEKDAY_LABELS.forEach((label, idx) => {
-    let dateLabel = label;
-    let isToday = false;
-    if (startDate) {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + idx);
-      dateLabel = `${label}(${d.getDate()})`;
-      isToday = d.toDateString() === todayStr;
-    }
-    html += `<th class="${isToday ? 'tt-today' : ''}">${dateLabel}</th>`;
-  });
-  html += '</tr></thead><tbody>';
-
+  let html = '<table class="tt-table">' + weekdayHeaderHtml(week) + '<tbody>';
   for (let period = 0; period < maxPeriods; period++) {
     html += `<tr><th>${period + 1}</th>`;
     for (let d = 0; d < 5; d++) {
       const cell = days[d] && days[d][period];
-      let isToday = false;
-      if (startDate) {
-        const dd = new Date(startDate);
-        dd.setDate(dd.getDate() + d);
-        isToday = dd.toDateString() === todayStr;
-      }
+      const isToday = isTodayColumn(week, d);
       if (cell && cell.subject) {
         html += `<td class="tt-cell${isToday ? ' tt-today-col' : ''}">
           <div class="tt-subject">${esc(cell.subject)}</div>
@@ -339,13 +404,59 @@ function renderTable() {
   tableArea.innerHTML = html;
 }
 
+function renderTeacherTable(week) {
+  const teacher = document.getElementById('teacherSelect').value;
+  const tableArea = document.getElementById('tableArea');
+  const cells = flattenWeekCells(week);
+
+  if (!teacher) {
+    tableArea.innerHTML = '<div class="empty-state">해당 주차에 교사 정보가 없습니다.</div>';
+    return;
+  }
+
+  // 학년/반마다 교시 수가 달라도 빠짐없이 보이도록, 이번 주 전체에서 가장 큰 교시 수를 기준으로 삼는다.
+  let maxPeriods = 0;
+  cells.forEach(cell => { maxPeriods = Math.max(maxPeriods, cell.period + 1); });
+
+  const grid = {}; // "weekday_period" -> cell
+  cells.filter(cell => cell.teacher === teacher).forEach(cell => {
+    grid[cell.weekday + '_' + cell.period] = cell;
+  });
+
+  let html = '<table class="tt-table">' + weekdayHeaderHtml(week) + '<tbody>';
+  for (let period = 0; period < maxPeriods; period++) {
+    html += `<tr><th>${period + 1}</th>`;
+    for (let d = 0; d < 5; d++) {
+      const cell = grid[d + '_' + period];
+      const isToday = isTodayColumn(week, d);
+      if (cell) {
+        html += `<td class="tt-cell${isToday ? ' tt-today-col' : ''}">
+          <div class="tt-subject">${esc(cell.subject)}</div>
+          <div class="tt-teacher">${esc(cell.grade)}학년 ${esc(cell.class)}반</div>
+        </td>`;
+      } else {
+        html += `<td class="tt-cell tt-empty-cell${isToday ? ' tt-today-col' : ''}">-</td>`;
+      }
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  tableArea.innerHTML = html;
+}
+
+function renderTable() {
+  const week = currentWeek();
+  if (currentMode === 'teacher') renderTeacherTable(week);
+  else renderClassTable(week);
+}
+
 window.onload = function() {
   showExternalBrowserBannerIfNeeded('inappBanner');
   loadTimetable().then(data => {
     cachedData = data;
     const syncedLabel = document.getElementById('syncedLabel');
     syncedLabel.textContent = data.syncedAt
-      ? '마지막 동기화: ' + new Date(data.syncedAt).toLocaleString('ko-KR')
+      ? '컴시간 알리미 마지막 동기화: ' + new Date(data.syncedAt).toLocaleString('ko-KR')
       : '동기화 기록 없음';
     if (populateSelectors()) renderTable();
   }).catch(err => {
