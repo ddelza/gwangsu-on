@@ -149,6 +149,7 @@ body {
 
 <div class="tt-wrap">
   <div class="tt-controls">
+    <select id="weekSelect"></select>
     <select id="gradeSelect"></select>
     <select id="classSelect"></select>
     <span class="tt-synced" id="syncedLabel"></span>
@@ -223,75 +224,105 @@ function esc(str) {
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm5dUC5HkUiHYjrkwuVWG1Quvan-_mUIY3SJhPwnvaCW30iw83CsFavm4LwthFfAz-mw/exec';
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금'];
 
-let cachedData = null; // { syncedAt, timetable: { grade: { class: [ [day0...],[day1...],... ] } } }
+let cachedData = null; // { syncedAt, weeks: [{ r, label, startDate, timetable: { grade: { class: [ [day0...],... ] } } }] }
 
 function loadTimetable() {
   return callApi('cached', {}, { scriptUrl: APPS_SCRIPT_URL, jsonp: true });
 }
 
+function currentWeek() {
+  const weekSelect = document.getElementById('weekSelect');
+  return cachedData.weeks.find(w => w.r === weekSelect.value) || cachedData.weeks[0];
+}
+
 function populateSelectors() {
+  const weekSelect = document.getElementById('weekSelect');
   const gradeSelect = document.getElementById('gradeSelect');
   const classSelect = document.getElementById('classSelect');
-  const grades = Object.keys(cachedData.timetable || {}).sort((a, b) => Number(a) - Number(b));
 
-  if (grades.length === 0) {
+  if (!cachedData.weeks || cachedData.weeks.length === 0) {
     document.getElementById('tableArea').innerHTML =
       '<div class="empty-state">아직 동기화된 시간표가 없습니다. 서버에서 comcigan_dailySync를 한 번 실행해주세요.</div>';
-    return;
+    return false;
   }
 
+  const savedWeek = localStorage.getItem('tt_week');
   const savedGrade = localStorage.getItem('tt_grade');
   const savedClass = localStorage.getItem('tt_class');
+  const weekRs = cachedData.weeks.map(w => w.r);
 
-  gradeSelect.innerHTML = grades.map(g => `<option value="${g}">${g}학년</option>`).join('');
-  gradeSelect.value = grades.includes(savedGrade) ? savedGrade : grades[0];
+  weekSelect.innerHTML = cachedData.weeks.map(w => `<option value="${esc(w.r)}">${esc(w.label)}</option>`).join('');
+  weekSelect.value = weekRs.includes(savedWeek) ? savedWeek : weekRs[0];
 
+  function refreshGradeOptions() {
+    const grades = Object.keys(currentWeek().timetable || {}).sort((a, b) => Number(a) - Number(b));
+    gradeSelect.innerHTML = grades.map(g => `<option value="${g}">${g}학년</option>`).join('');
+    gradeSelect.value = grades.includes(savedGrade) ? savedGrade : grades[0];
+  }
   function refreshClassOptions() {
     const grade = gradeSelect.value;
-    const classes = Object.keys(cachedData.timetable[grade] || {}).sort((a, b) => Number(a) - Number(b));
+    const classes = Object.keys(currentWeek().timetable[grade] || {}).sort((a, b) => Number(a) - Number(b));
     classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}반</option>`).join('');
     classSelect.value = classes.includes(savedClass) ? savedClass : (classes[0] || '');
   }
+  refreshGradeOptions();
   refreshClassOptions();
 
+  weekSelect.onchange = () => { refreshGradeOptions(); refreshClassOptions(); renderTable(); saveSelection(); };
   gradeSelect.onchange = () => { refreshClassOptions(); renderTable(); saveSelection(); };
   classSelect.onchange = () => { renderTable(); saveSelection(); };
+  return true;
 }
 
 function saveSelection() {
+  localStorage.setItem('tt_week', document.getElementById('weekSelect').value);
   localStorage.setItem('tt_grade', document.getElementById('gradeSelect').value);
   localStorage.setItem('tt_class', document.getElementById('classSelect').value);
 }
 
 function renderTable() {
+  const week = currentWeek();
   const grade = document.getElementById('gradeSelect').value;
   const cls = document.getElementById('classSelect').value;
-  const week = (cachedData.timetable[grade] || {})[cls];
+  const days = (week.timetable[grade] || {})[cls];
   const tableArea = document.getElementById('tableArea');
 
-  if (!week) {
+  if (!days) {
     tableArea.innerHTML = '<div class="empty-state">해당 학년/반 데이터가 없습니다.</div>';
     return;
   }
 
   // 요일별 최대 교시 수 계산 (학년/반마다 다를 수 있어서 고정하지 않음)
   let maxPeriods = 0;
-  week.forEach(day => { if (day) maxPeriods = Math.max(maxPeriods, day.length); });
+  days.forEach(day => { if (day) maxPeriods = Math.max(maxPeriods, day.length); });
 
-  const jsToday = new Date().getDay(); // 0=일 ... 6=토
-  const todayIdx = jsToday >= 1 && jsToday <= 5 ? jsToday - 1 : -1; // 0=월 ... 4=금
+  const todayStr = new Date().toDateString();
+  const startDate = week.startDate ? new Date(week.startDate) : null;
 
   let html = '<table class="tt-table"><thead><tr><th class="tt-corner"></th>';
   WEEKDAY_LABELS.forEach((label, idx) => {
-    html += `<th class="${idx === todayIdx ? 'tt-today' : ''}">${label}</th>`;
+    let dateLabel = label;
+    let isToday = false;
+    if (startDate) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + idx);
+      dateLabel = `${label}(${d.getDate()})`;
+      isToday = d.toDateString() === todayStr;
+    }
+    html += `<th class="${isToday ? 'tt-today' : ''}">${dateLabel}</th>`;
   });
   html += '</tr></thead><tbody>';
 
   for (let period = 0; period < maxPeriods; period++) {
     html += `<tr><th>${period + 1}</th>`;
     for (let d = 0; d < 5; d++) {
-      const cell = week[d] && week[d][period];
-      const isToday = d === todayIdx;
+      const cell = days[d] && days[d][period];
+      let isToday = false;
+      if (startDate) {
+        const dd = new Date(startDate);
+        dd.setDate(dd.getDate() + d);
+        isToday = dd.toDateString() === todayStr;
+      }
       if (cell && cell.subject) {
         html += `<td class="tt-cell${isToday ? ' tt-today-col' : ''}">
           <div class="tt-subject">${esc(cell.subject)}</div>
@@ -315,8 +346,7 @@ window.onload = function() {
     syncedLabel.textContent = data.syncedAt
       ? '마지막 동기화: ' + new Date(data.syncedAt).toLocaleString('ko-KR')
       : '동기화 기록 없음';
-    populateSelectors();
-    renderTable();
+    if (populateSelectors()) renderTable();
   }).catch(err => {
     document.getElementById('tableArea').innerHTML =
       `<div class="error-state">불러오기 실패: ${esc(err.message || String(err))}</div>`;
