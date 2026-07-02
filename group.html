@@ -7,31 +7,13 @@
 <title>모둠 짜기 — 광수 Online 교무실</title>
 <script>
 (function(){
-  var F={
-    'claude':'Nanum+Myeongjo','notion':'Noto+Sans+KR:wght@400;600;700',
-    'figma':'IBM+Plex+Sans+KR:wght@400;500','starbucks':'Gowun+Dodum',
-    'lamborghini':'Gothic+A1:wght@700','ferrari':'Noto+Serif+KR:wght@400;500;700',
-    'bugatti':'Gowun+Batang','spotify':'Nanum+Gothic:wght@400;700',
-    'nvidia':'Do+Hyeon','airbnb':'Sunflower:wght@300;500;700'
-  };
-  try{
-    var t=localStorage.getItem('gwangsu_theme')||'';
-    if(F[t]){
-      var p=document.createElement('link');p.rel='preconnect';p.href='https://fonts.googleapis.com';document.head.appendChild(p);
-      var q=document.createElement('link');q.rel='preconnect';q.href='https://fonts.gstatic.com';q.crossOrigin='';document.head.appendChild(q);
-      var l=document.createElement('link');l.rel='stylesheet';
-      l.href='https://fonts.googleapis.com/css2?family='+F[t]+'&display=swap';document.head.appendChild(l);
-    }
-  }catch(e){}
+  var F={'claude':'Nanum+Myeongjo','notion':'Noto+Sans+KR:wght@400;600;700','figma':'IBM+Plex+Sans+KR:wght@400;500','starbucks':'Gowun+Dodum','lamborghini':'Gothic+A1:wght@700','ferrari':'Noto+Serif+KR:wght@400;500;700','bugatti':'Gowun+Batang','spotify':'Nanum+Gothic:wght@400;700','nvidia':'Do+Hyeon','airbnb':'Sunflower:wght@300;500;700'};
+  try{var t=localStorage.getItem('gwangsu_theme')||'';if(F[t]){var p=document.createElement('link');p.rel='preconnect';p.href='https://fonts.googleapis.com';document.head.appendChild(p);var q=document.createElement('link');q.rel='preconnect';q.href='https://fonts.gstatic.com';q.crossOrigin='';document.head.appendChild(q);var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+F[t]+'&display=swap';document.head.appendChild(l);}}catch(e){}
 })();
 </script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg:#f5f6f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#888888;
-  --border:#d0d6e2; --nav-bg:#1a3d7c; --nav-text:#d8e3ff; --accent:#1a3d7c; --accent-soft:#e6ebf5;
-  --font-body:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-}
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#f5f6f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#888888; --border:#d0d6e2; --nav-bg:#1a3d7c; --nav-text:#d8e3ff; --accent:#1a3d7c; --accent-soft:#e6ebf5; --font-body:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
 :root[data-theme="teal"]        { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
 :root[data-theme="coral"]       { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
 :root[data-theme="lavender"]    { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
@@ -52,82 +34,122 @@
 :root[data-theme="nvidia"]      { --bg:#ffffff; --surface:#f7f7f7; --text:#1a1a1a; --text-muted:#757575; --border:#cccccc; --nav-bg:#000000; --nav-text:#ffffff; --accent:#76b900; --accent-soft:rgba(118,185,0,0.1); --on-accent:#000000; --font-body:"Do Hyeon","Roboto","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 :root[data-theme="airbnb"]      { --bg:#ffffff; --surface:#f7f7f7; --text:#222222; --text-muted:#6a6a6a; --border:#dddddd; --nav-bg:#222222; --nav-text:#ffffff; --accent:#ff385c; --accent-soft:rgba(255,56,92,0.08); --font-body:"Sunflower","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
 
-body { font-family:var(--font-body); background:var(--bg); color:var(--text); min-height:100vh; }
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); }
+
+/* ── Nav ── */
 .topnav { display:flex; flex-wrap:wrap; align-items:center; gap:4px; background:var(--nav-bg); padding:12px 16px; }
-.topnav .brand { color:#fff; font-weight:700; font-size:1.05rem; margin-right:16px; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; }
+.topnav .brand { display:inline-flex; align-items:center; gap:8px; color:#fff; font-weight:700; font-size:1.05rem; margin-right:16px; white-space:nowrap; text-decoration:none; }
 .brand-logo { height:28px; width:auto; display:block; }
 .gen1-link { margin-left:auto; font-size:0.8rem; opacity:0.85; }
 .topnav a { color:var(--nav-text); text-decoration:none; padding:8px 12px; border-radius:8px; font-size:0.92rem; }
 .topnav a:hover, .topnav a.active { background:rgba(255,255,255,0.15); color:#fff; }
 
-.page-wrap { max-width:860px; margin:0 auto; padding:24px 16px 60px; }
-.page-title { font-size:1.5rem; font-weight:800; color:var(--accent); margin-bottom:24px; }
+/* ── App shell ── */
+.app-layout { display:flex; height:calc(100vh - 52px); overflow:hidden; }
 
-/* Steps */
-.step-section { background:var(--surface); border-radius:16px; padding:20px; margin-bottom:16px; border:1px solid var(--border); }
-.step-title { font-size:1.05rem; font-weight:700; color:var(--accent); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
-.step-badge { background:var(--accent); color:var(--on-accent,#fff); border-radius:999px; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; flex-shrink:0; }
+/* ── Sidebar ── */
+.sidebar { width:180px; min-width:180px; background:var(--surface); border-right:1px solid var(--border); padding:12px 0; overflow-y:auto; }
+.step-btn { display:flex; align-items:center; gap:10px; padding:13px 14px; cursor:pointer; border-left:3px solid transparent; font-size:0.88rem; font-weight:600; color:var(--text-muted); transition:all 0.15s; user-select:none; }
+.step-btn:hover { background:var(--accent-soft); color:var(--text); }
+.step-btn.active { border-left-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+.step-btn.done .step-dot { background:#48bb78; }
+.step-btn.locked { opacity:0.35; cursor:not-allowed; pointer-events:none; }
+.step-dot { width:8px; height:8px; border-radius:50%; background:var(--border); flex-shrink:0; transition:background 0.2s; }
+.step-btn.active .step-dot { background:var(--accent); }
 
-/* Import section */
-.import-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-.import-btn { padding:8px 16px; border-radius:8px; border:1.5px solid var(--accent); background:var(--surface); color:var(--accent); font-size:0.85rem; font-weight:600; cursor:pointer; transition:0.15s; font-family:inherit; }
-.import-btn:hover, .import-btn.active { background:var(--accent); color:var(--on-accent,#fff); }
-.import-panel { display:none; }
-.import-panel.open { display:block; }
+/* ── Main panel ── */
+.main-panel { flex:1; overflow-y:auto; background:var(--bg); }
+.step-section { display:none; padding:24px; }
+.step-section.active { display:block; }
+.step-title { font-size:1.15rem; font-weight:700; color:var(--accent); margin-bottom:18px; }
 
-/* Sheet import */
-.sheet-import-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px; background:var(--accent-soft); border-radius:10px; margin-bottom:10px; }
-.sheet-import-form label { font-size:0.85rem; font-weight:600; white-space:nowrap; }
-.sheet-import-sel { padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.85rem; font-family:inherit; cursor:pointer; }
-.sheet-import-btn { padding:8px 18px; border-radius:8px; border:none; background:var(--accent); color:var(--on-accent,#fff); font-size:0.85rem; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
-.sheet-import-btn:disabled { opacity:0.5; cursor:not-allowed; }
-.sheet-import-msg { font-size:0.8rem; color:var(--text-muted); margin-top:6px; min-height:1.2em; }
+/* ── Shared buttons ── */
+.btn-primary { padding:10px 22px; background:var(--accent); color:var(--on-accent,#fff); border:none; border-radius:10px; cursor:pointer; font-size:0.92rem; font-weight:700; font-family:inherit; }
+.btn-primary:hover { opacity:0.88; }
+.btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
+.btn-secondary { padding:9px 18px; border:2px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); cursor:pointer; font-size:0.88rem; font-weight:600; font-family:inherit; }
+.btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
 
-/* Upload */
-.upload-zone { border:2px dashed var(--border); border-radius:10px; padding:20px; text-align:center; cursor:pointer; color:var(--text-muted); font-size:0.88rem; margin-bottom:10px; transition:0.15s; }
+/* ── Step 1 ── */
+.import-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.import-tab { padding:7px 16px; border:1.5px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text-muted); font-size:0.85rem; font-weight:600; cursor:pointer; font-family:inherit; transition:0.15s; }
+.import-tab:hover { border-color:var(--accent); color:var(--accent); }
+.import-tab.active { border-color:var(--accent); background:var(--accent); color:var(--on-accent,#fff); }
+
+.sheet-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:14px; background:var(--accent-soft); border-radius:10px; margin-bottom:10px; }
+.sheet-form label { font-size:0.85rem; font-weight:600; }
+.sheet-sel { padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.85rem; font-family:inherit; }
+.import-msg { font-size:0.8rem; color:var(--text-muted); margin-bottom:10px; min-height:1.2em; }
+
+.upload-zone { border:2px dashed var(--border); border-radius:12px; padding:40px 24px; text-align:center; cursor:pointer; color:var(--text-muted); font-size:0.9rem; margin-bottom:10px; transition:0.15s; background:var(--surface); }
 .upload-zone:hover { border-color:var(--accent); color:var(--accent); }
 
-/* Student table */
 .stu-table-wrap { overflow-x:auto; margin-bottom:10px; }
-table.stu-table { width:100%; border-collapse:collapse; font-size:0.88rem; }
-table.stu-table th { background:var(--accent); color:var(--on-accent,#fff); padding:7px 10px; text-align:left; font-size:0.8rem; }
-table.stu-table td { padding:5px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
-table.stu-table tr:last-child td { border-bottom:none; }
-.stu-input { width:100%; border:none; background:transparent; color:var(--text); font-size:0.88rem; font-family:inherit; padding:2px 0; outline:none; }
-.stu-gender-sel { border:none; background:transparent; color:var(--text); font-size:0.85rem; font-family:inherit; cursor:pointer; padding:2px 4px; }
-.btn-del-row { background:none; border:none; color:#e53e3e; cursor:pointer; font-size:0.9rem; padding:2px 6px; border-radius:4px; }
-.btn-del-row:hover { background:#ffe4e4; }
-.row-num-cell { color:var(--text-muted); font-size:0.78rem; text-align:center; width:32px; }
-
-/* Step footer */
-.step-footer { display:none; margin-top:14px; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-.step-footer.visible { display:flex; }
-.stu-summary { font-size:0.88rem; color:var(--text-muted); }
-.btn-add-row { padding:6px 14px; border:1.5px dashed var(--border); border-radius:8px; background:none; cursor:pointer; color:var(--text-muted); font-size:0.82rem; font-family:inherit; transition:0.15s; }
+table.stu-table { border-collapse:collapse; min-width:300px; background:var(--surface); border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+.stu-table th { background:var(--accent); color:var(--on-accent,#fff); padding:9px 12px; text-align:left; font-size:0.84rem; }
+.stu-table td { padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.stu-table tr:last-child td { border-bottom:none; }
+.stu-table .num-col { color:var(--text-muted); font-size:0.8rem; width:32px; text-align:center; }
+.stu-input { border:1px solid var(--border); border-radius:6px; padding:5px 8px; width:120px; background:var(--bg); color:var(--text); font-size:0.88rem; font-family:inherit; }
+.stu-input:focus { outline:none; border-color:var(--accent); }
+.gender-sel { border:1px solid var(--border); border-radius:6px; padding:5px 8px; background:var(--bg); color:var(--text); font-size:0.88rem; cursor:pointer; font-family:inherit; }
+.btn-del { background:none; border:none; color:#e53e3e; cursor:pointer; font-size:1rem; padding:4px 6px; border-radius:4px; }
+.btn-del:hover { background:#ffe4e4; }
+.btn-add-row { margin-top:10px; padding:8px 16px; border:2px dashed var(--border); border-radius:8px; background:none; cursor:pointer; color:var(--text-muted); font-size:0.88rem; font-family:inherit; transition:0.15s; }
 .btn-add-row:hover { border-color:var(--accent); color:var(--accent); }
-.btn-primary { padding:10px 24px; border-radius:10px; border:none; background:var(--accent); color:var(--on-accent,#fff); font-size:0.95rem; font-weight:700; cursor:pointer; font-family:inherit; transition:0.15s; }
-.btn-primary:hover { filter:brightness(1.15); }
-.btn-primary:disabled { opacity:0.45; cursor:not-allowed; filter:none; }
+.step1-footer { margin-top:18px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.stu-summary { font-size:0.88rem; color:var(--text-muted); }
 
-/* Step 2 — settings */
-.setting-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
-.setting-label { font-size:0.88rem; font-weight:600; white-space:nowrap; }
-.setting-num { width:72px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.95rem; font-family:inherit; text-align:center; }
-.setting-note { font-size:0.8rem; color:var(--text-muted); }
-.mode-tabs { display:flex; gap:8px; }
-.mode-tab { padding:7px 18px; border:1.5px solid var(--accent); border-radius:999px; background:var(--surface); color:var(--accent); font-size:0.85rem; font-weight:700; cursor:pointer; transition:0.15s; }
-.mode-tab.active { background:var(--accent); color:var(--on-accent,#fff); }
+/* ── Step 2 ── */
+.setting-group { margin-bottom:20px; }
+.setting-label { font-size:0.85rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+.mode-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.mode-tab { padding:8px 20px; border:2px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text-muted); font-size:0.88rem; font-weight:700; cursor:pointer; font-family:inherit; transition:0.15s; }
+.mode-tab.active { border-color:var(--accent); background:var(--accent); color:var(--on-accent,#fff); }
+.num-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.num-input { width:72px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.95rem; font-family:inherit; text-align:center; }
+.preview-note { font-size:0.82rem; color:var(--text-muted); }
 .gender-opt-row { display:flex; gap:8px; flex-wrap:wrap; }
-.gender-opt-btn { padding:7px 16px; border:1.5px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text); font-size:0.85rem; cursor:pointer; transition:0.15s; font-family:inherit; }
+.gender-opt-btn { padding:7px 16px; border:1.5px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text); font-size:0.85rem; cursor:pointer; font-family:inherit; transition:0.15s; }
 .gender-opt-btn.active { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:700; }
-.step2-info { font-size:0.85rem; color:var(--text-muted); padding:10px 14px; background:var(--accent-soft); border-radius:8px; margin-bottom:14px; }
+.step2-info { background:var(--accent-soft); color:var(--accent); padding:8px 14px; border-radius:8px; font-size:0.85rem; font-weight:600; margin-bottom:18px; display:inline-block; }
 
-/* Step 3 — result */
-.result-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center; }
-.result-summary { font-size:0.88rem; color:var(--text-muted); margin-left:auto; }
-.group-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
-.group-card { background:var(--surface); border-radius:12px; border:2px solid var(--border); overflow:hidden; }
-.group-card-header { padding:10px 14px; font-weight:700; font-size:0.9rem; color:var(--on-accent,#fff); }
+/* ── Constraint Panel (seat.html 스타일) ── */
+.constraint-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:20px; }
+.constraint-panel > summary { padding:12px 16px; cursor:pointer; font-weight:700; color:var(--accent); display:flex; align-items:center; gap:8px; list-style:none; user-select:none; }
+.constraint-panel > summary::-webkit-details-marker { display:none; }
+.constraint-panel > summary::after { content:'▸'; margin-left:auto; font-size:0.9rem; transition:transform 0.2s; }
+.constraint-panel[open] > summary::after { transform:rotate(90deg); }
+.cpanel-body { padding:0 16px 16px; border-top:1px solid var(--border); }
+.cpanel-badge { background:var(--accent); color:var(--on-accent,#fff); border-radius:999px; padding:2px 8px; font-size:0.75rem; font-weight:700; }
+
+.copt-details { border-top:1px solid var(--border); }
+.copt-details:first-of-type { border-top:none; }
+.copt-details > summary { padding:10px 2px; cursor:pointer; font-size:0.9rem; font-weight:600; list-style:none; display:flex; align-items:center; gap:6px; user-select:none; }
+.copt-details > summary::-webkit-details-marker { display:none; }
+.copt-details > summary::before { content:'▸'; font-size:0.75rem; color:var(--accent); flex-shrink:0; transition:transform 0.15s; }
+.copt-details[open] > summary::before { transform:rotate(90deg); }
+.copt-details[open] > summary { color:var(--accent); }
+.copt-inner { padding:4px 0 12px 18px; }
+.copt-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; font-size:0.85rem; }
+.cs-sel { padding:6px 8px; border:1px solid var(--border); border-radius:7px; background:var(--bg); color:var(--text); font-size:0.84rem; cursor:pointer; max-width:160px; font-family:inherit; }
+.cs-between { color:var(--text-muted); white-space:nowrap; font-size:0.82rem; }
+.btn-del-copt { background:none; border:none; color:#e53e3e; cursor:pointer; font-size:0.9rem; padding:3px 6px; border-radius:4px; }
+.btn-del-copt:hover { background:#ffe4e4; }
+.btn-add-copt { margin-top:4px; padding:5px 12px; border:1.5px dashed var(--border); border-radius:7px; background:none; cursor:pointer; color:var(--text-muted); font-size:0.82rem; font-family:inherit; transition:all 0.15s; }
+.btn-add-copt:hover { border-color:var(--accent); color:var(--accent); }
+.cpanel-note { font-size:0.79rem; color:var(--text-muted); margin-top:6px; }
+
+.step2-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+
+/* ── Step 3 ── */
+.result-toolbar { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; align-items:center; }
+.result-summary { font-size:0.85rem; color:var(--text-muted); margin-left:auto; }
+.warn-box { background:#fff8e1; border:1px solid #fbbf24; border-radius:8px; padding:10px 14px; font-size:0.84rem; color:#92400e; margin-bottom:14px; display:none; }
+
+.group-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:12px; }
+.group-card { background:var(--surface); border-radius:12px; overflow:hidden; border:1.5px solid var(--border); }
+.group-card-header { padding:10px 14px; font-weight:700; font-size:0.9rem; color:#fff; display:flex; align-items:center; justify-content:space-between; }
 .group-card-body { padding:10px 14px; }
 .group-member { display:flex; align-items:center; gap:6px; padding:4px 0; font-size:0.88rem; border-bottom:1px solid var(--border); }
 .group-member:last-child { border-bottom:none; }
@@ -135,23 +157,25 @@ table.stu-table tr:last-child td { border-bottom:none; }
 .gender-badge.male { background:#dbeafe; color:#1e40af; }
 .gender-badge.female { background:#fce7f3; color:#9d174d; }
 .gender-badge.none { background:var(--accent-soft); color:var(--accent); }
-.group-num-badge { font-size:0.75rem; color:var(--text-muted); margin-left:auto; }
-.empty-result { text-align:center; color:var(--text-muted); padding:30px 0; }
+.member-num { font-size:0.75rem; color:var(--text-muted); margin-left:auto; }
 
-/* Group colors (header background) */
-.gc-0 { background:#1a3d7c; } .gc-1 { background:#2e7d32; } .gc-2 { background:#b71c1c; }
-.gc-3 { background:#6a1b9a; } .gc-4 { background:#e65100; } .gc-5 { background:#00695c; }
-.gc-6 { background:#c62828; } .gc-7 { background:#283593; } .gc-8 { background:#558b2f; }
-.gc-9 { background:#4a148c; }
-
+/* ── Print ── */
 @media print {
-  .topnav, .step-section:not(#step3), .result-toolbar { display:none !important; }
-  .page-wrap { padding:0; max-width:100%; }
-  .group-grid { grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); }
-  .page-title { font-size:1.1rem; margin-bottom:12px; }
+  .topnav, .sidebar, #step1, #step2 { display:none !important; }
+  .app-layout { height:auto; overflow:visible; }
+  .main-panel { overflow:visible; }
+  #step3 { display:block !important; padding:0; }
+  .result-toolbar { display:none !important; }
+  .group-grid { grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
 }
-@media (max-width:600px) {
-  .page-wrap { padding:16px 12px 40px; }
+
+/* ── Mobile ── */
+@media (max-width:640px) {
+  .app-layout { flex-direction:column; height:auto; overflow:visible; }
+  .sidebar { width:100%; min-width:0; display:flex; border-right:none; border-bottom:1px solid var(--border); padding:6px 8px; overflow-x:auto; }
+  .step-btn { white-space:nowrap; border-left:none; border-bottom:3px solid transparent; padding:10px 12px; }
+  .step-btn.active { border-left-color:transparent; border-bottom-color:var(--accent); }
+  .main-panel { min-height:60vh; }
   .group-grid { grid-template-columns:1fr 1fr; }
 }
 </style>
@@ -163,182 +187,211 @@ table.stu-table tr:last-child td { border-bottom:none; }
   <a href="calender.html">캘린더</a>
   <a href="stu.html">학생 정보 조회</a>
   <a href="phone.html">내선번호</a>
-  <a href="tools.html">행정업무 간소화 도구</a>
+  <a href="tools.html" class="active">행정업무 간소화 도구</a>
+  <a href="group.html">모둠 짜기</a>
   <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
 </nav>
 
-<div class="page-wrap">
-  <div class="page-title">👥 모둠 짜기</div>
-
-  <!-- Step 1: 명단 등록 -->
-  <section class="step-section" id="step1">
-    <div class="step-title"><span class="step-badge">1</span> 학생 명단 등록</div>
-
-    <div class="import-row">
-      <button class="import-btn" id="btnManual" onclick="switchImportTab('manual')">✏️ 직접 입력</button>
-      <button class="import-btn" id="btnSheet" onclick="switchImportTab('sheet')">📋 학년·반으로 불러오기</button>
-      <button class="import-btn" id="btnExcel" onclick="switchImportTab('excel')">📂 엑셀 업로드</button>
+<div class="app-layout">
+  <!-- 사이드바 -->
+  <div class="sidebar">
+    <div class="step-btn active" id="sideBtn1" onclick="goStep(1)">
+      <span class="step-dot"></span>학생 명단
     </div>
+    <div class="step-btn locked" id="sideBtn2" onclick="goStep(2)">
+      <span class="step-dot"></span>모둠 설정
+    </div>
+    <div class="step-btn locked" id="sideBtn3" onclick="goStep(3)">
+      <span class="step-dot"></span>배치 결과
+    </div>
+  </div>
 
-    <!-- 학년·반으로 불러오기 -->
-    <div class="import-panel" id="panelSheet">
-      <div class="sheet-import-form">
-        <label>학년</label>
-        <select id="importGrade" class="sheet-import-sel">
-          <option value="1">1학년</option>
-          <option value="2">2학년</option>
-          <option value="3">3학년</option>
-        </select>
-        <label>반</label>
-        <select id="importBan" class="sheet-import-sel">
-          <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option>
-          <option value="4">4반</option><option value="5">5반</option><option value="6">6반</option>
-          <option value="7">7반</option><option value="8">8반</option><option value="9">9반</option>
-        </select>
-        <button class="sheet-import-btn" id="btnImportSheet" onclick="importFromSheet()">불러오기</button>
+  <!-- 메인 패널 -->
+  <div class="main-panel">
+
+    <!-- Step 1: 명단 -->
+    <div class="step-section active" id="step1">
+      <div class="step-title">👤 학생 명단 등록</div>
+
+      <div class="import-tabs">
+        <button class="import-tab active" onclick="switchTab('manual')">✏️ 직접 입력</button>
+        <button class="import-tab" onclick="switchTab('sheet')">📋 학년·반 불러오기</button>
+        <button class="import-tab" onclick="switchTab('excel')">📂 엑셀 업로드</button>
       </div>
-      <div class="sheet-import-msg" id="sheetImportMsg"></div>
-    </div>
 
-    <!-- 엑셀 업로드 -->
-    <div class="import-panel" id="panelExcel">
-      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('xlsxFile').click()">
-        📂 엑셀(.xlsx/.xls) 또는 CSV 파일을 클릭해 선택하세요<br>
-        <small style="font-size:0.78rem;margin-top:4px;display:block">열 순서 무관 — 이름·성명·학생이름 / 성별·젠더 열을 자동 인식합니다</small>
+      <!-- 학년·반 불러오기 -->
+      <div id="panelSheet" style="display:none">
+        <div class="sheet-form">
+          <label>학년</label>
+          <select id="importGrade" class="sheet-sel">
+            <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
+          </select>
+          <label>반</label>
+          <select id="importBan" class="sheet-sel">
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            <option>6</option><option>7</option><option>8</option><option>9</option>
+          </select>
+          <button class="btn-primary" id="btnImport" onclick="importFromSheet()" style="padding:8px 16px;font-size:0.85rem">불러오기</button>
+        </div>
+        <div class="import-msg" id="importMsg"></div>
       </div>
-      <input type="file" id="xlsxFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(this)">
-    </div>
 
-    <!-- 학생 테이블 -->
-    <div class="stu-table-wrap" id="tableWrap" style="display:none">
-      <table class="stu-table">
-        <thead><tr><th class="row-num-cell">#</th><th>이름</th><th>성별</th><th></th></tr></thead>
-        <tbody id="stuRows"></tbody>
-      </table>
-    </div>
+      <!-- 엑셀 업로드 -->
+      <div id="panelExcel" style="display:none">
+        <div class="upload-zone" onclick="document.getElementById('xlsxFile').click()">
+          📂 엑셀(.xlsx/.xls) 또는 CSV 클릭해서 선택<br>
+          <small>이름·성명 / 성별 열 자동 인식</small>
+        </div>
+        <input type="file" id="xlsxFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this)">
+      </div>
 
-    <div class="step-footer" id="step1Footer">
-      <div>
+      <!-- 학생 테이블 -->
+      <div class="stu-table-wrap" id="tableWrap" style="display:none">
+        <table class="stu-table">
+          <thead><tr><th class="num-col">#</th><th>이름</th><th>성별</th><th></th></tr></thead>
+          <tbody id="stuRows"></tbody>
+        </table>
+      </div>
+
+      <div class="step1-footer" id="step1Footer" style="display:none">
         <button class="btn-add-row" onclick="addRow()">+ 행 추가</button>
-        <span class="stu-summary" id="stuSummary" style="margin-left:10px"></span>
-      </div>
-      <button class="btn-primary" onclick="confirmStep1()">다음 단계 →</button>
-    </div>
-  </section>
-
-  <!-- Step 2: 모둠 설정 -->
-  <section class="step-section" id="step2" style="display:none">
-    <div class="step-title"><span class="step-badge">2</span> 모둠 설정</div>
-    <div class="step2-info" id="step2Info">학생 0명</div>
-
-    <div class="setting-row">
-      <div class="mode-tabs">
-        <button class="mode-tab active" id="modeByCount" onclick="switchGroupMode('count')">모둠 수로 나누기</button>
-        <button class="mode-tab" id="modeBySize" onclick="switchGroupMode('size')">인원 수로 나누기</button>
+        <span class="stu-summary" id="stuSummary"></span>
+        <button class="btn-primary" onclick="confirmStep1()">다음 단계 →</button>
       </div>
     </div>
 
-    <div class="setting-row" id="settingCountRow">
-      <span class="setting-label">모둠 수</span>
-      <input type="number" class="setting-num" id="groupCount" value="4" min="2" max="20" oninput="updateStep2Preview()">
-      <span class="setting-note" id="step2PreviewCount"></span>
-    </div>
+    <!-- Step 2: 설정 -->
+    <div class="step-section" id="step2">
+      <div class="step-title">⚙️ 모둠 설정</div>
+      <div class="step2-info" id="step2Info">학생 0명</div>
 
-    <div class="setting-row" id="settingSizeRow" style="display:none">
-      <span class="setting-label">모둠당 인원</span>
-      <input type="number" class="setting-num" id="groupSize" value="4" min="2" max="20" oninput="updateStep2Preview()">
-      <span class="setting-note" id="step2PreviewSize"></span>
-    </div>
+      <!-- 모둠 수 / 인원 수 -->
+      <div class="setting-group">
+        <div class="setting-label">나누기 방식</div>
+        <div class="mode-tabs">
+          <button class="mode-tab active" id="modeByCount" onclick="switchMode('count')">모둠 수로 나누기</button>
+          <button class="mode-tab" id="modeBySize" onclick="switchMode('size')">인원 수로 나누기</button>
+        </div>
+        <div class="num-row" id="rowCount">
+          <span style="font-size:0.88rem;font-weight:600">모둠 수</span>
+          <input type="number" class="num-input" id="groupCount" value="4" min="2" max="20" oninput="updatePreview()">
+          <span class="preview-note" id="previewCount"></span>
+        </div>
+        <div class="num-row" id="rowSize" style="display:none">
+          <span style="font-size:0.88rem;font-weight:600">모둠당 인원</span>
+          <input type="number" class="num-input" id="groupSize" value="4" min="2" max="20" oninput="updatePreview()">
+          <span class="preview-note" id="previewSize"></span>
+        </div>
+      </div>
 
-    <div class="setting-row">
-      <span class="setting-label">성별 배치 방식</span>
-      <div class="gender-opt-row">
-        <button class="gender-opt-btn active" id="gOptNone" onclick="setGenderOpt('none')">성별 무관 (완전 랜덤)</button>
-        <button class="gender-opt-btn" id="gOptBalance" onclick="setGenderOpt('balance')">각 모둠 성별 균형</button>
-        <button class="gender-opt-btn" id="gOptSame" onclick="setGenderOpt('same')">같은 성별끼리</button>
+      <!-- 성별 옵션 -->
+      <div class="setting-group">
+        <div class="setting-label">성별 배치</div>
+        <div class="gender-opt-row">
+          <button class="gender-opt-btn active" id="gOptNone"    onclick="setGenderOpt('none')">성별 무관 (완전 랜덤)</button>
+          <button class="gender-opt-btn"         id="gOptBalance" onclick="setGenderOpt('balance')">각 모둠 성별 균형</button>
+          <button class="gender-opt-btn"         id="gOptSame"    onclick="setGenderOpt('same')">같은 성별끼리</button>
+        </div>
+      </div>
+
+      <!-- 제약 조건 패널 -->
+      <details class="constraint-panel" id="cpanel">
+        <summary>🔗 배치 제약 조건 <span class="cpanel-badge" id="cpBadge" style="display:none"></span></summary>
+        <div class="cpanel-body">
+
+          <details class="copt-details" id="togetherDetails" ontoggle="updateBadge()">
+            <summary>같은 모둠에 배치</summary>
+            <div class="copt-inner">
+              <div id="togetherList"></div>
+              <button class="btn-add-copt" onclick="addTogetherRow()">+ 같은 모둠 조건 추가</button>
+              <p class="cpanel-note">※ 여러 줄 추가 시 AND 조건으로 모두 만족하도록 배치합니다</p>
+            </div>
+          </details>
+
+          <details class="copt-details" id="apartDetails" ontoggle="updateBadge()">
+            <summary>다른 모둠으로 분리</summary>
+            <div class="copt-inner">
+              <div id="apartList"></div>
+              <button class="btn-add-copt" onclick="addApartRow()">+ 분리 조건 추가</button>
+              <p class="cpanel-note">※ 여러 줄 추가 시 AND 조건으로 모두 만족하도록 배치합니다</p>
+            </div>
+          </details>
+
+        </div>
+      </details>
+
+      <div class="step2-actions">
+        <button class="btn-primary" onclick="goAssign()">🎲 모둠 배치</button>
+        <button class="btn-secondary" onclick="goStep(1)">← 명단 수정</button>
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
-      <button class="btn-primary" onclick="goAssign()">🎲 모둠 배치</button>
-      <button class="btn-primary" style="background:var(--surface);color:var(--accent);border:2px solid var(--accent)" onclick="backToStep1()">← 명단 수정</button>
+    <!-- Step 3: 결과 -->
+    <div class="step-section" id="step3">
+      <div class="step-title">👥 모둠 배치 결과</div>
+      <div class="result-toolbar">
+        <button class="btn-primary" onclick="goAssign()">🔀 다시 섞기</button>
+        <button class="btn-secondary" onclick="goStep(2)">⚙️ 설정 변경</button>
+        <button class="btn-secondary" onclick="window.print()">🖨️ 출력</button>
+        <span class="result-summary" id="resultSummary"></span>
+      </div>
+      <div class="warn-box" id="warnBox"></div>
+      <div class="group-grid" id="groupGrid"></div>
     </div>
-  </section>
 
-  <!-- Step 3: 결과 -->
-  <section class="step-section" id="step3" style="display:none">
-    <div class="step-title"><span class="step-badge">3</span> 모둠 배치 결과</div>
-    <div class="result-toolbar">
-      <button class="btn-primary" onclick="goAssign()">🔀 다시 섞기</button>
-      <button class="btn-primary" style="background:var(--surface);color:var(--accent);border:2px solid var(--accent)" onclick="document.getElementById('step2').style.display='';document.getElementById('step3').style.display='none'">⚙️ 설정 변경</button>
-      <button class="btn-primary" style="background:var(--surface);color:var(--accent);border:2px solid var(--accent)" onclick="window.print()">🖨️ 출력</button>
-      <span class="result-summary" id="resultSummary"></span>
-    </div>
-    <div class="group-grid" id="groupGrid"></div>
-  </section>
-</div>
+  </div><!-- /main-panel -->
+</div><!-- /app-layout -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ── 상수 ──────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
 const LS_KEY = 'group_students';
+const GROUP_COLORS = ['#1a3d7c','#2e7d32','#b71c1c','#6a1b9a','#e65100','#00695c','#c62828','#283593','#558b2f','#4a148c','#00838f','#827717'];
 
 // ── 상태 ──────────────────────────────────────────────────────
-let students = [];   // [{name, gender}]
-let groupMode = 'count';   // 'count' | 'size'
-let genderOpt = 'none';    // 'none' | 'balance' | 'same'
+let students = [];
+let groupMode = 'count';
+let genderOpt = 'none';
 let rowCounter = 0;
-let rosterCache = null;    // getStudentRoster 결과 캐시
+let tgCnt = 0, apCnt = 0;
+let rosterCache = null;
+let step1Done = false, step2Done = false;
 
 // ── 유틸 ──────────────────────────────────────────────────────
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function norm(s) {
-  return String(s||'').replace(/\s/g,'').normalize('NFC').toLowerCase();
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function norm(s) { return String(s||'').replace(/\s/g,'').normalize('NFC').toLowerCase(); }
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
 }
 
-// ── 임포트 탭 전환 ──────────────────────────────────────────
-let currentImportTab = 'manual';
-function switchImportTab(tab) {
-  currentImportTab = tab;
-  ['manual','sheet','excel'].forEach(t => {
-    document.getElementById('btn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===tab);
-    const p = document.getElementById('panel'+t.charAt(0).toUpperCase()+t.slice(1));
-    if (p) p.classList.toggle('open', t===tab);
+// ── 사이드바 ──────────────────────────────────────────────────
+function goStep(n) {
+  if (n === 2 && !step1Done) return;
+  if (n === 3 && !step2Done) return;
+  [1,2,3].forEach(i => {
+    document.getElementById('step'+i).classList.toggle('active', i===n);
+    const btn = document.getElementById('sideBtn'+i);
+    btn.classList.toggle('active', i===n);
   });
-  // 직접 입력 탭에서는 테이블 항상 표시
-  if (tab === 'manual') ensureTableVisible();
 }
 
-function ensureTableVisible() {
-  if (document.getElementById('stuRows').children.length === 0) addRow();
+// ── 임포트 탭 ──────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.import-tab').forEach((b,i) => b.classList.toggle('active', ['manual','sheet','excel'][i]===tab));
+  document.getElementById('panelSheet').style.display = tab==='sheet' ? '' : 'none';
+  document.getElementById('panelExcel').style.display = tab==='excel' ? '' : 'none';
+  if (tab === 'manual') ensureTable();
+}
+function ensureTable() {
+  if (!document.getElementById('stuRows').children.length) addRow();
   document.getElementById('tableWrap').style.display = '';
-  updateStep1Footer();
+  syncStudents();
 }
 
-// ── 학년·반으로 시트에서 불러오기 ──────────────────────────────
-function callApiJsonp(url) {
-  return new Promise((resolve, reject) => {
-    const cbName = '__groupCb_' + Date.now();
-    const to = setTimeout(() => {
-      delete window[cbName];
-      reject(new Error('응답 시간 초과'));
-    }, 8000);
-    window[cbName] = (data) => {
-      clearTimeout(to);
-      delete window[cbName];
-      resolve(data);
-    };
-    const sc = document.createElement('script');
-    sc.src = url + '&callback=' + cbName;
-    sc.onerror = () => { clearTimeout(to); delete window[cbName]; reject(new Error('네트워크 오류')); };
-    document.body.appendChild(sc);
-    setTimeout(() => { try { document.body.removeChild(sc); } catch(e){} }, 10000);
-  });
-}
-
+// ── 시트에서 불러오기 ──────────────────────────────────────────
 async function getRoster() {
   if (rosterCache) return rosterCache;
   const url = `${APPS_SCRIPT_URL}?action=getStudentRoster`;
@@ -346,76 +399,68 @@ async function getRoster() {
     const res = await fetch(url);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    rosterCache = data;
-    return data;
+    rosterCache = data; return data;
   } catch(e) {
-    // fetch 실패 시 JSONP 폴백
-    const data = await callApiJsonp(url);
-    if (data.error) throw new Error(data.error);
-    rosterCache = data;
-    return data;
+    return new Promise((resolve, reject) => {
+      const cb = '__gc_' + Date.now();
+      const to = setTimeout(() => { delete window[cb]; reject(new Error('응답 시간 초과')); }, 8000);
+      window[cb] = d => { clearTimeout(to); delete window[cb]; if(d.error) reject(new Error(d.error)); else { rosterCache=d; resolve(d); } };
+      const sc = document.createElement('script');
+      sc.src = url + '&callback=' + cb;
+      sc.onerror = () => { clearTimeout(to); delete window[cb]; reject(new Error('네트워크 오류')); };
+      document.body.appendChild(sc);
+    });
   }
 }
-
 async function importFromSheet() {
   const grade = document.getElementById('importGrade').value;
   const ban = document.getElementById('importBan').value;
-  const msgEl = document.getElementById('sheetImportMsg');
-  const btn = document.getElementById('btnImportSheet');
-  btn.disabled = true;
-  msgEl.textContent = '불러오는 중...';
-
+  const msg = document.getElementById('importMsg');
+  const btn = document.getElementById('btnImport');
+  btn.disabled = true; msg.textContent = '불러오는 중...';
   try {
     const data = await getRoster();
-    const matched = (data.students || []).filter(s =>
-      String(s.grade) === String(grade) && String(s.ban) === String(ban)
-    );
-    if (!matched.length) {
-      msgEl.textContent = `${grade}학년 ${ban}반 학생을 찾지 못했습니다. 시트에 해당 반 데이터가 있는지 확인해주세요.`;
-      return;
-    }
-    // 번호 순 정렬
-    matched.sort((a,b) => (Number(a.num)||0) - (Number(b.num)||0));
-    students = matched.map(s => ({ name: s.name, gender: '미기재' }));
+    const matched = (data.students||[]).filter(s => String(s.grade)===grade && String(s.ban)===ban);
+    if (!matched.length) { msg.textContent = `${grade}학년 ${ban}반 학생을 찾지 못했습니다.`; return; }
+    matched.sort((a,b) => (Number(a.num)||0)-(Number(b.num)||0));
+    students = matched.map(s => ({ name:s.name, gender:'미기재' }));
     populateTable();
-    msgEl.textContent = `${grade}학년 ${ban}반 학생 ${students.length}명을 불러왔습니다.`;
-  } catch(err) {
-    msgEl.textContent = '불러오기 실패: ' + (err.message || String(err));
-  } finally {
-    btn.disabled = false;
-  }
+    msg.textContent = `${grade}학년 ${ban}반 ${students.length}명 불러옴`;
+    refreshConstraintSelects();
+  } catch(err) { msg.textContent = '실패: '+(err.message||String(err)); }
+  finally { btn.disabled = false; }
 }
 
 // ── 엑셀 업로드 ──────────────────────────────────────────────
-function handleFileUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
+function handleFile(input) {
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = e => {
     try {
-      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const wb = XLSX.read(e.target.result, {type:'binary'});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-      if (!data || data.length < 2) { alert('데이터를 찾지 못했습니다.'); return; }
-      const header = data[0].map(h => norm(h));
-      const nameCol = header.findIndex(h => ['이름','성명','학생이름','name'].some(k => h.includes(k)));
-      const genderCol = header.findIndex(h => ['성별','젠더','gender'].some(k => h.includes(k)));
-      if (nameCol < 0) { alert('이름 열을 찾지 못했습니다. 헤더에 "이름" 또는 "성명" 열이 있어야 합니다.'); return; }
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if (!data || data.length < 2) { alert('데이터 없음'); return; }
+      const hdr = data[0].map(h => norm(h));
+      const nc = hdr.findIndex(h => ['이름','성명','학생이름','name'].some(k=>h.includes(k)));
+      const gc = hdr.findIndex(h => ['성별','젠더','gender'].some(k=>h.includes(k)));
+      if (nc<0) { alert('이름 열을 찾지 못했습니다.'); return; }
       students = [];
-      for (let r = 1; r < data.length; r++) {
-        const name = String(data[r][nameCol] || '').trim();
-        const gender = genderCol >= 0 ? String(data[r][genderCol] || '').trim() || '미기재' : '미기재';
-        if (name) students.push({ name, gender });
+      for (let r=1;r<data.length;r++) {
+        const name = String(data[r][nc]||'').trim();
+        const gender = gc>=0 ? (String(data[r][gc]||'').trim()||'미기재') : '미기재';
+        if (name) students.push({name, gender});
       }
-      if (!students.length) { alert('학생 데이터를 찾지 못했습니다.'); return; }
+      if (!students.length) { alert('학생 데이터 없음'); return; }
       populateTable();
-    } catch(err) { alert('파일 읽기 실패: ' + err.message); }
+      refreshConstraintSelects();
+    } catch(err) { alert('읽기 실패: '+err.message); }
   };
   reader.readAsBinaryString(file);
   input.value = '';
 }
 
-// ── 테이블 조작 ──────────────────────────────────────────────
+// ── 테이블 ──────────────────────────────────────────────────
 function populateTable() {
   document.getElementById('tableWrap').style.display = '';
   document.getElementById('stuRows').innerHTML = '';
@@ -423,196 +468,251 @@ function populateTable() {
   students.forEach(s => addRow(s.name, s.gender));
   syncStudents();
 }
-
 function addRow(name='', gender='남') {
-  const id = 'gr' + (rowCounter++);
-  const tr = document.createElement('tr');
-  tr.id = id;
+  const id = 'gr'+(rowCounter++);
+  const tr = document.createElement('tr'); tr.id = id;
   tr.innerHTML = `
-    <td class="row-num-cell" id="${id}_n"></td>
+    <td class="num-col" id="${id}_n"></td>
     <td><input class="stu-input" value="${esc(name)}" placeholder="이름" oninput="syncStudents()"></td>
-    <td>
-      <select class="stu-gender-sel" onchange="syncStudents()">
-        <option value="남"${gender==='남'?' selected':''}>남</option>
-        <option value="여"${gender==='여'?' selected':''}>여</option>
-        <option value="미기재"${gender==='미기재'?' selected':''}>-</option>
-      </select>
-    </td>
-    <td><button class="btn-del-row" onclick="document.getElementById('${id}').remove();syncStudents()">✕</button></td>`;
+    <td><select class="gender-sel" onchange="syncStudents()">
+      <option value="남"${gender==='남'?' selected':''}>남</option>
+      <option value="여"${gender==='여'?' selected':''}>여</option>
+      <option value="미기재"${gender==='미기재'?' selected':''}>-</option>
+    </select></td>
+    <td><button class="btn-del" onclick="document.getElementById('${id}').remove();syncStudents()">✕</button></td>`;
   document.getElementById('stuRows').appendChild(tr);
-  reNumberRows();
+  renum();
 }
-
-function reNumberRows() {
-  document.querySelectorAll('#stuRows tr').forEach((tr, i) => {
-    const n = tr.querySelector('[id$="_n"]');
-    if (n) n.textContent = i + 1;
+function renum() {
+  document.querySelectorAll('#stuRows tr').forEach((tr,i) => {
+    const n = tr.querySelector('[id$="_n"]'); if(n) n.textContent = i+1;
   });
 }
-
 function syncStudents() {
   students = [];
   document.querySelectorAll('#stuRows tr').forEach(tr => {
-    const name = (tr.querySelector('input')?.value || '').trim();
-    const gender = tr.querySelector('select')?.value || '미기재';
-    if (name) students.push({ name, gender });
+    const name = (tr.querySelector('input')?.value||'').trim();
+    const gender = tr.querySelector('select')?.value||'미기재';
+    if (name) students.push({name, gender});
   });
-  reNumberRows();
+  renum();
   try { localStorage.setItem(LS_KEY, JSON.stringify(students)); } catch(e) {}
-  updateStep1Footer();
-}
-
-function updateStep1Footer() {
   const footer = document.getElementById('step1Footer');
-  const summary = document.getElementById('stuSummary');
-  if (students.length > 0) {
-    footer.classList.add('visible');
-    summary.textContent = `총 ${students.length}명`;
-  } else {
-    footer.classList.remove('visible');
-  }
+  footer.style.display = students.length ? '' : 'none';
+  document.getElementById('stuSummary').textContent = `총 ${students.length}명`;
 }
-
 function confirmStep1() {
   syncStudents();
   if (!students.length) { alert('학생을 1명 이상 입력해주세요.'); return; }
+  step1Done = true;
+  document.getElementById('sideBtn2').classList.remove('locked');
   document.getElementById('step2Info').textContent = `학생 ${students.length}명`;
-  document.getElementById('step2').style.display = '';
-  updateStep2Preview();
-  document.getElementById('step2').scrollIntoView({ behavior:'smooth', block:'start' });
-}
-
-function backToStep1() {
-  document.getElementById('step2').style.display = 'none';
-  document.getElementById('step3').style.display = 'none';
+  updatePreview();
+  refreshConstraintSelects();
+  goStep(2);
 }
 
 // ── Step 2 설정 ──────────────────────────────────────────────
-function switchGroupMode(mode) {
-  groupMode = mode;
-  document.getElementById('modeByCount').classList.toggle('active', mode==='count');
-  document.getElementById('modeBySize').classList.toggle('active', mode==='size');
-  document.getElementById('settingCountRow').style.display = mode==='count' ? '' : 'none';
-  document.getElementById('settingSizeRow').style.display = mode==='size' ? '' : 'none';
-  updateStep2Preview();
+function switchMode(m) {
+  groupMode = m;
+  document.getElementById('modeByCount').classList.toggle('active', m==='count');
+  document.getElementById('modeBySize').classList.toggle('active', m==='size');
+  document.getElementById('rowCount').style.display = m==='count' ? '' : 'none';
+  document.getElementById('rowSize').style.display = m==='size' ? '' : 'none';
+  updatePreview();
 }
-
-function setGenderOpt(opt) {
-  genderOpt = opt;
-  ['none','balance','same'].forEach(o => {
-    document.getElementById('gOpt'+o.charAt(0).toUpperCase()+o.slice(1)).classList.toggle('active', o===opt);
-  });
+function setGenderOpt(o) {
+  genderOpt = o;
+  ['none','balance','same'].forEach(x => document.getElementById('gOpt'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active', x===o));
 }
-
-function updateStep2Preview() {
+function calcGC() {
   const n = students.length;
-  if (!n) return;
-  if (groupMode === 'count') {
-    const gc = Math.max(2, Math.min(20, parseInt(document.getElementById('groupCount').value)||4));
-    const base = Math.floor(n/gc), rem = n%gc;
-    document.getElementById('step2PreviewCount').textContent =
-      rem ? `→ ${rem}개 모둠 ${base+1}명 + ${gc-rem}개 모둠 ${base}명` : `→ 각 모둠 ${base}명`;
-  } else {
-    const gs = Math.max(2, Math.min(20, parseInt(document.getElementById('groupSize').value)||4));
-    const gc = Math.ceil(n/gs);
-    const base = Math.floor(n/gc), rem = n%gc;
-    document.getElementById('step2PreviewSize').textContent =
-      `→ ${gc}개 모둠` + (rem ? ` (${rem}개 모둠 ${base+1}명 + ${gc-rem}개 모둠 ${base}명)` : ` (각 ${base}명)`);
-  }
-}
-
-// ── 배치 알고리즘 ──────────────────────────────────────────────
-function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length-1; i > 0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
-  return a;
-}
-
-function calcGroupCount() {
-  const n = students.length;
-  if (groupMode === 'count') return Math.max(2, Math.min(n, parseInt(document.getElementById('groupCount').value)||4));
+  if (groupMode==='count') return Math.max(2, Math.min(n, parseInt(document.getElementById('groupCount').value)||4));
   const gs = Math.max(2, parseInt(document.getElementById('groupSize').value)||4);
   return Math.max(2, Math.ceil(n/gs));
 }
-
-function assignGroups() {
-  const gc = calcGroupCount();
-  const groups = Array.from({length:gc}, () => []);
-
-  if (genderOpt === 'same') {
-    // 같은 성별끼리 — 성별별 풀을 먼저 분배
-    const males   = shuffle(students.filter(s => s.gender === '남'));
-    const females = shuffle(students.filter(s => s.gender === '여'));
-    const others  = shuffle(students.filter(s => s.gender !== '남' && s.gender !== '여'));
-
-    // 남학생 → 앞 모둠들부터 채우기
-    let gi = 0;
-    males.forEach(s => { groups[gi % gc].push(s); gi++; });
-    females.forEach(s => { groups[gi % gc].push(s); gi++; });
-    others.forEach(s => { groups[gi % gc].push(s); gi++; });
-
-  } else if (genderOpt === 'balance') {
-    // 성별 균형 — 인터리브 방식
-    const males   = shuffle(students.filter(s => s.gender === '남'));
-    const females = shuffle(students.filter(s => s.gender === '여'));
-    const others  = shuffle(students.filter(s => s.gender !== '남' && s.gender !== '여'));
-    // 각 풀을 라운드로빈으로 각 모둠에 배분
-    let gi = 0;
-    males.forEach(s => { groups[gi++ % gc].push(s); });
-    gi = 0;
-    females.forEach(s => { groups[gi++ % gc].push(s); });
-    gi = 0;
-    others.forEach(s => { groups[gi++ % gc].push(s); });
-    // 결과 모둠 안에서 순서 셔플
-    groups.forEach(g => { for(let i=g.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[g[i],g[j]]=[g[j],g[i]];} });
-
+function updatePreview() {
+  const n = students.length; if (!n) return;
+  const gc = calcGC(), base = Math.floor(n/gc), rem = n%gc;
+  const txt = rem ? `→ ${rem}모둠 ${base+1}명 + ${gc-rem}모둠 ${base}명` : `→ 각 모둠 ${base}명`;
+  if (groupMode==='count') {
+    document.getElementById('previewCount').textContent = txt;
   } else {
-    // 완전 랜덤
-    const pool = shuffle(students);
-    pool.forEach((s, i) => groups[i % gc].push(s));
+    document.getElementById('previewSize').textContent = `→ ${gc}개 모둠` + (rem ? ` (${rem}모둠 ${base+1}명, ${gc-rem}모둠 ${base}명)` : ` (각 ${base}명)`);
+  }
+}
+
+// ── 제약 조건 ──────────────────────────────────────────────────
+function makeStuSel(id) {
+  const opts = students.map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
+  return `<select class="cs-sel" id="${id}">${opts}</select>`;
+}
+function refreshConstraintSelects() {
+  // 기존 셀렉트 값 유지하며 옵션 목록만 갱신
+  document.querySelectorAll('.cs-sel').forEach(sel => {
+    const cur = sel.value;
+    sel.innerHTML = students.map(s => `<option value="${esc(s.name)}"${s.name===cur?' selected':''}>${esc(s.name)}</option>`).join('');
+  });
+}
+function addTogetherRow() {
+  const id = 'tg'+(tgCnt++);
+  const div = document.createElement('div'); div.className='copt-row'; div.id=id;
+  div.innerHTML = makeStuSel(id+'_a')+'<span class="cs-between">와</span>'+makeStuSel(id+'_b')+
+    '<span class="cs-between">같은 모둠</span>'+
+    `<button class="btn-del-copt" onclick="document.getElementById('${id}').remove();updateBadge()">✕</button>`;
+  document.getElementById('togetherList').appendChild(div);
+  updateBadge();
+}
+function addApartRow() {
+  const id = 'ap'+(apCnt++);
+  const div = document.createElement('div'); div.className='copt-row'; div.id=id;
+  div.innerHTML = makeStuSel(id+'_a')+'<span class="cs-between">와</span>'+makeStuSel(id+'_b')+
+    '<span class="cs-between">다른 모둠</span>'+
+    `<button class="btn-del-copt" onclick="document.getElementById('${id}').remove();updateBadge()">✕</button>`;
+  document.getElementById('apartList').appendChild(div);
+  updateBadge();
+}
+function updateBadge() {
+  const tg = document.getElementById('togetherList').children.length;
+  const ap = document.getElementById('apartList').children.length;
+  const n = tg + ap;
+  const el = document.getElementById('cpBadge');
+  el.textContent = n+'개'; el.style.display = n ? '' : 'none';
+}
+function collectConstraints() {
+  const together=[], apart=[];
+  document.querySelectorAll('#togetherList .copt-row').forEach(row => {
+    const a = document.getElementById(row.id+'_a')?.value;
+    const b = document.getElementById(row.id+'_b')?.value;
+    if (a && b && a!==b) together.push([a,b]);
+  });
+  document.querySelectorAll('#apartList .copt-row').forEach(row => {
+    const a = document.getElementById(row.id+'_a')?.value;
+    const b = document.getElementById(row.id+'_b')?.value;
+    if (a && b && a!==b) apart.push([a,b]);
+  });
+  return { together, apart };
+}
+function hasConstraints() {
+  return document.getElementById('togetherList').children.length > 0 ||
+         document.getElementById('apartList').children.length > 0;
+}
+
+// ── 배치 알고리즘 ──────────────────────────────────────────────
+function baseAssign(gc) {
+  // 성별 옵션에 따라 섞은 풀 생성
+  let pool;
+  if (genderOpt==='same') {
+    const m=shuffle(students.filter(s=>s.gender==='남'));
+    const f=shuffle(students.filter(s=>s.gender==='여'));
+    const o=shuffle(students.filter(s=>s.gender!=='남'&&s.gender!=='여'));
+    // 같은 성별끼리 연속 블록
+    pool = [...m,...f,...o];
+  } else if (genderOpt==='balance') {
+    pool = shuffle(students);
+  } else {
+    pool = shuffle(students);
   }
 
+  const groups = Array.from({length:gc}, ()=>[]);
+  if (genderOpt==='balance') {
+    // 인터리브: 남/여/기타 각각 라운드로빈
+    let gi=0;
+    shuffle(students.filter(s=>s.gender==='남')).forEach(s=>{groups[gi++%gc].push(s);});
+    gi=0;
+    shuffle(students.filter(s=>s.gender==='여')).forEach(s=>{groups[gi++%gc].push(s);});
+    gi=0;
+    shuffle(students.filter(s=>s.gender!=='남'&&s.gender!=='여')).forEach(s=>{groups[gi++%gc].push(s);});
+    groups.forEach(g=>{for(let i=g.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[g[i],g[j]]=[g[j],g[i]];}});
+  } else if (genderOpt==='same') {
+    pool.forEach((s,i)=>groups[i%gc].push(s));
+  } else {
+    pool.forEach((s,i)=>groups[i%gc].push(s));
+  }
   return groups;
+}
+
+function calcViol(groups, constraints) {
+  let v = 0;
+  const nameToGroup = {};
+  groups.forEach((g,gi) => g.forEach(s => { nameToGroup[s.name] = gi; }));
+  constraints.together.forEach(([a,b]) => {
+    if (nameToGroup[a]!==undefined && nameToGroup[b]!==undefined && nameToGroup[a]!==nameToGroup[b]) v++;
+  });
+  constraints.apart.forEach(([a,b]) => {
+    if (nameToGroup[a]!==undefined && nameToGroup[b]!==undefined && nameToGroup[a]===nameToGroup[b]) v++;
+  });
+  return v;
 }
 
 function goAssign() {
   syncStudents();
   if (!students.length) return;
-  const groups = assignGroups();
-  renderGroups(groups);
-  document.getElementById('step3').style.display = '';
-  document.getElementById('step3').scrollIntoView({ behavior:'smooth', block:'start' });
+  step2Done = true;
+  document.getElementById('sideBtn3').classList.remove('locked');
+
+  const gc = calcGC();
+  const constraints = collectConstraints();
+
+  let best = null, bestViol = Infinity;
+  const iters = hasConstraints() ? 800 : 1;
+
+  for (let i=0;i<iters;i++) {
+    const g = baseAssign(gc);
+    const v = calcViol(g, constraints);
+    if (v < bestViol) { bestViol=v; best=g; }
+    if (bestViol===0) break;
+  }
+
+  renderGroups(best, bestViol, constraints);
+  goStep(3);
 }
 
 // ── 결과 렌더링 ──────────────────────────────────────────────
-const GROUP_COLORS = ['#1a3d7c','#2e7d32','#b71c1c','#6a1b9a','#e65100','#00695c','#c62828','#283593','#558b2f','#4a148c'];
-
-function renderGroups(groups) {
-  const maleCount   = students.filter(s=>s.gender==='남').length;
-  const femaleCount = students.filter(s=>s.gender==='여').length;
+function renderGroups(groups, viol, constraints) {
+  const mC = students.filter(s=>s.gender==='남').length;
+  const fC = students.filter(s=>s.gender==='여').length;
   document.getElementById('resultSummary').textContent =
-    `총 ${students.length}명 → ${groups.length}모둠` +
-    (maleCount||femaleCount ? ` (남 ${maleCount}명 / 여 ${femaleCount}명)` : '');
+    `총 ${students.length}명 → ${groups.length}모둠`+(mC||fC ? ` (남 ${mC} 여 ${fC})` : '');
+
+  const warnBox = document.getElementById('warnBox');
+  if (viol > 0) {
+    const togetherViol = constraints.together.filter(([a,b]) => {
+      const ng = {};
+      groups.forEach((g,gi)=>g.forEach(s=>{ng[s.name]=gi;}));
+      return ng[a]!==ng[b];
+    });
+    const apartViol = constraints.apart.filter(([a,b]) => {
+      const ng = {};
+      groups.forEach((g,gi)=>g.forEach(s=>{ng[s.name]=gi;}));
+      return ng[a]===ng[b];
+    });
+    let msgs = [];
+    togetherViol.forEach(([a,b]) => msgs.push(`"${a}"와 "${b}" — 같은 모둠 배치 불가 (학생 수/모둠 수 조건 충돌)`));
+    apartViol.forEach(([a,b]) => msgs.push(`"${a}"와 "${b}" — 분리 배치 불가 (학생 수/모둠 수 조건 충돌)`));
+    warnBox.innerHTML = '⚠️ 일부 조건을 만족하지 못했습니다:<br>' + msgs.map(m=>`• ${esc(m)}`).join('<br>');
+    warnBox.style.display = '';
+  } else {
+    warnBox.style.display = 'none';
+  }
 
   let html = '';
-  groups.forEach((g, gi) => {
-    const color = GROUP_COLORS[gi % GROUP_COLORS.length];
-    const mC = g.filter(s=>s.gender==='남').length;
-    const fC = g.filter(s=>s.gender==='여').length;
-    const genderInfo = (mC||fC) ? ` <small style="font-weight:400;opacity:0.75">남${mC} 여${fC}</small>` : '';
+  groups.forEach((g,gi) => {
+    const color = GROUP_COLORS[gi%GROUP_COLORS.length];
+    const mc=g.filter(s=>s.gender==='남').length, fc=g.filter(s=>s.gender==='여').length;
+    const gInfo = (mc||fc) ? `<span style="font-weight:400;font-size:0.78rem;opacity:.8">남${mc} 여${fc}</span>` : '';
     html += `<div class="group-card">
-      <div class="group-card-header" style="background:${color}">${gi+1}모둠 (${g.length}명)${genderInfo}</div>
+      <div class="group-card-header" style="background:${color}">
+        <span>${gi+1}모둠 (${g.length}명)</span>${gInfo}
+      </div>
       <div class="group-card-body">`;
-    g.forEach((s, si) => {
-      const gb = s.gender==='남' ? 'male' : s.gender==='여' ? 'female' : 'none';
-      const gl = s.gender==='남' ? '남' : s.gender==='여' ? '여' : '-';
+    g.forEach((s,si) => {
+      const gb = s.gender==='남'?'male':s.gender==='여'?'female':'none';
+      const gl = s.gender==='남'?'남':s.gender==='여'?'여':'-';
       html += `<div class="group-member">
         <span class="gender-badge ${gb}">${gl}</span>
         <span>${esc(s.name)}</span>
-        <span class="group-num-badge">${si+1}</span>
+        <span class="member-num">${si+1}</span>
       </div>`;
     });
     html += `</div></div>`;
@@ -622,22 +722,20 @@ function renderGroups(groups) {
 
 // ── 초기화 ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // 저장된 명단 복원
   try {
     const saved = JSON.parse(localStorage.getItem(LS_KEY)||'null');
     if (saved && saved.length) {
       students = saved;
       populateTable();
-      const banner = document.createElement('div');
-      banner.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--on-accent,#fff);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:9999;';
-      banner.textContent=`💾 저장된 명단 ${students.length}명을 불러왔습니다`;
-      document.body.appendChild(banner);
-      setTimeout(()=>banner.remove(), 3000);
+      const b = document.createElement('div');
+      b.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--on-accent,#fff);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:9999;';
+      b.textContent=`💾 저장된 명단 ${students.length}명 복원됨`;
+      document.body.appendChild(b);
+      setTimeout(()=>b.remove(), 3000);
       return;
     }
   } catch(e) {}
-  // 저장된 명단 없으면 직접 입력 탭 활성화
-  switchImportTab('manual');
+  ensureTable();
 });
 </script>
 </body>
