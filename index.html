@@ -234,6 +234,11 @@ const ACTION_MAP = {
   getIndex: (runner) => runner.getIndex(),
 };
 
+// 시트 색인과 별도로 항상 노출할 로컬 항목 — 새 페이지 추가 시 여기에 추가
+const LOCAL_ITEMS = [
+  { title: '무선망(WiFi) 안내', category: '정보기기', url: 'wifi.html', keywords: 'wifi 와이파이 무선망 네트워크 인터넷 크롬북 iot 사물인터넷', description: '교내 WiFi SSID·아이디·비밀번호 및 크롬북 연결 안내' },
+];
+
 let allItems = [];
 let activeCategory = '';
 
@@ -309,12 +314,14 @@ document.getElementById('searchBox').addEventListener('input', () => {
 window.onload = function() {
   showExternalBrowserBannerIfNeeded('inappBanner');
   loadIndex().then(data => {
-    allItems = data.items || [];
+    allItems = [...LOCAL_ITEMS, ...(data.items || [])];
     renderChips(allItems);
     renderResults();
   }).catch(err => {
-    document.getElementById('cardGrid').innerHTML =
-      `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`;
+    // 시트 로드 실패해도 로컬 항목은 보여줌
+    allItems = [...LOCAL_ITEMS];
+    renderChips(allItems);
+    renderResults();
   });
 };
 </script>
