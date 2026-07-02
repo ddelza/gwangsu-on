@@ -153,10 +153,11 @@ table.stu-table { border-collapse:collapse; min-width:300px; background:var(--su
 .group-card-body { padding:10px 14px; }
 .group-member { display:flex; align-items:center; gap:6px; padding:4px 0; font-size:0.88rem; border-bottom:1px solid var(--border); }
 .group-member:last-child { border-bottom:none; }
-.gender-badge { font-size:0.7rem; padding:1px 6px; border-radius:999px; font-weight:700; flex-shrink:0; }
-.gender-badge.male { background:#dbeafe; color:#1e40af; }
-.gender-badge.female { background:#fce7f3; color:#9d174d; }
-.gender-badge.none { background:var(--accent-soft); color:var(--accent); }
+.gender-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.gender-dot.male   { background:#7ec8f7; }
+.gender-dot.female { background:#f9a8d4; }
+.gender-dot.none   { background:var(--border); }
+.role-icon { font-size:0.78rem; flex-shrink:0; line-height:1; }
 .member-num { font-size:0.75rem; color:var(--text-muted); margin-left:auto; }
 
 /* ── Print ── */
@@ -316,6 +317,24 @@ table.stu-table { border-collapse:collapse; min-width:300px; background:var(--su
             </div>
           </details>
 
+          <details class="copt-details" id="aceDetails" ontoggle="updateBadge()">
+            <summary>⭐ 에이스 등록 — 각 모둠에 최대한 흩어지게 배치</summary>
+            <div class="copt-inner">
+              <div id="aceList"></div>
+              <button class="btn-add-copt" onclick="addAceRow()">+ 에이스 추가</button>
+              <p class="cpanel-note">※ 에이스끼리 같은 모둠이 되지 않도록 최대한 분산합니다</p>
+            </div>
+          </details>
+
+          <details class="copt-details" id="weakDetails" ontoggle="updateBadge()">
+            <summary>💔 아픈 손가락 등록 — 각 모둠에 최대한 흩어지게 배치</summary>
+            <div class="copt-inner">
+              <div id="weakList"></div>
+              <button class="btn-add-copt" onclick="addWeakRow()">+ 아픈 손가락 추가</button>
+              <p class="cpanel-note">※ 아픈 손가락끼리 같은 모둠이 되지 않도록 최대한 분산합니다</p>
+            </div>
+          </details>
+
         </div>
       </details>
 
@@ -353,7 +372,7 @@ let students = [];
 let groupMode = 'count';
 let genderOpt = 'none';
 let rowCounter = 0;
-let tgCnt = 0, apCnt = 0;
+let tgCnt = 0, apCnt = 0, aceCnt = 0, weakCnt = 0;
 let rosterCache = null;
 let step1Done = false, step2Done = false;
 
@@ -547,11 +566,20 @@ function makeStuSel(id) {
   return `<select class="cs-sel" id="${id}">${opts}</select>`;
 }
 function refreshConstraintSelects() {
-  // 기존 셀렉트 값 유지하며 옵션 목록만 갱신
   document.querySelectorAll('.cs-sel').forEach(sel => {
     const cur = sel.value;
     sel.innerHTML = students.map(s => `<option value="${esc(s.name)}"${s.name===cur?' selected':''}>${esc(s.name)}</option>`).join('');
   });
+}
+function getAceSet() {
+  const s = new Set();
+  document.querySelectorAll('#aceList .copt-row .cs-sel').forEach(el => { if(el.value) s.add(el.value); });
+  return s;
+}
+function getWeakSet() {
+  const s = new Set();
+  document.querySelectorAll('#weakList .copt-row .cs-sel').forEach(el => { if(el.value) s.add(el.value); });
+  return s;
 }
 function addTogetherRow() {
   const id = 'tg'+(tgCnt++);
@@ -571,15 +599,36 @@ function addApartRow() {
   document.getElementById('apartList').appendChild(div);
   updateBadge();
 }
+function makeSingleSel(id) {
+  const opts = students.map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
+  return `<select class="cs-sel" id="${id}">${opts}</select>`;
+}
+function addAceRow() {
+  const id = 'ace'+(aceCnt++);
+  const div = document.createElement('div'); div.className='copt-row'; div.id=id;
+  div.innerHTML = '⭐ ' + makeSingleSel(id+'_s') +
+    `<button class="btn-del-copt" onclick="document.getElementById('${id}').remove();updateBadge()">✕</button>`;
+  document.getElementById('aceList').appendChild(div);
+  updateBadge();
+}
+function addWeakRow() {
+  const id = 'weak'+(weakCnt++);
+  const div = document.createElement('div'); div.className='copt-row'; div.id=id;
+  div.innerHTML = '💔 ' + makeSingleSel(id+'_s') +
+    `<button class="btn-del-copt" onclick="document.getElementById('${id}').remove();updateBadge()">✕</button>`;
+  document.getElementById('weakList').appendChild(div);
+  updateBadge();
+}
 function updateBadge() {
-  const tg = document.getElementById('togetherList').children.length;
-  const ap = document.getElementById('apartList').children.length;
-  const n = tg + ap;
+  const n = document.getElementById('togetherList').children.length
+          + document.getElementById('apartList').children.length
+          + document.getElementById('aceList').children.length
+          + document.getElementById('weakList').children.length;
   const el = document.getElementById('cpBadge');
   el.textContent = n+'개'; el.style.display = n ? '' : 'none';
 }
 function collectConstraints() {
-  const together=[], apart=[];
+  const together=[], apart=[], ace=[], weak=[];
   document.querySelectorAll('#togetherList .copt-row').forEach(row => {
     const a = document.getElementById(row.id+'_a')?.value;
     const b = document.getElementById(row.id+'_b')?.value;
@@ -590,11 +639,19 @@ function collectConstraints() {
     const b = document.getElementById(row.id+'_b')?.value;
     if (a && b && a!==b) apart.push([a,b]);
   });
-  return { together, apart };
+  document.querySelectorAll('#aceList .copt-row').forEach(row => {
+    const s = row.querySelector('.cs-sel')?.value;
+    if (s) ace.push(s);
+  });
+  document.querySelectorAll('#weakList .copt-row').forEach(row => {
+    const s = row.querySelector('.cs-sel')?.value;
+    if (s) weak.push(s);
+  });
+  return { together, apart, ace, weak };
 }
 function hasConstraints() {
-  return document.getElementById('togetherList').children.length > 0 ||
-         document.getElementById('apartList').children.length > 0;
+  return ['togetherList','apartList','aceList','weakList']
+    .some(id => document.getElementById(id).children.length > 0);
 }
 
 // ── 배치 알고리즘 ──────────────────────────────────────────────
@@ -641,6 +698,17 @@ function calcViol(groups, constraints) {
   constraints.apart.forEach(([a,b]) => {
     if (nameToGroup[a]!==undefined && nameToGroup[b]!==undefined && nameToGroup[a]===nameToGroup[b]) v++;
   });
+  // 에이스/아픈손가락: 같은 모둠에 2명 이상 있는 쌍 수 카운트
+  const countPairsInSameGroup = (names) => {
+    const byGroup = {};
+    names.forEach(n => {
+      const gi = nameToGroup[n];
+      if (gi !== undefined) byGroup[gi] = (byGroup[gi]||0) + 1;
+    });
+    Object.values(byGroup).forEach(cnt => { if (cnt > 1) v += cnt - 1; });
+  };
+  countPairsInSameGroup(constraints.ace);
+  countPairsInSameGroup(constraints.weak);
   return v;
 }
 
@@ -705,12 +773,14 @@ function renderGroups(groups, viol, constraints) {
         <span>${gi+1}모둠 (${g.length}명)</span>${gInfo}
       </div>
       <div class="group-card-body">`;
+    const aceSet = getAceSet(), weakSet = getWeakSet();
     g.forEach((s,si) => {
-      const gb = s.gender==='남'?'male':s.gender==='여'?'female':'none';
-      const gl = s.gender==='남'?'남':s.gender==='여'?'여':'-';
+      const gd = s.gender==='남'?'male':s.gender==='여'?'female':'none';
+      const role = aceSet.has(s.name) ? '<span class="role-icon">⭐</span>'
+                 : weakSet.has(s.name) ? '<span class="role-icon">💔</span>' : '';
       html += `<div class="group-member">
-        <span class="gender-badge ${gb}">${gl}</span>
-        <span>${esc(s.name)}</span>
+        <span class="gender-dot ${gd}"></span>
+        ${role}<span>${esc(s.name)}</span>
         <span class="member-num">${si+1}</span>
       </div>`;
     });
