@@ -266,22 +266,13 @@ const T = {
   phone: `<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg"><rect width="280" height="100" fill="var(--accent-soft)"/><rect x="30" y="18" width="160" height="64" rx="6" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/><rect x="30" y="18" width="160" height="16" rx="6" fill="var(--accent)" opacity="0.7"/><rect x="30" y="26" width="160" height="8" fill="var(--accent)" opacity="0.7"/><text x="110" y="29" text-anchor="middle" font-size="7.5" fill="#fff" font-family="sans-serif">내선번호 목록</text>${[['교장실','100'],['교무실','200'],['행정실','300'],['도서관','410']].map(([n,e],i)=>`<text x="42" y="${42+i*11}" font-size="7.5" fill="var(--text-muted)" font-family="sans-serif">${n}</text><text x="155" y="${42+i*11}" text-anchor="end" font-size="7.5" fill="var(--accent)" font-weight="700" font-family="monospace">${e}</text>`).join('')}<text x="218" y="58" text-anchor="middle" font-size="34" font-family="sans-serif">☎️</text></svg>`,
 };
 
+// LOCAL_ITEMS: 커스텀 HTML 페이지(내부 앱)만 — 시트에 행으로 넣을 수 없는 것들
+// 외부 링크(구글 문서/시트/슬라이드/드라이브 등)는 모두 색인 시트에서 관리
+// 시트 초기 데이터 입력은 Apps Script의 seedIndexSheet() 실행
 const LOCAL_ITEMS = [
-  // ── 교사메뉴 ──────────────────────────────
   { title: '내선번호', category: '교사메뉴', url: 'phone.html', keywords: '내선번호 전화 연락처 교무실', description: '교내 내선번호 목록 조회 및 편집', thumb: T.phone },
-  { title: '2026업무분장', category: '교사메뉴', url: 'https://docs.google.com/document/d/1APyO0ch1F_192CLT-Cz2ZgnubBOHYyTm77VQ9Qglq1c/edit?tab=t.0', keywords: '업무분장 업무 부서 담당 역할', description: '2026학년도 교직원 업무분장 문서', thumb: T.duties },
-  { title: '교직원 구글계정', category: '교사메뉴', url: 'https://docs.google.com/spreadsheets/d/11zLFq88xyI8AJEZLe67nk3TlhAjR_XU3w-XtZxtTKss/edit?gid=1712704707#gid=1712704707', keywords: '구글계정 google 교직원 ip 아이피', description: '교직원 구글계정 및 IP 관리 시트 (연도별)', thumb: T.gaccount },
-  { title: '학교 계정 모음', category: '교사메뉴', url: 'https://docs.google.com/spreadsheets/d/1HLbfRGkpuu1QDm-ywAvK-ew4AemxPwAy6I3rsgCDPtU/edit?gid=0#gid=0', keywords: '계정 아이디 비밀번호 11번가 지마켓 학교홈페이지', description: '11번가, G마켓, 학교홈페이지 등 각종 학교 계정 모음', thumb: `<svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg"><rect width="280" height="100" fill="var(--accent-soft)"/><rect x="20" y="20" width="240" height="62" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>${[['🏫','학교홈페이지'],['🛒','11번가'],['🛍️','G마켓'],['📦','기타']].map(([e,n],i)=>`<rect x="${33+i*58}" y="28" width="48" height="44" rx="5" fill="var(--accent-soft)"/><text x="${57+i*58}" y="56" text-anchor="middle" font-size="18" font-family="sans-serif">${e}</text><text x="${57+i*58}" y="68" text-anchor="middle" font-size="6.5" fill="var(--text-muted)" font-family="sans-serif">${n}</text>`).join('')}<text x="140" y="94" text-anchor="middle" font-size="8.5" fill="var(--text-muted)" font-family="sans-serif">학교 계정 모음</text></svg>` },
-  { title: '출입문 비밀번호', category: '교사메뉴', url: 'https://docs.google.com/spreadsheets/d/1Xl5z5sOtqcozlUhuai1Od26rPkPXsLZgUrrxEcIRTbI/edit#gid=0', keywords: '출입문 비밀번호 도어 열쇠 잠금', description: '교내 각 출입문 비밀번호 목록', thumb: T.door },
-  { title: '제규정집(2022)', category: '교사메뉴', url: 'http://drive.google.com/file/d/1CCwuHyL_ybGlcnTrjtXIt7_81EHUzVEr/view', keywords: '규정 제규정 학교규정 규칙 법령', description: '광수중학교 제규정집 2022년판 (PDF)', thumb: T.rules },
-  // ── 정보기기 ──────────────────────────────
   { title: '무선망(WiFi) 안내', category: '정보기기', url: 'wifi.html', keywords: 'wifi 와이파이 무선망 네트워크 인터넷 크롬북 iot 사물인터넷', description: '교내 WiFi SSID·아이디·비밀번호 및 크롬북 연결 안내', thumb: T.wifi },
   { title: '교직원 IP 조회', category: '정보기기', url: 'ip.html', keywords: 'ip 아이피 구글계정 교직원 컴퓨터 네트워크', description: '이름 검색으로 구글계정·IP 주소 확인 (연도별)', thumb: T.ip },
-  { title: '학교 IP 설정 방법', category: '정보기기', url: 'https://docs.google.com/presentation/d/1fAdUGrzsISxmSEhZjizRciNChZ7MzlLQztkWcPSVuJQ/edit?slide=id.p#slide=id.p', keywords: 'ip 아이피 설정 네트워크 인터넷 컴퓨터', description: '교내 컴퓨터 IP 주소 수동 설정 방법 안내 슬라이드', thumb: T.slides_ip },
-  { title: '프린트 드라이버 설정 방법', category: '정보기기', url: 'https://docs.google.com/presentation/d/10p6XMos1vCUJ8v2u5chg0xst6NiyySmx6-fmBa7qy3Y/edit#slide=id.p', keywords: '프린터 드라이버 인쇄 설정 프린트', description: '교내 프린터 드라이버 설치 및 설정 방법 안내 슬라이드', thumb: T.slides_print },
-  { title: '정보기기 유지보수 관리대장', category: '정보기기', url: 'https://docs.google.com/spreadsheets/d/1Mu3zuxgrRlWEeSgNyh0nxWcc2FoxzB6d5u6LSgTPXMU/edit?gid=170004323#gid=170004323', keywords: '유지보수 관리대장 정보기기 컴퓨터 수리 점검 월요일', description: '정보기기 유지보수 방문 기록 관리대장 (매주 월요일)', thumb: T.maintenance },
-  { title: '크롬북 관리(번호+학생계정)', category: '정보기기', url: 'https://docs.google.com/spreadsheets/d/1I2JmMWEqrOhz1jDToAvGCoqbW0uTgO1sYhEku_f4Y58/edit?gid=4112195#gid=4112195', keywords: '크롬북 chromebook 학생계정 번호 관리', description: '크롬북 기기번호별 학생 계정 배정 관리 시트', thumb: T.chromebook },
-  { title: '크롬북 보관함 비번', category: '정보기기', url: 'https://docs.google.com/spreadsheets/d/1I2JmMWEqrOhz1jDToAvGCoqbW0uTgO1sYhEku_f4Y58/edit?gid=128605386#gid=128605386', keywords: '크롬북 보관함 비밀번호 캐비닛 잠금', description: '크롬북 보관함 위치별 비밀번호 목록', thumb: T.locker },
 ];
 
 let allItems = [];
