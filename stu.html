@@ -175,7 +175,7 @@ table.stu-table tr.ban-alt td, table.stu-table td { color: var(--text); }
 
   <div class="filter-card edit-mode-card">
     <button id="editModeToggleBtn" class="edit-mode-btn" onclick="enterEditMode()">✏️ 수정모드</button>
-    <button class="print-btn" onclick="printAttendance()">🖨️ 출석부 출력</button>
+    <button class="print-btn" onclick="printRoster()">🖨️ 명렬표 출력</button>
     <div id="editModeBar" style="display:none">
       <span id="editSummaryText">변경 0건</span>
       <button class="edit-mode-save-btn" onclick="saveEditedFields()">✅ 수정 완료</button>
@@ -623,7 +623,7 @@ async function saveEditedFields() {
   }
 }
 
-function printAttendance() {
+function printRoster() {
   const q = document.getElementById('searchBox').value;
   let results = allStudents;
   if (activityFilter) {
@@ -649,50 +649,78 @@ function printAttendance() {
   });
 
   const today = new Date().toLocaleDateString('ko-KR');
-  const days = Array.from({length: 31}, (_, i) => i + 1);
+  // 한 반 최대 인원 기준으로 컬럼 수 결정: 40명 이하→4열, 이상→5열
+  // 각 컬럼은 [번호, 이름, 서명] 구성
 
   const pages = [...classMap.entries()].map(([className, students], pi) => {
-    const rows = students.map(s => `
-      <tr>
-        <td class="c-num">${s.num}</td>
-        <td class="c-name">${s.name}</td>
-        ${days.map(() => '<td></td>').join('')}
-      </tr>`).join('');
+    const COLS = students.length > 40 ? 5 : 4;
+    // 학생 없는 칸은 빈 행으로 채워 컬럼 높이 맞춤
+    const rows = Math.ceil(students.length / COLS);
+    const cells = Array.from({length: rows * COLS}, (_, i) => students[i] || null);
+
+    // 행 기준으로 렌더 (같은 행의 COLS개 학생을 가로로)
+    const bodyRows = Array.from({length: rows}, (_, r) =>
+      `<tr>${Array.from({length: COLS}, (_, c) => {
+        const s = cells[r * COLS + c];
+        if (!s) return '<td class="c-num"></td><td class="c-name"></td><td class="c-sign"></td>';
+        return `<td class="c-num">${s.num}</td><td class="c-name">${s.name}</td><td class="c-sign"></td>`;
+      }).join('')}</tr>`
+    ).join('');
+
+    // 헤더: 컬럼 수만큼 반복
+    const headerCols = Array.from({length: COLS}, () =>
+      '<th class="c-num">번호</th><th class="c-name">이름</th><th class="c-sign">서명</th>'
+    ).join('<th class="c-sep"></th>');
+    const bodyColsDivider = Array.from({length: COLS}, () =>
+      '<td class="c-num"></td><td class="c-name"></td><td class="c-sign"></td>'
+    ).join('<td class="c-sep"></td>');
+
+    const headerRow = Array.from({length: COLS}, (_, i) =>
+      `<th class="c-num">번호</th><th class="c-name">이름</th><th class="c-sign">서명</th>${i < COLS-1 ? '<th class="c-sep"></th>' : ''}`
+    ).join('');
+
+    const finalBodyRows = Array.from({length: rows}, (_, r) =>
+      `<tr>${Array.from({length: COLS}, (_, c) => {
+        const s = cells[r * COLS + c];
+        const sep = c < COLS - 1 ? '<td class="c-sep"></td>' : '';
+        if (!s) return `<td class="c-num"></td><td class="c-name"></td><td class="c-sign"></td>${sep}`;
+        return `<td class="c-num">${s.num}</td><td class="c-name">${s.name}</td><td class="c-sign"></td>${sep}`;
+      }).join('')}</tr>`
+    ).join('');
+
     return `
     <div class="page${pi > 0 ? ' break' : ''}">
       <div class="ph">
-        <span class="ph-title">광수중학교 ${className} 출석부</span>
-        <span class="ph-date">${today} 출력 &nbsp;·&nbsp; ${students.length}명</span>
+        <span class="ph-title">광수중학교 ${className} 명렬표</span>
+        <span class="ph-meta">${students.length}명 &nbsp;·&nbsp; ${today} 출력</span>
       </div>
       <table>
-        <thead><tr>
-          <th class="c-num">번호</th><th class="c-name">이름</th>
-          ${days.map(d => `<th class="c-day">${d}</th>`).join('')}
-        </tr></thead>
-        <tbody>${rows}</tbody>
+        <thead><tr>${headerRow}</tr></thead>
+        <tbody>${finalBodyRows}</tbody>
       </table>
     </div>`;
   }).join('');
 
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html>
-<html lang="ko"><head><meta charset="UTF-8"><title>출석부</title>
+<html lang="ko"><head><meta charset="UTF-8"><title>명렬표</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:9.5pt;color:#000;background:#fff}
-.page{padding:8mm 8mm 6mm}
+body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:10pt;color:#000;background:#fff}
+.page{padding:8mm 10mm 6mm}
 .break{page-break-before:always}
-.ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
-.ph-title{font-size:13pt;font-weight:700}
-.ph-date{font-size:8pt;color:#555}
+.ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;border-bottom:2px solid #000;padding-bottom:4px}
+.ph-title{font-size:14pt;font-weight:700}
+.ph-meta{font-size:8.5pt;color:#444}
 table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #000;text-align:center;vertical-align:middle;padding:2px 1px;height:22px}
-th{background:#e8e8e8;font-size:8.5pt;font-weight:700}
-td{font-size:9pt}
-.c-num{width:24px}
-.c-name{width:52px;text-align:left;padding-left:4px}
-.c-day{width:auto;font-size:7.5pt}
-@page{size:A4 landscape;margin:5mm}
+th,td{border:1px solid #666;text-align:center;vertical-align:middle;padding:1px 2px;height:20px}
+th{background:#ddd;font-size:8.5pt;font-weight:700}
+td{font-size:9.5pt}
+.c-num{width:28px}
+.c-name{width:60px;text-align:left;padding-left:5px}
+.c-sign{width:50px}
+.c-sep{width:6px;border:none;background:#fff}
+@page{size:A4 portrait;margin:5mm}
 </style>
 </head><body>
 ${pages}
