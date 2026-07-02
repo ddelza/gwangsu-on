@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>교직원 IP 조회 — 광수 Online 교무실</title>
+<script>
+(function(){
+  var F={
+    'claude':'Nanum+Myeongjo','notion':'Noto+Sans+KR:wght@400;600;700',
+    'figma':'IBM+Plex+Sans+KR:wght@400;500','starbucks':'Gowun+Dodum',
+    'lamborghini':'Gothic+A1:wght@700','ferrari':'Noto+Serif+KR:wght@400;500;700',
+    'bugatti':'Gowun+Batang','spotify':'Nanum+Gothic:wght@400;700',
+    'nvidia':'Do+Hyeon','airbnb':'Sunflower:wght@300;500;700'
+  };
+  try{
+    var t=localStorage.getItem('gwangsu_theme')||'';
+    if(F[t]){
+      var p=document.createElement('link');p.rel='preconnect';p.href='https://fonts.googleapis.com';document.head.appendChild(p);
+      var q=document.createElement('link');q.rel='preconnect';q.href='https://fonts.gstatic.com';q.crossOrigin='';document.head.appendChild(q);
+      var l=document.createElement('link');l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family='+F[t]+'&display=swap';
+      document.head.appendChild(l);
+    }
+  }catch(e){}
+})();
+</script>
+<style>
+* { box-sizing: border-box; }
+
+:root {
+  --bg:#f5f6f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#888888;
+  --border:#d0d6e2; --nav-bg:#1a3d7c; --nav-text:#d8e3ff; --accent:#1a3d7c; --accent-soft:#e6ebf5;
+  --font-body:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+:root[data-theme="teal"] { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"] { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"] { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"] { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"] { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"] { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#adb8c8; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#a8beaa; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"] { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#bdb3c8; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+:root[data-theme="apple"] { --bg:#f5f5f7; --surface:#ffffff; --text:#1d1d1f; --text-muted:#6e6e73; --border:#d2d2d7; --nav-bg:#000000; --nav-text:rgba(255,255,255,0.85); --accent:#0066cc; --accent-soft:rgba(0,102,204,0.1); --font-body:-apple-system,"SF Pro Display","SF Pro Text",BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="claude"] { --bg:#faf9f5; --surface:#f0e9df; --text:#141413; --text-muted:#8a7a65; --border:#ddd4c4; --nav-bg:#181715; --nav-text:#faf9f5; --accent:#cc785c; --accent-soft:#f5ede3; --font-body:"Nanum Myeongjo",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="notion"] { --bg:#ffffff; --surface:#f6f5f4; --text:#1a1a1a; --text-muted:#787671; --border:#e5e3df; --nav-bg:#0a1530; --nav-text:#ffffff; --accent:#5645d4; --accent-soft:#ede9fa; --font-body:"Noto Sans KR","Segoe UI",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="figma"] { --bg:#ffffff; --surface:#f7f7f5; --text:#000000; --text-muted:#787878; --border:#e6e6e6; --nav-bg:#000000; --nav-text:#ffffff; --accent:#6e5ff3; --accent-soft:#dceeb1; --font-body:"IBM Plex Sans KR","Helvetica Neue",Arial,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="starbucks"] { --bg:#f2f0eb; --surface:#ffffff; --text:#1f1f1d; --text-muted:#5a7a6a; --border:#c8d8cc; --nav-bg:#1e3932; --nav-text:#ffffff; --accent:#00754a; --accent-soft:#d4e9e2; --font-body:"Gowun Dodum","Trebuchet MS","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="lamborghini"] { --bg:#000000; --surface:#202020; --text:#ffffff; --text-muted:#7d7d7d; --border:#2a2a2a; --nav-bg:#000000; --nav-text:#ffffff; --accent:#ffc000; --accent-soft:rgba(255,192,0,0.12); --on-accent:#000000; --font-body:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="ferrari"] { --bg:#181818; --surface:#2c2c2c; --text:#ffffff; --text-muted:#a0a0a0; --border:#3d3d3d; --nav-bg:#181818; --nav-text:#ffffff; --accent:#da291c; --accent-soft:rgba(218,41,28,0.15); --font-body:"Noto Serif KR",Georgia,"Times New Roman","Batang",serif; }
+:root[data-theme="bugatti"] { --bg:#000000; --surface:#141414; --text:#ffffff; --text-muted:#999999; --border:#262626; --nav-bg:#000000; --nav-text:#cccccc; --accent:#c3d9f3; --accent-soft:rgba(195,217,243,0.08); --on-accent:#141414; --font-body:"Gowun Batang",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="spotify"] { --bg:#121212; --surface:#181818; --text:#ffffff; --text-muted:#b3b3b3; --border:#4d4d4d; --nav-bg:#000000; --nav-text:#ffffff; --accent:#1ed760; --accent-soft:rgba(30,215,96,0.12); --on-accent:#121212; --font-body:"Nanum Gothic","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="nvidia"] { --bg:#ffffff; --surface:#f7f7f7; --text:#1a1a1a; --text-muted:#757575; --border:#cccccc; --nav-bg:#000000; --nav-text:#ffffff; --accent:#76b900; --accent-soft:rgba(118,185,0,0.1); --on-accent:#000000; --font-body:"Do Hyeon","Roboto","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="airbnb"] { --bg:#ffffff; --surface:#f7f7f7; --text:#222222; --text-muted:#6a6a6a; --border:#dddddd; --nav-bg:#222222; --nav-text:#ffffff; --accent:#ff385c; --accent-soft:rgba(255,56,92,0.08); --font-body:"Sunflower","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+
+body { margin:0; font-family:var(--font-body,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif); background:var(--bg); color:var(--text); }
+
+.topnav { display:flex; flex-wrap:wrap; align-items:center; gap:4px; background:var(--nav-bg); padding:12px 16px; }
+.topnav .brand { color:#fff; font-weight:700; font-size:1.05rem; margin-right:16px; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; }
+.brand-logo { height:28px; width:auto; display:block; }
+.gen1-link { margin-left:auto; font-size:0.8rem; opacity:0.85; }
+.topnav a { color:var(--nav-text); text-decoration:none; padding:8px 12px; border-radius:8px; font-size:0.92rem; }
+.topnav a:hover { background:rgba(255,255,255,0.15); color:#fff; }
+
+.content { max-width: 800px; margin: 0 auto; padding: 24px 16px 48px; }
+
+.page-header { margin-bottom: 20px; }
+.page-header h1 { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; color: var(--accent); }
+.page-header p { font-size: 0.88rem; color: var(--text-muted); margin: 0; }
+
+/* 안내 버튼 2개 */
+.guide-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.guide-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+  text-decoration: none; color: var(--on-accent, #fff); background: var(--accent);
+  border: none; cursor: pointer; transition: opacity 0.15s;
+}
+.guide-btn:hover { opacity: 0.85; }
+.guide-btn.secondary {
+  background: var(--accent-soft); color: var(--accent);
+  border: 1.5px solid var(--border);
+}
+
+/* 검색창 */
+.search-box {
+  width: 100%; padding: 13px 16px; font-size: 1rem;
+  border: 2px solid var(--border); border-radius: 12px; outline: none;
+  background: var(--surface); color: var(--text); margin-bottom: 16px;
+}
+.search-box:focus { border-color: var(--accent); }
+
+/* 결과 */
+.result-area { display: flex; flex-direction: column; gap: 12px; }
+
+.result-card {
+  background: var(--surface); border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;
+}
+.result-year {
+  background: var(--accent); color: var(--on-accent, #fff);
+  font-size: 0.82rem; font-weight: 700; padding: 6px 14px;
+  letter-spacing: 0.05em;
+}
+.result-rows { padding: 0; }
+
+.info-row {
+  display: grid; grid-template-columns: 80px 1fr;
+  border-bottom: 1px solid var(--border); align-items: center;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label {
+  padding: 10px 14px; font-size: 0.8rem; color: var(--text-muted);
+  font-weight: 600; background: var(--accent-soft); white-space: nowrap;
+}
+.info-value {
+  padding: 10px 14px; font-size: 0.92rem; font-family: "Consolas","Menlo",monospace;
+  word-break: break-all;
+}
+.info-value.name-val { font-family: inherit; font-weight: 700; font-size: 1rem; }
+.info-value.empty { color: var(--text-muted); font-style: italic; font-family: inherit; }
+
+.empty-state { text-align: center; color: var(--text-muted); padding: 48px 0; font-size: 0.95rem; }
+.hint { text-align: center; color: var(--text-muted); padding: 36px 0; font-size: 0.9rem; }
+
+.multi-result { display: flex; flex-direction: column; gap: 12px; }
+
+@media (max-width: 600px) {
+  .topnav { padding: 10px 12px; }
+  .topnav .brand { width: 100%; margin-bottom: 6px; }
+  .guide-btns { flex-direction: column; }
+  .guide-btn { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="settings.html" class="brand-logo-link"><img src="logo.png" alt="" class="brand-logo"></a>
+  <a href="./" class="brand">광수 Online 교무실 2세대</a>
+  <a href="calender.html">캘린더</a>
+  <a href="stu.html">학생 정보 조회</a>
+  <a href="phone.html">내선번호</a>
+  <a href="tools.html">행정업무 간소화 도구</a>
+  <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
+</nav>
+
+<div class="content">
+  <div class="page-header">
+    <h1>🖥️ 교직원 IP 조회</h1>
+    <p>이름을 검색하면 구글계정과 IP 정보를 확인할 수 있습니다.</p>
+  </div>
+
+  <div class="guide-btns">
+    <a class="guide-btn"
+       href="https://docs.google.com/presentation/d/1fAdUGrzsISxmSEhZjizRciNChZ7MzlLQztkWcPSVuJQ/edit?slide=id.p#slide=id.p"
+       target="_blank" rel="noopener">
+      📡 학교 IP 설정 방법
+    </a>
+    <a class="guide-btn secondary"
+       href="https://docs.google.com/presentation/d/10p6XMos1vCUJ8v2u5chg0xst6NiyySmx6-fmBa7qy3Y/edit#slide=id.p"
+       target="_blank" rel="noopener">
+      🖨️ 프린트 드라이버 설정 방법
+    </a>
+  </div>
+
+  <input id="searchBox" class="search-box" type="text" placeholder="이름을 입력하세요 (예: 홍길동)">
+
+  <div id="resultArea" class="result-area">
+    <div class="hint">이름을 입력하면 해당 교직원의 IP 정보가 표시됩니다.</div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
+
+let yearData = null; // { '2025': { entries, labels }, '2026': { entries, labels }, ... }
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function loadData() {
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set('action', 'getIpDirectory');
+  return fetch(url.toString())
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      yearData = data.years || {};
+    });
+}
+
+function fuzzyMatch(name, q) {
+  const n = name.replace(/\s/g, '').toLowerCase();
+  const qn = q.replace(/\s/g, '').toLowerCase();
+  return n.includes(qn);
+}
+
+function renderResults(q) {
+  const area = document.getElementById('resultArea');
+  if (!q) {
+    area.innerHTML = '<div class="hint">이름을 입력하면 해당 교직원의 IP 정보가 표시됩니다.</div>';
+    return;
+  }
+  if (!yearData) {
+    area.innerHTML = '<div class="hint">데이터를 불러오는 중입니다...</div>';
+    return;
+  }
+
+  // 연도 내림차순(최신 먼저)으로 정렬
+  const years = Object.keys(yearData).sort((a, b) => b.localeCompare(a));
+
+  const cards = [];
+  for (const year of years) {
+    const { entries, labels } = yearData[year];
+    const matched = entries.filter(e => fuzzyMatch(e.name, q));
+    if (!matched.length) continue;
+
+    const rows = matched.map(e => `
+      <div class="result-rows">
+        <div class="info-row">
+          <div class="info-label">${esc(labels.name || '이름')}</div>
+          <div class="info-value name-val">${esc(e.name)}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">${esc(labels.role || '담당')}</div>
+          <div class="info-value${e.role ? '' : ' empty'}">${e.role ? esc(e.role) : '—'}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">${esc(labels.account || '구글계정')}</div>
+          <div class="info-value${e.account ? '' : ' empty'}">${e.account ? esc(e.account) : '—'}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">${esc(labels.ip || 'IP')}</div>
+          <div class="info-value${e.ip ? '' : ' empty'}">${e.ip ? esc(e.ip) : '—'}</div>
+        </div>
+      </div>
+    `).join('<hr style="margin:0;border:none;border-top:2px dashed var(--border)">');
+
+    cards.push(`
+      <div class="result-card">
+        <div class="result-year">${esc(year)}년도</div>
+        ${rows}
+      </div>
+    `);
+  }
+
+  if (!cards.length) {
+    area.innerHTML = `<div class="empty-state">«${esc(q)}» 검색 결과가 없습니다.</div>`;
+    return;
+  }
+  area.innerHTML = cards.join('');
+}
+
+let timer = null;
+document.getElementById('searchBox').addEventListener('input', function() {
+  clearTimeout(timer);
+  const q = this.value.trim();
+  timer = setTimeout(() => renderResults(q), 200);
+});
+
+// 데이터 미리 로드
+loadData().catch(err => {
+  document.getElementById('resultArea').innerHTML =
+    `<div class="empty-state">데이터를 불러오지 못했습니다.<br><small>${esc(err.message)}</small></div>`;
+});
+</script>
+</body>
+</html>
