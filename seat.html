@@ -400,16 +400,13 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
             </label>
           </div>
 
-          <div class="cpanel-footer">
-            <button class="btn-primary" onclick="doConstrainedAssign()">✅ 옵션 적용하여 배치</button>
-            <span class="cpanel-note">※ 500회 시도 후 조건을 가장 많이 만족하는 결과를 반영합니다</span>
-          </div>
+          <p class="cpanel-note" style="margin-top:10px;">※ 옵션이 설정되어 있으면 아래 배치 버튼이 자동으로 옵션을 적용합니다</p>
         </div>
       </details>
 
       <div class="step3-toolbar">
-        <button class="btn-primary" onclick="doRandomAssign()">🔀 랜덤 배치 (옵션 없이)</button>
-        <button class="btn-secondary" id="reshuffleBtn" style="display:none" onclick="reshuffleLast()">↺ 다시 섞기</button>
+        <button class="btn-primary" onclick="doAssign()">🔀 랜덤 배치</button>
+        <button class="btn-secondary" id="reshuffleBtn" style="display:none" onclick="doAssign()">↺ 다시 섞기</button>
       </div>
 
       <div id="constraintWarn" class="constraint-warn"></div>
@@ -691,9 +688,12 @@ function shuffle(arr) {
   return arr;
 }
 
-let lastMode = 'random'; // 'random' | 'constrained'
-function reshuffleLast() {
-  lastMode === 'constrained' ? doConstrainedAssign() : doRandomAssign();
+function hasConstraints() {
+  return ['optFixEn','optApartEn','optTogetherEn'].some(id => document.getElementById(id)?.checked)
+    || genderMode !== null;
+}
+function doAssign() {
+  hasConstraints() ? doConstrainedAssign() : doRandomAssign();
 }
 
 // ── 옵션 UI ──────────────────────────────────────────────────
