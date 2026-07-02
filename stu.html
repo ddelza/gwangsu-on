@@ -653,35 +653,23 @@ function printRoster() {
   // 각 컬럼은 [번호, 이름, 서명] 구성
 
   const pages = [...classMap.entries()].map(([className, students], pi) => {
-    const COLS = students.length > 40 ? 5 : 4;
-    // 학생 없는 칸은 빈 행으로 채워 컬럼 높이 맞춤
-    const rows = Math.ceil(students.length / COLS);
-    const cells = Array.from({length: rows * COLS}, (_, i) => students[i] || null);
+    // 열당 최대 30명, 열 수는 올림
+    const PER_COL = 30;
+    const COLS = Math.ceil(students.length / PER_COL);
+    const rows = PER_COL; // 항상 30행 (빈 칸 포함)
 
-    // 행 기준으로 렌더 (같은 행의 COLS개 학생을 가로로)
-    const bodyRows = Array.from({length: rows}, (_, r) =>
-      `<tr>${Array.from({length: COLS}, (_, c) => {
-        const s = cells[r * COLS + c];
-        if (!s) return '<td class="c-num"></td><td class="c-name"></td><td class="c-sign"></td>';
-        return `<td class="c-num">${s.num}</td><td class="c-name">${s.name}</td><td class="c-sign"></td>`;
-      }).join('')}</tr>`
-    ).join('');
-
-    // 헤더: 컬럼 수만큼 반복
-    const headerCols = Array.from({length: COLS}, () =>
-      '<th class="c-num">번호</th><th class="c-name">이름</th><th class="c-sign">서명</th>'
-    ).join('<th class="c-sep"></th>');
-    const bodyColsDivider = Array.from({length: COLS}, () =>
-      '<td class="c-num"></td><td class="c-name"></td><td class="c-sign"></td>'
-    ).join('<td class="c-sep"></td>');
+    // 열 우선 배치: cells[col][row] = student | null
+    const colData = Array.from({length: COLS}, (_, c) =>
+      Array.from({length: rows}, (_, r) => students[c * rows + r] || null)
+    );
 
     const headerRow = Array.from({length: COLS}, (_, i) =>
-      `<th class="c-num">번호</th><th class="c-name">이름</th><th class="c-sign">서명</th>${i < COLS-1 ? '<th class="c-sep"></th>' : ''}`
+      `<th class="c-num">번호</th><th class="c-name">이름</th><th class="c-sign">비고</th>${i < COLS-1 ? '<th class="c-sep"></th>' : ''}`
     ).join('');
 
     const finalBodyRows = Array.from({length: rows}, (_, r) =>
       `<tr>${Array.from({length: COLS}, (_, c) => {
-        const s = cells[r * COLS + c];
+        const s = colData[c][r];
         const sep = c < COLS - 1 ? '<td class="c-sep"></td>' : '';
         if (!s) return `<td class="c-num"></td><td class="c-name"></td><td class="c-sign"></td>${sep}`;
         return `<td class="c-num">${s.num}</td><td class="c-name">${s.name}</td><td class="c-sign"></td>${sep}`;
