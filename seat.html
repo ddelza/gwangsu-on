@@ -224,13 +224,14 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
 .constraint-panel[open] > summary::after { transform:rotate(90deg); }
 .cpanel-body { padding:0 16px 16px; border-top:1px solid var(--border); }
 .cpanel-badge { background:var(--accent); color:var(--on-accent,#fff); border-radius:999px; padding:2px 8px; font-size:0.75rem; font-weight:700; }
-.copt { border-top:1px solid var(--border); padding:10px 0; }
-.copt:first-child { border-top:none; padding-top:12px; }
-.copt-toggle { display:flex; align-items:flex-start; gap:8px; cursor:pointer; }
-.copt-toggle input[type=checkbox] { margin-top:3px; accent-color:var(--accent); flex-shrink:0; }
-.copt-label { font-size:0.9rem; font-weight:600; }
-.copt-body { display:none; margin-top:8px; padding-left:20px; }
-.copt-body.open { display:block; }
+.copt-details { border-top:1px solid var(--border); }
+.copt-details:first-of-type { border-top:none; }
+.copt-details > summary { padding:10px 2px; cursor:pointer; font-size:0.9rem; font-weight:600; list-style:none; display:flex; align-items:center; gap:6px; user-select:none; }
+.copt-details > summary::-webkit-details-marker { display:none; }
+.copt-details > summary::before { content:'▸'; font-size:0.75rem; color:var(--accent); flex-shrink:0; transition:transform 0.15s; }
+.copt-details[open] > summary::before { transform:rotate(90deg); }
+.copt-details[open] > summary { color:var(--accent); }
+.copt-inner { padding:2px 0 12px 18px; }
 .copt-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap; font-size:0.85rem; }
 .cs-sel { padding:5px 8px; border:1px solid var(--border); border-radius:7px; background:var(--bg); color:var(--text); font-size:0.84rem; cursor:pointer; max-width:165px; }
 .cs-between { color:var(--text-muted); white-space:nowrap; }
@@ -358,54 +359,45 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
         <summary>⚙️ 배치 옵션 설정 <span class="cpanel-badge" id="cpBadge" style="display:none"></span></summary>
         <div class="cpanel-body">
 
-          <div class="copt">
-            <label class="copt-toggle">
-              <input type="checkbox" id="optFixEn" onchange="toggleOptBody('fixBody',this)">
-              <span class="copt-label">(1) 특정 학생 행 / 열 고정</span>
-            </label>
-            <div class="copt-body" id="fixBody">
+          <details class="copt-details" id="fixDetails" ontoggle="updateBadge()">
+            <summary>(1) 특정 학생 행 / 열 고정</summary>
+            <div class="copt-inner">
               <div id="fixList"></div>
               <button class="btn-add-copt" onclick="addFixRow()">+ 고정 추가</button>
             </div>
-          </div>
+          </details>
 
-          <div class="copt">
-            <label class="copt-toggle">
-              <input type="checkbox" id="optApartEn" onchange="toggleOptBody('apartBody',this)">
-              <span class="copt-label">(2) 특정 두 학생 인접 금지</span>
-            </label>
-            <div class="copt-body" id="apartBody">
+          <details class="copt-details" id="apartDetails" ontoggle="updateBadge()">
+            <summary>(2) 특정 두 학생 인접 금지</summary>
+            <div class="copt-inner">
               <div id="apartList"></div>
               <button class="btn-add-copt" onclick="addApartRow()">+ 인접금지 추가</button>
             </div>
-          </div>
+          </details>
 
-          <div class="copt">
-            <label class="copt-toggle">
-              <input type="checkbox" id="optTogetherEn" onchange="toggleOptBody('togetherBody',this)">
-              <span class="copt-label">(3) 특정 두 학생 인접 배치</span>
-            </label>
-            <div class="copt-body" id="togetherBody">
+          <details class="copt-details" id="togetherDetails" ontoggle="updateBadge()">
+            <summary>(3) 특정 두 학생 인접 배치</summary>
+            <div class="copt-inner">
               <div id="togetherList"></div>
               <button class="btn-add-copt" onclick="addTogetherRow()">+ 인접배치 추가</button>
             </div>
-          </div>
+          </details>
 
-          <div class="copt">
-            <label class="copt-toggle">
-              <input type="checkbox" id="optSameEn" onchange="onGenderCheck('same',this)">
-              <span class="copt-label">(4) 같은 성별끼리 짝꿍 만들기 <small style="font-weight:400;color:var(--text-muted)">(남는 학생은 혼성 가능)</small></span>
-            </label>
-          </div>
+          <details class="copt-details" id="sameDetails" ontoggle="onGenderToggle('same',this)">
+            <summary>(4) 같은 성별끼리 짝꿍 만들기 <small style="font-weight:400;color:var(--text-muted)">(남는 학생은 혼성 가능)</small></summary>
+            <div class="copt-inner">
+              <p class="cpanel-note">펼치면 활성화됩니다. (5번과 동시 사용 불가)</p>
+            </div>
+          </details>
 
-          <div class="copt">
-            <label class="copt-toggle">
-              <input type="checkbox" id="optDiffEn" onchange="onGenderCheck('diff',this)">
-              <span class="copt-label">(5) 다른 성별끼리 짝꿍 만들기 <small style="font-weight:400;color:var(--text-muted)">(남는 학생은 혼성 가능)</small></span>
-            </label>
-          </div>
+          <details class="copt-details" id="diffDetails" ontoggle="onGenderToggle('diff',this)">
+            <summary>(5) 다른 성별끼리 짝꿍 만들기 <small style="font-weight:400;color:var(--text-muted)">(남는 학생은 혼성 가능)</small></summary>
+            <div class="copt-inner">
+              <p class="cpanel-note">펼치면 활성화됩니다. (4번과 동시 사용 불가)</p>
+            </div>
+          </details>
 
-          <p class="cpanel-note" style="margin-top:10px;">※ 옵션이 설정되어 있으면 아래 배치 버튼이 자동으로 옵션을 적용합니다</p>
+          <p class="cpanel-note" style="margin-top:10px;">※ 펼쳐진 옵션이 배치 시 자동 적용됩니다</p>
         </div>
       </details>
 
@@ -585,7 +577,20 @@ function syncStudents() {
     const gender = tr.querySelector('select')?.value || '미기재';
     if (name) students.push({ name, gender });
   });
+  try { localStorage.setItem('seat_students', JSON.stringify(students)); } catch(e) {}
   updateStep1Footer();
+}
+
+function loadSavedStudents() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('seat_students') || 'null');
+    if (saved && saved.length) {
+      students = saved;
+      populateTable();
+      return true;
+    }
+  } catch(e) {}
+  return false;
 }
 
 function updateStep1Footer() {
@@ -700,8 +705,8 @@ function shuffle(arr) {
 }
 
 function hasConstraints() {
-  return ['optFixEn','optApartEn','optTogetherEn'].some(id => document.getElementById(id)?.checked)
-    || genderMode !== null;
+  return ['fixDetails','apartDetails','togetherDetails','sameDetails','diffDetails']
+    .some(id => document.getElementById(id)?.open);
 }
 function doAssign() {
   hasConstraints() ? doConstrainedAssign() : doRandomAssign();
@@ -711,15 +716,11 @@ function doAssign() {
 let genderMode = null; // 'same' | 'diff' | null
 let fixCnt = 0, apCnt = 0, tgCnt = 0;
 
-function toggleOptBody(bodyId, cb) {
-  document.getElementById(bodyId).classList.toggle('open', cb.checked);
-  updateBadge();
-}
-
-function onGenderCheck(mode, cb) {
-  if (cb.checked) {
+function onGenderToggle(mode, el) {
+  if (el.open) {
     genderMode = mode;
-    document.getElementById(mode === 'same' ? 'optDiffEn' : 'optSameEn').checked = false;
+    const otherId = mode === 'same' ? 'diffDetails' : 'sameDetails';
+    document.getElementById(otherId).open = false;
   } else {
     if (genderMode === mode) genderMode = null;
   }
@@ -727,8 +728,8 @@ function onGenderCheck(mode, cb) {
 }
 
 function updateBadge() {
-  let n = ['optFixEn','optApartEn','optTogetherEn'].filter(id => document.getElementById(id)?.checked).length;
-  if (genderMode) n++;
+  const n = ['fixDetails','apartDetails','togetherDetails','sameDetails','diffDetails']
+    .filter(id => document.getElementById(id)?.open).length;
   const el = document.getElementById('cpBadge');
   el.textContent = n + '개 활성'; el.style.display = n ? '' : 'none';
 }
@@ -786,7 +787,7 @@ function addTogetherRow() {
 
 function collectConstraints() {
   const c = { fixed:[], apart:[], together:[], genderPairing: genderMode };
-  if (document.getElementById('optFixEn')?.checked) {
+  if (document.getElementById('fixDetails')?.open) {
     document.querySelectorAll('#fixList .copt-row').forEach(row => {
       const id = row.id;
       const name = document.getElementById(id+'_s')?.value;
@@ -795,14 +796,14 @@ function collectConstraints() {
       if (name) c.fixed.push({ studentName:name, fixType:type, value:val });
     });
   }
-  if (document.getElementById('optApartEn')?.checked) {
+  if (document.getElementById('apartDetails')?.open) {
     document.querySelectorAll('#apartList .copt-row').forEach(row => {
       const a = document.getElementById(row.id+'_a')?.value;
       const b = document.getElementById(row.id+'_b')?.value;
       if (a && b && a!==b) c.apart.push({a,b});
     });
   }
-  if (document.getElementById('optTogetherEn')?.checked) {
+  if (document.getElementById('togetherDetails')?.open) {
     document.querySelectorAll('#togetherList .copt-row').forEach(row => {
       const a = document.getElementById(row.id+'_a')?.value;
       const b = document.getElementById(row.id+'_b')?.value;
@@ -987,6 +988,17 @@ function renderSeating(seatingMap, overflow) {
   document.getElementById('seatingWrap').style.display='';
   document.getElementById('reshuffleBtn').style.display='';
 }
+
+// ── 저장된 학생 명단 자동 복원 ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (loadSavedStudents()) {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--on-accent,#fff);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:9999;';
+    banner.textContent = `💾 저장된 학생 명단 ${students.length}명을 불러왔습니다`;
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 3000);
+  }
+});
 </script>
 </body>
 </html>

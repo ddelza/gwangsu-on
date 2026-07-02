@@ -295,6 +295,7 @@ body {
       <div class="legend-item">🟧 중형세미나실</div>
       <div class="legend-item">🟨 소형세미나실</div>
       <div class="legend-item">💃 댄스실</div>
+      <div class="legend-item">🏀 체육관</div>
     </div>
   </div>
 </div>
@@ -349,6 +350,7 @@ body {
       <div class="room-edit-row"><span class="room-edit-label">🟧 중형세미나실</span><input class="room-edit-input" data-room="medium" placeholder="예약 내용"></div>
       <div class="room-edit-row"><span class="room-edit-label">🟨 소형세미나실</span><input class="room-edit-input" data-room="small" placeholder="예약 내용"></div>
       <div class="room-edit-row"><span class="room-edit-label">💃 댄스실</span><input class="room-edit-input" data-room="dance" placeholder="예약 내용"></div>
+      <div class="room-edit-row"><span class="room-edit-label">🏀 체육관</span><input class="room-edit-input" data-room="gym" placeholder="예약 내용"></div>
     </div>
 
     <div class="edit-actions">
@@ -393,6 +395,7 @@ const ROOM_CATS = [
   { key: 'medium', label: '중형 세미나실', emoji: '🟧' },
   { key: 'small',  label: '소형 세미나실', emoji: '🟨' },
   { key: 'dance',  label: '댄스실',        emoji: '💃' },
+  { key: 'gym',   label: '체육관',         emoji: '🏀' },
 ];
 
 const DAY_HEADERS = ['일','월','화','수','목','금','토'];
@@ -497,6 +500,7 @@ function parseTable(table) {
     else if (label.includes('중형')) roomIdx.medium = i;
     else if (label.includes('소형')) roomIdx.small = i;
     else if (label.includes('댄스')) roomIdx.dance = i;
+    else if (label.includes('체육관')) roomIdx.gym = i;
   });
 
   const events = {};
@@ -634,6 +638,7 @@ const ROOM_OPTIONS = [
   { key: 'medium', label: '🟧 중형세미나실' },
   { key: 'small', label: '🟨 소형세미나실' },
   { key: 'dance', label: '💃 댄스실' },
+  { key: 'gym',   label: '🏀 체육관' },
 ];
 
 function openDayModal(dateKey) {
