@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자율·자치활동 문구 뽑기 — 광수 Online 교무실</title>
+<script>
+(function(){
+  var F={'claude':'Nanum+Myeongjo','notion':'Noto+Sans+KR:wght@400;600;700','figma':'IBM+Plex+Sans+KR:wght@400;500','starbucks':'Gowun+Dodum','lamborghini':'Gothic+A1:wght@700','ferrari':'Noto+Serif+KR:wght@400;500;700','bugatti':'Gowun+Batang','spotify':'Nanum+Gothic:wght@400;700','nvidia':'Do+Hyeon','airbnb':'Sunflower:wght@300;500;700'};
+  try{var t=localStorage.getItem('gwangsu_theme')||'';if(F[t]){var p=document.createElement('link');p.rel='preconnect';p.href='https://fonts.googleapis.com';document.head.appendChild(p);var q=document.createElement('link');q.rel='preconnect';q.href='https://fonts.gstatic.com';q.crossOrigin='';document.head.appendChild(q);var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+F[t]+'&display=swap';document.head.appendChild(l);}}catch(e){}
+})();
+</script>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#f5f6f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#888888; --border:#d0d6e2; --nav-bg:#1a3d7c; --nav-text:#d8e3ff; --accent:#1a3d7c; --accent-soft:#e6ebf5; --font-body:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
+:root[data-theme="teal"]        { --bg:#f4f9f8; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7a9c95; --border:#cfe6e0; --nav-bg:#146b5e; --nav-text:#cdeee7; --accent:#146b5e; --accent-soft:#e1f3ef; }
+:root[data-theme="coral"]       { --bg:#fbf6f3; --surface:#ffffff; --text:#1a1a1a; --text-muted:#a98a7c; --border:#ecd9d0; --nav-bg:#a85a3e; --nav-text:#f6ddd1; --accent:#a85a3e; --accent-soft:#f6e6df; }
+:root[data-theme="lavender"]    { --bg:#f7f5fb; --surface:#ffffff; --text:#1a1a1a; --text-muted:#8c81a6; --border:#e0daf0; --nav-bg:#5b4b8a; --nav-text:#e3ddf5; --accent:#5b4b8a; --accent-soft:#ece7f7; }
+:root[data-theme="forest"]      { --bg:#f5f8f5; --surface:#ffffff; --text:#1a1a1a; --text-muted:#7d9c8c; --border:#d6e8de; --nav-bg:#2d6a4f; --nav-text:#d2ece1; --accent:#2d6a4f; --accent-soft:#e3f1ea; }
+:root[data-theme="slate"]       { --bg:#f6f6f7; --surface:#ffffff; --text:#1a1a1a; --text-muted:#838c98; --border:#dde1e6; --nav-bg:#3d4a5c; --nav-text:#dbe2ea; --accent:#3d4a5c; --accent-soft:#e7eaee; }
+:root[data-theme="dark-navy"]   { --bg:#1b1f27; --surface:#242a35; --text:#e8e9ec; --text-muted:#adb8c8; --border:#353d4a; --nav-bg:#141821; --nav-text:#b8c9ef; --accent:#7da3e8; --accent-soft:#2a3344; }
+:root[data-theme="dark-forest"] { --bg:#1a211d; --surface:#232b26; --text:#e6ece8; --text-muted:#a8beaa; --border:#34433a; --nav-bg:#141a17; --nav-text:#bcdfca; --accent:#5fae84; --accent-soft:#26352c; }
+:root[data-theme="dark-plum"]   { --bg:#201a24; --surface:#2a232f; --text:#ece6ef; --text-muted:#bdb3c8; --border:#3d3444; --nav-bg:#18131b; --nav-text:#d8c6e8; --accent:#a87fd0; --accent-soft:#322a3a; }
+:root[data-theme="apple"]       { --bg:#f5f5f7; --surface:#ffffff; --text:#1d1d1f; --text-muted:#6e6e73; --border:#d2d2d7; --nav-bg:#000000; --nav-text:rgba(255,255,255,0.85); --accent:#0066cc; --accent-soft:rgba(0,102,204,0.1); --font-body:-apple-system,"SF Pro Display","SF Pro Text",BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="claude"]      { --bg:#faf9f5; --surface:#f0e9df; --text:#141413; --text-muted:#8a7a65; --border:#ddd4c4; --nav-bg:#181715; --nav-text:#faf9f5; --accent:#cc785c; --accent-soft:#f5ede3; --font-body:"Nanum Myeongjo",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="notion"]      { --bg:#ffffff; --surface:#f6f5f4; --text:#1a1a1a; --text-muted:#787671; --border:#e5e3df; --nav-bg:#0a1530; --nav-text:#ffffff; --accent:#5645d4; --accent-soft:#ede9fa; --font-body:"Noto Sans KR","Segoe UI",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="figma"]       { --bg:#ffffff; --surface:#f7f7f5; --text:#000000; --text-muted:#787878; --border:#e6e6e6; --nav-bg:#000000; --nav-text:#ffffff; --accent:#6e5ff3; --accent-soft:#dceeb1; --font-body:"IBM Plex Sans KR","Helvetica Neue",Arial,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="starbucks"]   { --bg:#f2f0eb; --surface:#ffffff; --text:#1f1f1d; --text-muted:#5a7a6a; --border:#c8d8cc; --nav-bg:#1e3932; --nav-text:#ffffff; --accent:#00754a; --accent-soft:#d4e9e2; --font-body:"Gowun Dodum","Trebuchet MS","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="lamborghini"] { --bg:#000000; --surface:#202020; --text:#ffffff; --text-muted:#7d7d7d; --border:#2a2a2a; --nav-bg:#000000; --nav-text:#ffffff; --accent:#ffc000; --accent-soft:rgba(255,192,0,0.12); --on-accent:#000000; --font-body:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="ferrari"]     { --bg:#181818; --surface:#2c2c2c; --text:#ffffff; --text-muted:#a0a0a0; --border:#3d3d3d; --nav-bg:#181818; --nav-text:#ffffff; --accent:#da291c; --accent-soft:rgba(218,41,28,0.15); --font-body:"Noto Serif KR",Georgia,"Times New Roman","Batang",serif; }
+:root[data-theme="bugatti"]     { --bg:#000000; --surface:#141414; --text:#ffffff; --text-muted:#999999; --border:#262626; --nav-bg:#000000; --nav-text:#cccccc; --accent:#c3d9f3; --accent-soft:rgba(195,217,243,0.08); --on-accent:#141414; --font-body:"Gowun Batang",Georgia,"Times New Roman","Batang","Apple SD Gothic Neo","Malgun Gothic",serif; }
+:root[data-theme="spotify"]     { --bg:#121212; --surface:#181818; --text:#ffffff; --text-muted:#b3b3b3; --border:#4d4d4d; --nav-bg:#000000; --nav-text:#ffffff; --accent:#1ed760; --accent-soft:rgba(30,215,96,0.12); --on-accent:#121212; --font-body:"Nanum Gothic","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="nvidia"]      { --bg:#ffffff; --surface:#f7f7f7; --text:#1a1a1a; --text-muted:#757575; --border:#cccccc; --nav-bg:#000000; --nav-text:#ffffff; --accent:#76b900; --accent-soft:rgba(118,185,0,0.1); --on-accent:#000000; --font-body:"Do Hyeon","Roboto","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+:root[data-theme="airbnb"]      { --bg:#ffffff; --surface:#f7f7f7; --text:#222222; --text-muted:#6a6a6a; --border:#dddddd; --nav-bg:#222222; --nav-text:#ffffff; --accent:#ff385c; --accent-soft:rgba(255,56,92,0.08); --font-body:"Sunflower","Helvetica Neue",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); }
+
+.topnav { display:flex; flex-wrap:wrap; align-items:center; gap:4px; background:var(--nav-bg); padding:12px 16px; }
+.topnav .brand { display:inline-flex; align-items:center; gap:8px; color:#fff; font-weight:700; font-size:1.05rem; margin-right:16px; white-space:nowrap; text-decoration:none; }
+.brand-logo { height:28px; width:auto; display:block; }
+.gen1-link { margin-left:auto; font-size:0.8rem; opacity:0.85; }
+.topnav a { color:var(--nav-text); text-decoration:none; padding:8px 12px; border-radius:8px; font-size:0.92rem; }
+.topnav a:hover, .topnav a.active { background:rgba(255,255,255,0.15); color:#fff; }
+
+.page-header { max-width:640px; margin:0 auto; padding:24px 16px 4px; }
+.page-header h1 { font-size:1.25rem; font-weight:700; margin:0 0 4px; color:var(--accent); }
+.page-header p { font-size:0.88rem; color:var(--text-muted); margin:0; }
+
+.wrap { max-width:640px; margin:0 auto; padding:16px; }
+.card { background:var(--surface); border-radius:16px; border:1px solid var(--border); padding:22px; }
+
+.progress-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.progress-label { font-size:0.85rem; color:var(--text-muted); }
+.progress-label b { color:var(--accent); }
+.progress-bar { flex:1; height:6px; border-radius:999px; background:var(--accent-soft); margin-left:12px; overflow:hidden; }
+.progress-bar-fill { height:100%; background:var(--accent); border-radius:999px; transition:width 0.25s; }
+
+.btn-draw {
+  width:100%; padding:16px; background:var(--accent); color:var(--on-accent,#fff); border:none; border-radius:12px;
+  font-size:1.05rem; font-weight:800; cursor:pointer; font-family:inherit; margin-bottom:16px;
+  transition:opacity 0.15s;
+}
+.btn-draw:hover { opacity:0.9; }
+.btn-draw:disabled { opacity:0.4; cursor:not-allowed; }
+
+.result-box {
+  width:100%; min-height:120px; padding:16px; border:1.5px solid var(--border); border-radius:12px;
+  background:var(--bg); color:var(--text); font-size:0.95rem; line-height:1.7; font-family:inherit;
+  resize:vertical; margin-bottom:12px;
+}
+.result-box::placeholder { color:var(--text-muted); }
+
+.btn-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+.btn-copy { padding:11px; background:var(--accent-soft); color:var(--accent); border:1.5px solid var(--accent); border-radius:10px; font-size:0.9rem; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn-copy:hover { opacity:0.85; }
+.btn-copy:disabled { opacity:0.4; cursor:not-allowed; }
+.btn-reset { padding:11px; background:none; border:1.5px solid var(--border); border-radius:10px; font-size:0.9rem; cursor:pointer; font-family:inherit; color:#e53e3e; }
+.btn-reset:hover { border-color:#e53e3e; background:#ffe4e4; }
+
+.msg { font-size:0.82rem; color:var(--text-muted); min-height:1.2em; text-align:center; }
+.msg.ok { color:var(--accent); font-weight:600; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="settings.html" class="brand-logo-link"><img src="logo.png" alt="" class="brand-logo"></a>
+  <a href="./" class="brand">광수 Online 교무실 2세대</a>
+  <a href="calender.html">캘린더</a>
+  <a href="stu.html">학생 정보 조회</a>
+  <a href="phone.html">내선번호</a>
+  <a href="tools.html">행정업무 간소화 도구</a>
+  <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
+</nav>
+
+<div class="page-header">
+  <h1>자율·자치활동 문구 뽑기</h1>
+  <p>서로 다른 두 활동 영역에서 문구를 하나씩 무작위로 뽑아 이어붙입니다. 이미 뽑힌 문구는 다시 나오지 않아요.</p>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="progress-row">
+      <span class="progress-label"><b id="usedCount">0</b> / <span id="totalCount">100</span> 문구 사용됨</span>
+      <div class="progress-bar"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+
+    <button class="btn-draw" id="btnDraw" onclick="draw()">🎲 문구 뽑기</button>
+
+    <textarea class="result-box" id="resultBox" readonly placeholder="버튼을 눌러 문구를 뽑아보세요."></textarea>
+
+    <div class="btn-row">
+      <button class="btn-copy" id="btnCopy" onclick="copyResult()" disabled>📋 복사하기</button>
+      <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
+    </div>
+
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  { date: '2026-03-03', sentences: [
+    "개학식(2026.03.03.)에서 새로운 학년의 시작을 맞이하여 담임교사 및 급우들의 발표를 성실히 경청하며 올바른 교실 생활을 다짐함.",
+    "개학식(2026.03.03.)에서 공동체 규칙을 준수하고 모범적인 생활 태도를 유지할 것을 다짐하며 학급 구성원으로서 높은 책임감을 나타냄.",
+    "개학식(2026.03.03.)에서 경청하는 태도가 매우 훌륭하여 타인의 모범이 되었으며 새로운 담임교사 및 급우들과의 첫 만남에서 따뜻하고 예의 바르게 행동함.",
+    "개학식(2026.03.03.)에서 급우들과의 첫 만남에서 따뜻하고 예의 바른 태도로 대화를 나누며 학급 내 긍정적인 교우 관계 형성에 앞장섬.",
+    "개학식(2026.03.03.)에서 담임교사의 학급 운영 비전에 큰 공감을 표시하고 적극적으로 호응하며 교실 내 긍정적인 에너지를 전파함.",
+    "개학식(2026.03.03.)에서 학급 구성원 모두가 존중받는 평화로운 반을 만들기 위해 자신이 실천할 수 있는 역할을 찾아 자발적으로 행동함.",
+    "개학식(2026.03.03.)에서 1년간의 개인적 성장 목표를 구체적으로 설정하고 이를 성찰 일지에 진솔하게 기록하는 등 자기주도적 태도가 돋보임.",
+    "개학식(2026.03.03.)에서 규칙적이고 성실한 등교 생활과 기본에 충실한 자율적 통제력을 다짐하며 성숙한 상급 학년으로서의 자질을 보여줌.",
+    "개학식(2026.03.03.)에서 새로운 다짐을 담은 학급 다이어리 작성 활동에 높은 관심을 보이고, 1학기 생활 목표를 조목조목 계획함.",
+    "개학식(2026.03.03.)에서 질서 있는 태도로 학급 오리엔테이션에 임하고 교우들의 소개 발표에 적극적으로 환호하며 든든한 화합의 기반을 마련함."
+  ]},
+  { date: '2026-03-06', sentences: [
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 선관위 선언문에 담긴 공평무사한 관리 책무를 엄숙히 약속하며 개인의 정실을 배제하는 성숙함을 나타냄.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 투표 진행 과정 전반에 걸쳐 선관위원으로서 엄정하고 신중한 조력자의 역할을 실천할 것을 선서함.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 선거운동 규칙과 절차가 명시된 규정집을 급우들에게 쉽고 친절하게 조목조목 안내해 줌.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 공정 선거 퀴즈 풀이 활동을 통해 참다운 민주 시민의 권리와 성숙한 자치 자세의 중요성을 깊이 체득함.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 선관위 홍보 포스터 제작에 탁월한 시각화 재능을 발휘하여 공명선거 표어를 예술적으로 완성함.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 위원회 대표 서기로 선출되어 회의 결과와 투표 관리 일정을 정교하고 체계적으로 일지에 대기록함.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 공평하고 투명한 선거 관리를 다짐하는 굳은 책임 의식을 보이며 투표소 규칙을 주체적으로 정비함.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 선거 관리 실무 협의를 성실히 이끌며 발생 가능한 투표 절차상의 오류를 지혜롭게 지적하고 대비책을 도출함.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 학급 내 민주주의 실현의 든든한 초석이 되겠다는 뜨거운 자긍심을 내비치며 회의 전반을 경청함.",
+    "학급자치회 선거관리위원 구성(2026.03.06.)에서 선거관리위원의 윤리 의무에 적극 동의하고 선거 운동 기간 발생할 수 있는 갈등 요소를 예방하기 위한 대책을 성실히 논의함."
+  ]},
+  { date: '2026-03-13', sentences: [
+    "학급자치회장단 선거(2026.03.13.)에서 (일반학생) 입후보자들의 소견 발표를 매우 진지한 태도로 성실히 경청하고, 공약의 현실성과 반에 대한 봉사 의지를 냉철하게 검증함.",
+    "학급자치회장단 선거(2026.03.13.)에서 (일반학생) 질서 있고 엄숙한 참관 태도를 시종일관 견지하며 소중한 한 표의 주권 권리를 신성하게 실천함.",
+    "학급자치회장단 선거(2026.03.13.)에서 (일반학생) 질문과 답변 시간을 활용하여 공약의 구체적 추진 계획을 꼼꼼하게 질의하는 예리한 비판성을 보임.",
+    "학급자치회장단 선거(2026.03.13.)에서 (일반학생) 선거 결과에 성숙하게 승복하고 선출된 회장단에게 축하를 보내며 즐겁고 평화로운 공동체를 함께 만들겠다는 협력 의지를 다짐.",
+    "학급자치회장단 선거(2026.03.13.)에서 (일반학생) 학급을 위해 헌신할 진짜 일꾼을 뽑기 위해 학급 실정을 진단하고 유권자로서의 건전한 안목을 유감없이 발휘함.",
+    "학급자치회장단 선거(2026.03.13.)에서 (선거관리위원) 명렬표 대조, 기표 도장 관리, 투표 용지 교부 등 자신에게 부여된 행정 소임을 침착하고 빈틈없이 수행함.",
+    "학급자치회장단 선거(2026.03.13.)에서 (선거관리위원) 투표 도중 발생한 무효표 기준 판정 시 규정집을 면밀히 대조하며 소신 있고 정직하게 개표 과정을 감독함.",
+    "학급자치회장단 선거(2026.03.13.)에서 (선거관리위원) 개표 과정에서 참관인들의 동선을 공정하게 통제하고, 최종 득표수를 정확하고 신속하게 계산하여 자치회 선거의 절차적 투명성을 제고함.",
+    "학급자치회장단 선거(2026.03.13.)에서 (선거관리위원) 자치회 선거 규칙 위반 여부를 밀착 모니터링하고 공정 투표 선서식을 주도하며 민주적 선거 집행 요원으로서 귀중한 책무를 다함.",
+    "학급자치회장단 선거(2026.03.13.)에서 (선거관리위원) 투표 종료 후 개표 관리 일지를 명확하게 작성하고 서명 날인 절차를 정확히 집행하여 투표 제반 과정의 완성도를 높임."
+  ]},
+  { date: '2026-04-03', sentences: [
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 학급의 핵심 가치로 '존중'과 '협력'을 적극 제안하고, 상호 존중이 바탕이 되지 않은 협력은 형식에 그칠 수 있음을 설득력 있게 설명하여 최종 비전을 도출하는 데 크게 기여함.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 모둠 토의를 적극적으로 주도하며 '서로 협력하려면 우리는 어떤 존중을 해야할까?'라는 우리 반 최종 질문형 비전에 깊이 공감하고, 실천 가능한 구체적 약속들을 창의적으로 고안해 냄.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 협력을 실현하기 위해 우리가 보여주어야 할 존중의 태도로 '경청과 고운 말 사용'을 꼽았으며, 일상생활 속에서 친구들의 의견을 끝까지 듣고 반응하는 행동 규칙을 수립하는 데 주도적인 역할을 함.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 가치 선정 논의 과정 중 갈등이 생기자, 상대방의 입장을 먼저 이해하는 존중의 자세를 보이며 모둠 구성원 간의 원활한 의견 조율과 협력을 이끌어내는 뛰어난 리더십을 보임.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 모둠 대표 발표자로 나서 3학년 2반 구성원 모두가 공감할 수 있는 최종 질문형 비전의 의미를 명확히 정립하고, 일상 속 존중을 통한 협력적 학급 생활의 필요성을 설파하여 전원 합의를 이끌어냄.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 칠판 정리와 기록을 자처하여 반원들이 제시한 다양한 존중과 협력의 실천 아이디어를 명확하게 분류·정리함으로써, 3학년 2반만의 아름답고 주체적인 학급 비전 선언문 초안을 신속하게 완성함.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 학급 비전 수립 활동지에 '친구의 약점을 감싸주고 강점을 응원하는 존중이 진정한 협력을 만든다'라는 깊이 있는 성찰적 소감을 남겨 급우들과 교사에게 깊은 감동을 줌.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 학업 스트레스로 예민해질 수 있는 3학년 시기에 서로 존중하고 협력하는 분위기를 조성하기 위해 '하루에 한 번 이상 친구 칭찬하기'라는 다정다감하고 실용적인 존중 캠페인을 제안함.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 학급 비전 액자 제작 활동에 우수한 디자인적 역량을 발휘하여 '서로 협력하려면 우리는 어떤 존중을 해야할까?'라는 문구를 정성스럽고 깔끔하게 타이포그래피로 작성해 교실 게시판에 전시함.",
+    "질문으로 학급 비전 세우기(2026.04.03.)에서 비전 토의 중 내성적인 반 친구가 자신의 아이디어를 낼 수 있도록 친절하게 질문을 던지며 경청해 주어, 진정한 존중을 실천하며 함께 협력하는 따뜻한 토론 환경을 만듦."
+  ]},
+  { date: '2026-04-24', sentences: [
+    "학교문화 책임규약 선서(2026.04.24.)에서 규약의 가치를 깊이 이해하고, 존중과 협력의 자세로 학교폭력 예방 및 배려 깊은 언어 사용을 준수하겠다는 성실한 다짐을 서약서에 진솔하게 기술함.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 모둠별 토의를 이끌며 학급 비전인 '존중과 협력'을 생활 속에서 실현하기 위해 언어폭력과 따돌림 없는 안전한 교실을 만들어 가자는 구체적인 실천 수칙을 이끌어냄.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 모둠원들의 의견을 경청하여 정리하는 성실함을 보였으며, 권리에 상응하는 의무와 책무성에 대해 진지하게 성찰하고 적극적으로 토론에 동참함.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 학급 대표 선서자로 자원하여, 신뢰할 수 있는 학교 공동체와 즐거운 3학년 2반을 만들겠다는 의지를 품위 있고 단호한 목소리로 낭독하여 공동체의 다짐을 엄숙히 함.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 '우리가 서약한 책임규약은 단순한 약속을 넘어 친구에 대한 존중과 신뢰의 약속이다'라고 말하며 공동체 구성원으로서 성숙한 시민의식을 드러냄.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 규칙 위반 시 부과할 수 있는 민주적이고 평화로운 갈등 해결 방안에 대해 참신한 아이디어를 제시하고, 반 전체가 서로 돕고 협력하는 분위기 형성에 기여함.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 책임규약의 내용 중 '우리가 스스로 지켜야 할 자율과 배려' 부분을 돋보이게 카드뉴스로 정성껏 제작하여 교실 뒷게시판에 게시함으로써 학우들의 준수 의지를 높임.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 사이버 환경에서의 존중과 협력 수칙을 강조하며 악성 댓글 달지 않기, 단체 대화방에서의 예의 지키기 등 디지털 책임 규약의 내용을 실천적으로 제안함.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 학교문화 책임규약 서명식에 매우 진중한 자세로 참여하였으며, 서약한 규약을 일상에서 솔선수범하여 지키며 주변 친구들에게 선한 영향력을 행사함.",
+    "학교문화 책임규약 선서(2026.04.24.)에서 갈등 상황이 발생했을 때 책임규약에 명시된 존중과 조율의 방식을 떠올리며 친구들의 사소한 다툼을 평화적이고 이성적으로 해결하는 데 훌륭한 역할을 수행함."
+  ]},
+  { date: '2026-05-15', sentences: [
+    "학급자치회의(2026.05.15.)에서 3학년 2반의 학급 공동체 활성화 안건인 '모둠 협동 큐브 풀기 대회'를 제안하고, 반 친구들이 다 함께 참여할 수 있는 협동 규칙과 일정을 구체적으로 조율함.",
+    "학급자치회의(2026.05.15.)에서 회의 서기로 자발적으로 활약하며 급우들이 격렬하게 제시한 찬반 의견들을 일목요연하고 명확하게 정리해 화이트보드에 실시간으로 공유함으로써 회의 지연을 막음.",
+    "학급자치회의(2026.05.15.)에서 교실 내 존중 문화 확산을 위한 '경청 스티커 모으기' 캠페인을 주도적으로 건의하여, 서로 협력하고 존중하는 분위기를 다지는 실효성 있는 실천 방안을 수립함.",
+    "학급자치회의(2026.05.15.)에서 모둠 청소 구역 배분 안건과 관련하여, 모두가 꺼리는 구역에 대해 '우리 모둠이 솔선수범해 돕겠다'며 배려와 협동의 공동체 정신을 발휘해 회의의 합의 도출을 이끎.",
+    "학급자치회의(2026.05.15.)에서 자치 회의 진행 과정 중 일부 구성원의 고성이 오가거나 감정이 과열될 때, '서로 존중하며 이야기하자'고 침착하게 중재를 건네어 토론 분위기를 성숙하게 가라앉힘.",
+    "학급자치회의(2026.05.15.)에서 '체육대회 종목 선정 및 연습 계획 수립' 안건에 대해 모든 반원이 공평하게 참여할 수 있는 로테이션식 연습 계획을 제시해 모두의 동의를 받음.",
+    "학급자치회의(2026.05.15.)에서 다수결 투표 결과 소수 의견으로 남겨진 학우들의 아쉬움을 배려하여, 그들의 의견 중 '모둠 피드백 시간 마련'이라는 절충안을 추가 제안해 자치 결정에 반영하는 민주적 포용력을 보임.",
+    "학급자치회의(2026.05.15.)에서 학급 예산의 투명하고 민주적인 사용처 논의 시, '모두에게 공평하고 유용한 학급 문구류 구입'을 역설하여 효율적이고도 공정한 자치 자금 분배를 완수함.",
+    "학급자치회의(2026.05.15.)에서 학기 중 실천할 '학급 공헌 1인 1역할'의 세부 정비 안건을 건의하고, 교실 청결을 위한 분리수거 도우미의 상세 매뉴얼을 수립해 학급 일과 효율을 대폭 향상함.",
+    "학급자치회의(2026.05.15.)에서 교실 환경 개선을 위해 '존중의 말 한마디 상자' 설치를 제안하고, 친구들의 마음을 보듬는 예쁜 위로와 존중의 엽서 쓰기 운동을 자발적으로 전개함."
+  ]},
+  { date: '2026-05-29', sentences: [
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 '서로 협력하려면 우리는 어떤 존중을 해야할까?'라는 학급 비전 질문을 토대로 지난 두 달간의 자신의 행동을 매우 객관적이고 진솔하게 성찰하는 평가지를 작성함.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 모둠 성찰 활동을 주도하며 친구들의 말을 중단시키지 않고 끝까지 듣는 '경청의 존중'이 모둠 협력 과제 해결 시간을 대폭 단축시켰다는 긍정적 상관관계를 도출해 냄.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 우리 반의 실천 사항인 '경청과 존중의 말씨'가 학업 스트레스를 낮추고 교실 분위기를 평화롭게 만드는 데 미친 긍정적인 변화를 정량적으로 에세이에 작성하여 큰 공감을 이끌어냄.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 스스로 세운 질문 수칙인 '친구의 의견 존중하기'를 일상 속에서 어떻게 성실히 이행했는지 스스로 체크리스트를 확인하며 미진했던 협동력을 보완할 수 있는 다짐을 기록함.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 성찰 나눔을 위한 학급 전체 토론 시, 급우들의 긍정적인 실천 사례들을 자발적으로 수집하여 슬라이드로 구성하고 이를 친절하게 발표해 친구들의 자존감과 의욕을 북돋움.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 학급 게시판의 '존중과 협력 성찰 코너'를 자원하여 정성껏 정리하고, 반원들의 정성 어린 중간 성찰 메모들을 한눈에 보기 좋게 범주별로 예쁘게 분류하여 전시함.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 '진정한 협력은 잘하는 친구의 독주가 아니라 못하는 친구를 기다려주는 존중에서 시작된다'라는 깊은 울림의 문장을 작성하여 반 구성원들의 행동 변화에 선한 자극을 줌.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 모둠 토의의 기록 담당 역할을 훌륭히 수행하며, 학기 초 설정했던 실천 계획 대비 5월 말 기준의 협동 점수 달성 현황을 정교한 성장 그래프로 일지에 도식화함.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 지난 활동 기간 중 사소한 교우 갈등 상황에서 서로에 대한 존중 어린 대화 노력이 결여되었음을 예리하게 스스로 고백하고, 남은 1학기 동안 성실히 협력하겠다는 실천안을 제출함.",
+    "질문형 학급 비전 중간 성찰(2026.05.29.)에서 '협력을 이끌어내는 열쇠는 역지사지의 배려 섞인 존중이다'라는 성찰 주제를 아름다운 포스터 디자인으로 도안하여 급우들이 실천을 생활화하도록 선도적인 시각 홍보를 진행함."
+  ]},
+  { date: '2026-06-05', sentences: [
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 학생 대표로서 교사, 학부모, 학생이 대등한 관계에서 상호 존중하는 주체적 민주 토론 문화 수립의 목적을 명확히 이해하고 반 친구들에게 설명함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 배부된 대토론회 운영 매뉴얼을 꼼꼼하게 검토하여 주체성, 협력, 예의의 3대 가치를 실천하기 위한 핵심 토론 기본 규칙을 알기 쉽게 도식화함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 우리 반의 학급 가치인 '존중과 협력'이 대토론회 현장에서도 빛을 발할 수 있도록, 상대방 주장의 전제를 인정하며 협력적으로 소통하는 모의 토론 연습을 솔선수범함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 대토론회 안건 발굴을 위해 '존중받는 학교 복지 및 시설 개선'에 대한 반 친구들의 사전 수요를 조사하고, 이를 논리 정연하게 보고서로 취합하는 데 기여함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 '학교의 혁신적 변화는 3주체가 서로에 대한 존중을 기초로 소통할 때 비로소 달성된다'는 주체적이고 깊이 있는 성찰 요약을 작성해 공유함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 토론 도우미 역할을 자원하여 토론 진행 순서, 발언 시간 준수 규칙 및 상호 예절 주의점 등 필수 정보들을 간결하게 일러스트 카드로 만들어 교우들에게 안내함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 학우들과의 브레인스토밍 토의 중, 학교 공통 의제가 전교 대토론회에 상정되기 위해 우리 반이 취해야 할 다각적인 홍보 전략에 대해 참신하고 정교한 아이디어를 개진함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 학급 게시판에 전교 토론 일정과 절차를 기록하고, 친구들이 주저 없이 학교 문제 개선을 위한 의견 포스트잇을 붙일 수 있도록 참여 유도 문구를 작성함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 소수 권익 보호를 주제로 삼아 장애 학우 통학 편의 개선이나 노후 자치 공간 재정비 등 민주적인 복지 안건들이 우선 제시될 수 있도록 공동체적 참여를 권장함.",
+    "교육 3주체 대토론회 운영 안내(2026.06.05.)에서 토론회의 성취와 가치를 깊이 있게 수용하며, 향후 토론 당일 성숙한 경청 태도와 질서 정연한 협력적 토의 참여를 이행하겠다는 굳건한 태도를 나타냄."
+  ]},
+  { date: '2026-06-12', sentences: [
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 '존중과 협력'의 가치를 적극적으로 반영하여, 교내 자습실 이용 수칙 정비 및 자율 예산의 효율적 배분을 담은 고품질의 의제 기획안을 제시함.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 모둠 토의의 이끌이로서 갈등이 대립하는 안건인 '매점 메뉴 다양화'와 '환경 보호를 위한 일회용품 사용 금지' 간의 조화로운 상생 타협안을 고안해 합의를 완수함.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 반원들이 제안한 총 30여 개의 산발적인 아이디어를 '시설 개선', '질서 확립', '학생 복지'의 3대 핵심 카테고리로 신속하고도 명확하게 칠판에 시각적 도표로 정돈함.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 학생들의 재미와 학업적 피로 완화를 위한 '교내 쉼터 보수 계획'을 의제로 발굴하며, 정성 어린 통계 데이터와 예산 타당성 분석 결과를 조력 자료로 친구들에게 선보임.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 '우리가 존중받기 위해서는 먼저 타인과 학교 공동체 전체에 헌신하는 책임감 있는 의제를 내야 한다'며 학교 안전 관련 예방 대책을 의제로 강력히 건의함.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 모둠 토의 시 소극적인 학우들에게 다정하게 의견을 묻고, 그들이 낸 소중한 한마디 의견도 놓치지 않고 최종 학급 수렴 보고서에 비중 있게 등재하는 따뜻함을 보임.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 자치 의제 심사 표결을 주도적으로 담당하여 무기명 비밀 투표의 민주적 방식을 정확하게 통제하고, 투표 집계 통계를 신뢰성 있게 시각화해 반원들에게 제시함.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 대의원회에 정식으로 제출할 '3학년 2반 최종 3대 의제 건의안'의 제안 배경 및 논리적 실천 근거들의 문장을 어휘의 격식을 갖추어 수려하고도 깔끔하게 수정 보완함.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 교내 3학년 전체 학년 회의에 회부할 공동의제인 '급식 배식 순서 순환제'를 구체적으로 창안하고, 학년 간 불평등과 갈등 소지를 미연에 조율하는 중재 성과를 거둠.",
+    "학급별 의제 아이디어 수렴(2026.06.12.)에서 학급을 사랑하고 학교 문화를 일구기 위해 매사에 기발하게 참여하는 열성 어린 태도를 나타내며, 공동체의 화합과 협력을 돕는 기분 좋은 에너지를 전파함."
+  ]},
+  { date: '2026-06-26', sentences: [
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 전교 대토론회 최종 상정 의제인 '존중과 협력의 학생 자치 자율 예산 사용권 확대' 안건에 대해, 책임 있는 사용을 전제로 한 정기적 예결산 공고 수칙을 대안으로 훌륭히 제안함.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 '교내 스마트폰 자율 사용 구역 설정' 안건 토론 중 찬반 양론이 격하게 맞서자, 타인의 자율권을 해치지 않는 '보행 안전 책임제'를 정교한 절충안으로 마련함.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 모둠 찬반 투표 결과 기록자로서 개표 집계 서기를 명확히 담당하고, 우리 학급의 찬반 여론 분석 결과 그래프를 칠판에 신속하고 가독성 높게 입체적으로 도식화함.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 우리 반의 가치인 '존중'을 기반으로 소수 의견인 '동아리 시간 선택 유연제 확대'가 표결에서 사장되지 않도록 발언 기회를 양보해 주체적으로 옹호하는 우애를 보임.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 전교생 자율 봉사제 개선 의제에 대해 '학교 주변 상점가 연계 정화 봉사'를 주체적으로 설계하며, 지역사회와 공생하고 협력하는 성숙한 교육 공동체 의식을 나타냄.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 대의원 연설자로 자원하여, 우리 반의 최종 비전인 '서로 협력하려면 우리는 어떤 존중을 해야할까?'의 성공적인 실천 이력을 전교생 연계 모델로 강력하게 연설함.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 학교 내 노후 자치 공간의 보수 계획에 찬성 의견을 피력하며, 반 친구들이 안전하게 휴식을 누릴 수 있는 자율 쉼터 활성화 매뉴얼을 논리적이고도 다정한 필치로 구성함.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 의견 포스트잇 분류 작업 시 반 친구들의 사소한 단어와 건의 뒤에 담긴 절실한 마음과 필요성을 세심하게 조명해 주며 의제의 대표성과 신뢰를 공고히 다짐.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 회의 검수관을 자임해, 전교 학생회에 정식으로 발송할 '3학년 2반 최종 결의 제안서'의 서론과 논조 흐름을 유려하게 정정하는 등 완벽한 마무리에 최선을 다함.",
+    "학교 공통 의제에 대한 의견 수렴(2026.06.26.)에서 갈등 조율사로 활약해, 자칫 감정적 반목으로 흐를 뻔했던 '매점 친환경 포장 간식 안건'에 비용 현실성과 건강 안전성 간의 타협안을 제공해 화합에 이바지함."
+  ]}
+];
+
+const TOTAL = CATEGORIES.reduce((sum, c) => sum + c.sentences.length, 0);
+const STORAGE_KEY = 'truman_lets_grit_used_v1';
+
+function loadUsed() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+  } catch (e) { return new Set(); }
+}
+function saveUsed(used) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...used])); } catch (e) {}
+}
+
+function updateProgress() {
+  const used = loadUsed();
+  document.getElementById('usedCount').textContent = used.size;
+  document.getElementById('totalCount').textContent = TOTAL;
+  document.getElementById('progressFill').style.width = (used.size / TOTAL * 100) + '%';
+}
+
+function draw() {
+  const used = loadUsed();
+  const msg = document.getElementById('msg');
+  msg.textContent = '';
+  msg.className = 'msg';
+
+  const availableCatIdx = CATEGORIES
+    .map((c, i) => i)
+    .filter(i => CATEGORIES[i].sentences.some((_, j) => !used.has(i + '-' + j)));
+
+  if (availableCatIdx.length < 2) {
+    msg.textContent = '더 이상 뽑을 수 있는 조합이 없습니다. 전체 초기화를 눌러주세요.';
+    document.getElementById('btnDraw').disabled = true;
+    return;
+  }
+
+  const shuffled = availableCatIdx.slice().sort(() => Math.random() - 0.5);
+  const [catA, catB] = shuffled.slice(0, 2);
+
+  function pickFrom(catIdx) {
+    const unusedIdx = CATEGORIES[catIdx].sentences
+      .map((_, j) => j)
+      .filter(j => !used.has(catIdx + '-' + j));
+    const sentIdx = unusedIdx[Math.floor(Math.random() * unusedIdx.length)];
+    used.add(catIdx + '-' + sentIdx);
+    return { date: CATEGORIES[catIdx].date, text: CATEGORIES[catIdx].sentences[sentIdx] };
+  }
+
+  const picks = [pickFrom(catA), pickFrom(catB)].sort((a, b) => a.date < b.date ? -1 : 1);
+  saveUsed(used);
+
+  document.getElementById('resultBox').value = picks.map(p => p.text).join('\n');
+  document.getElementById('btnCopy').disabled = false;
+  updateProgress();
+}
+
+function copyResult() {
+  const text = document.getElementById('resultBox').value;
+  const msg = document.getElementById('msg');
+  if (!text) return;
+
+  function showCopied() {
+    msg.textContent = '복사되었습니다!';
+    msg.className = 'msg ok';
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
+
+  function fallbackCopy() {
+    const box = document.getElementById('resultBox');
+    box.focus();
+    box.select();
+    try {
+      document.execCommand('copy');
+      showCopied();
+    } catch (e) {
+      msg.textContent = '복사에 실패했습니다. 직접 선택해 복사해주세요.';
+      msg.className = 'msg';
+    }
+  }
+}
+
+function resetAll() {
+  if (!confirm('지금까지 뽑은 기록을 모두 초기화할까요?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('resultBox').value = '';
+  document.getElementById('btnCopy').disabled = true;
+  document.getElementById('btnDraw').disabled = false;
+  document.getElementById('msg').textContent = '';
+  document.getElementById('msg').className = 'msg';
+  updateProgress();
+}
+
+updateProgress();
+</script>
+</body>
+</html>
