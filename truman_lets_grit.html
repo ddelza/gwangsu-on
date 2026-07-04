@@ -48,9 +48,9 @@ body { font-family:var(--font-body); background:var(--bg); color:var(--text); }
 .page-header p { font-size:0.88rem; color:var(--text-muted); margin:0; }
 
 .wrap { max-width:640px; margin:0 auto; padding:16px; }
-.card { background:var(--surface); border-radius:16px; border:1px solid var(--border); padding:22px; }
+.card { background:var(--surface); border-radius:16px; border:1px solid var(--border); padding:30px; }
 
-.progress-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.progress-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
 .progress-label { font-size:0.85rem; color:var(--text-muted); }
 .progress-label b { color:var(--accent); }
 .progress-bar { flex:1; height:6px; border-radius:999px; background:var(--accent-soft); margin-left:12px; overflow:hidden; }
@@ -58,24 +58,24 @@ body { font-family:var(--font-body); background:var(--bg); color:var(--text); }
 
 .btn-draw {
   width:100%; padding:16px; background:var(--accent); color:var(--on-accent,#fff); border:none; border-radius:12px;
-  font-size:1.05rem; font-weight:800; cursor:pointer; font-family:inherit; margin-bottom:16px;
+  font-size:1.05rem; font-weight:800; cursor:pointer; font-family:inherit; margin-bottom:24px;
   transition:opacity 0.15s;
 }
 .btn-draw:hover { opacity:0.9; }
 .btn-draw:disabled { opacity:0.4; cursor:not-allowed; }
 
 .result-box {
-  width:100%; min-height:120px; padding:16px; border:1.5px solid var(--border); border-radius:12px;
-  background:var(--bg); color:var(--text); font-size:0.95rem; line-height:1.7; font-family:inherit;
-  resize:vertical; margin-bottom:12px;
+  width:100%; min-height:140px; padding:18px; border:1.5px solid var(--border); border-radius:12px;
+  background:var(--bg); color:var(--text); font-size:0.95rem; line-height:1.8; font-family:inherit;
+  resize:vertical; margin-bottom:20px;
 }
 .result-box::placeholder { color:var(--text-muted); }
 
-.btn-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
-.btn-copy { padding:11px; background:var(--accent-soft); color:var(--accent); border:1.5px solid var(--accent); border-radius:10px; font-size:0.9rem; font-weight:700; cursor:pointer; font-family:inherit; }
+.btn-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.btn-copy { padding:13px; background:var(--accent-soft); color:var(--accent); border:1.5px solid var(--accent); border-radius:10px; font-size:0.9rem; font-weight:700; cursor:pointer; font-family:inherit; }
 .btn-copy:hover { opacity:0.85; }
 .btn-copy:disabled { opacity:0.4; cursor:not-allowed; }
-.btn-reset { padding:11px; background:none; border:1.5px solid var(--border); border-radius:10px; font-size:0.9rem; cursor:pointer; font-family:inherit; color:#e53e3e; }
+.btn-reset { padding:13px; background:none; border:1.5px solid var(--border); border-radius:10px; font-size:0.9rem; cursor:pointer; font-family:inherit; color:#e53e3e; }
 .btn-reset:hover { border-color:#e53e3e; background:#ffe4e4; }
 
 .msg { font-size:0.82rem; color:var(--text-muted); min-height:1.2em; text-align:center; }
