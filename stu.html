@@ -171,11 +171,15 @@ table.stu-table tr.ban-alt td, table.stu-table td { color: var(--text); }
 </div>
 
 <div class="filter-wrap">
-  <input id="searchBox" class="search-box" type="text" placeholder="이름, 학번, 반, 동아리/스포츠클럽 등으로 검색">
+  <input id="searchBox" class="search-box" type="text" placeholder="이름, 학번, 반, 이메일, 동아리/스포츠클럽 등으로 검색">
 
   <div class="filter-card edit-mode-card">
     <button id="editModeToggleBtn" class="edit-mode-btn" onclick="enterEditMode()">✏️ 수정모드</button>
+    <label style="font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
+      <input type="checkbox" id="includeEmailChk"> 이메일 포함
+    </label>
     <button class="print-btn" onclick="printRoster()">🖨️ 명렬표 출력</button>
+    <button class="print-btn" onclick="downloadExcel()">📥 엑셀 다운로드</button>
     <div id="editModeBar" style="display:none">
       <span id="editSummaryText">변경 0건</span>
       <button class="edit-mode-save-btn" onclick="saveEditedFields()">✅ 수정 완료</button>
@@ -288,7 +292,7 @@ let pendingEdits = {}; // key: `${id}|${sem}|${label}` -> { id, grade, sem, labe
 function studentSearchText(s) {
   const sem1Extras = s.sem1.extras.map(e => e.value).join(' ');
   const sem2Extras = s.sem2.extras.map(e => e.value).join(' ');
-  return [s.name, s.id, s.grade, s.ban, s.num, s.sem1.sport, sem1Extras, s.sem2.sport, sem2Extras].join(' ');
+  return [s.name, s.id, s.grade, s.ban, s.num, s.email, s.sem1.sport, sem1Extras, s.sem2.sport, sem2Extras].join(' ');
 }
 
 function uniqueSorted(arr) {
@@ -485,7 +489,7 @@ function renderResults() {
 
   let html = `<div class="result-count">${results.length}명</div>`;
   html += '<table class="stu-table"><thead><tr>';
-  html += '<th>학년</th><th>반</th><th>번호</th><th>학번</th><th>이름</th>';
+  html += '<th>학년</th><th>반</th><th>번호</th><th>학번</th><th>이름</th><th>이메일</th>';
   html += '<th>1학기 스포츠클럽</th><th>1학기 주제선택/동아리</th>';
   html += '<th>2학기 스포츠클럽</th><th>2학기 주제선택/동아리</th>';
   html += '</tr></thead><tbody>';
@@ -501,6 +505,7 @@ function renderResults() {
     const electiveCell = (semKey) => editMode ? editableElectiveSelects(s, semKey) : cell(semExtraText(s[semKey]));
     return `<tr class="${isBanStart ? 'ban-start ' : ''}${banColorIdx === 1 ? 'ban-alt' : ''}">
       <td>${esc(s.grade)}</td><td>${esc(s.ban)}</td><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td>
+      <td style="font-size:0.78rem;color:var(--text-muted)">${esc(s.email||'')}</td>
       <td>${sportCell('sem1')}</td><td>${electiveCell('sem1')}</td>
       <td>${sportCell('sem2')}</td><td>${electiveCell('sem2')}</td>
     </tr>`;
@@ -655,28 +660,32 @@ function printRoster() {
   }
 
   const today = new Date().toLocaleDateString('ko-KR');
+  const withEmail = document.getElementById('includeEmailChk').checked;
 
   const pages = [...groupMap.entries()].map(([className, students], pi) => {
-    // 열당 최대 30명, 열 수는 올림
-    const PER_COL = 30;
-    const COLS = Math.ceil(students.length / PER_COL);
-    const rows = PER_COL; // 항상 30행 (빈 칸 포함)
+    // 열당 최대 30명 (이메일 포함 시 한 열로 제한)
+    const PER_COL = withEmail ? students.length : 30;
+    const COLS = withEmail ? 1 : Math.ceil(students.length / PER_COL);
+    const rows = withEmail ? students.length : PER_COL;
 
-    // 열 우선 배치: cells[col][row] = student | null
+    // 열 우선 배치
     const colData = Array.from({length: COLS}, (_, c) =>
       Array.from({length: rows}, (_, r) => students[c * rows + r] || null)
     );
 
-    const headerRow = Array.from({length: COLS}, (_, i) =>
-      `<th class="c-id">학번</th><th class="c-gender">성별</th><th class="c-name">이름</th><th class="c-sign">비고</th>${i < COLS-1 ? '<th class="c-sep"></th>' : ''}`
-    ).join('');
+    const headerRow = Array.from({length: COLS}, (_, i) => {
+      const emailCol = withEmail ? '<th class="c-email">이메일</th>' : '';
+      return `<th class="c-id">학번</th><th class="c-gender">성별</th><th class="c-name">이름</th>${emailCol}<th class="c-sign">비고</th>${i < COLS-1 ? '<th class="c-sep"></th>' : ''}`;
+    }).join('');
 
     const finalBodyRows = Array.from({length: rows}, (_, r) =>
       `<tr>${Array.from({length: COLS}, (_, c) => {
         const s = colData[c][r];
         const sep = c < COLS - 1 ? '<td class="c-sep"></td>' : '';
-        if (!s) return `<td class="c-id"></td><td class="c-gender"></td><td class="c-name"></td><td class="c-sign"></td>${sep}`;
-        return `<td class="c-id">${s.id}</td><td class="c-gender">${s.gender||''}</td><td class="c-name">${s.name}</td><td class="c-sign"></td>${sep}`;
+        const emailCol = withEmail ? '<td class="c-email"></td>' : '';
+        if (!s) return `<td class="c-id"></td><td class="c-gender"></td><td class="c-name"></td>${withEmail ? '<td class="c-email"></td>' : ''}<td class="c-sign"></td>${sep}`;
+        const emailCell = withEmail ? `<td class="c-email">${s.email||''}</td>` : '';
+        return `<td class="c-id">${s.id}</td><td class="c-gender">${s.gender||''}</td><td class="c-name">${s.name}</td>${emailCell}<td class="c-sign"></td>${sep}`;
       }).join('')}</tr>`
     ).join('');
 
@@ -711,6 +720,7 @@ td{font-size:9.5pt}
 .c-id{width:38px;font-size:8.5pt}
 .c-gender{width:24px}
 .c-name{width:58px;text-align:left;padding-left:5px}
+.c-email{font-size:7.5pt;text-align:left;padding-left:4px}
 .c-sign{width:46px}
 .c-sep{width:6px;border:none;background:#fff}
 @page{size:A4 portrait;margin:5mm}
@@ -720,6 +730,49 @@ ${pages}
 <script>window.onload=function(){window.print();}<\/script>
 </body></html>`);
   win.document.close();
+}
+
+function downloadExcel() {
+  const q = document.getElementById('searchBox').value;
+  const withEmail = document.getElementById('includeEmailChk').checked;
+  let results = allStudents;
+  if (activityFilter) {
+    results = results.filter(studentMatchesActivity);
+  } else {
+    if (activeGrade) results = results.filter(s => String(s.grade) === activeGrade);
+    if (activeBan)   results = results.filter(s => String(s.ban) === activeBan);
+  }
+  results = fuzzySearch(results, q, ['_searchText']);
+  results = results.slice().sort((a, b) => {
+    if (a.grade !== b.grade) return a.grade - b.grade;
+    if (a.ban   !== b.ban)   return a.ban - b.ban;
+    return a.num - b.num;
+  });
+  if (!results.length) { alert('다운로드할 학생이 없습니다.'); return; }
+
+  const q2 = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const headers = ['학년', '반', '번호', '학번', '이름'];
+  if (withEmail) headers.push('이메일');
+  headers.push('1학기 스포츠클럽', '1학기 주제선택/동아리', '2학기 스포츠클럽', '2학기 주제선택/동아리');
+
+  const rows = results.map(s => {
+    const row = [s.grade, s.ban, s.num, s.id, s.name];
+    if (withEmail) row.push(s.email || '');
+    row.push(s.sem1.sport || '', semExtraText(s.sem1), s.sem2.sport || '', semExtraText(s.sem2));
+    return row.map(q2).join(',');
+  });
+
+  const csv = '﻿' + [headers.map(q2).join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const dateStr = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  const label = activeGrade ? `${activeGrade}학년${activeBan ? activeBan+'반' : ''}` : '전체';
+  a.download = `학생명단_${label}_${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
 }
 
 function reloadRoster() {
