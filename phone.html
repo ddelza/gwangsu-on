@@ -114,17 +114,19 @@ body {
   font-size: 0.85rem; cursor: pointer; border: none;
 }
 .edit-status-msg { font-size: 0.82rem; color: #1a7c4a; }
-.list-wrap { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; }
+.list-wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 40px; }
 .result-count { font-size: 0.82rem; color: var(--text-muted); margin: 4px 2px 10px; }
-.phone-card {
-  display: flex; align-items: center; gap: 14px; background: var(--surface); border-radius: 12px;
-  padding: 12px 16px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 6px solid #ccc;
+.phone-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
 }
-.phone-card .role { font-size: 0.75rem; color: var(--text-muted); min-width: 96px; }
-.phone-card .name { font-size: 1rem; font-weight: 700; min-width: 76px; }
-.phone-card .nums { margin-left: auto; text-align: right; }
-.phone-card .ext { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
-.phone-card .direct { font-size: 0.78rem; color: var(--text-muted); }
+.phone-card {
+  display: flex; flex-direction: column; background: var(--surface); border-radius: 12px;
+  padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 5px solid #ccc;
+}
+.phone-card .role { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.phone-card .name { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+.phone-card .ext { font-size: 1.15rem; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
+.phone-card .direct { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 .cat-관리자행정 { border-left-color: #6c93cf; }
 .cat-1학년 { border-left-color: #d7c36a; }
 .cat-2학년 { border-left-color: #7fb26b; }
@@ -148,11 +150,12 @@ body {
 .ed-remove-btn {
   margin-left: auto; background: none; border: none; color: #c0392b; cursor: pointer; font-size: 0.9rem;
 }
+@media (max-width: 700px) {
+  .phone-grid { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 600px) {
   .topnav { padding: 10px 12px; }
   .topnav .brand { width: 100%; margin-bottom: 6px; }
-  .phone-card { flex-wrap: wrap; }
-  .phone-card .nums { margin-left: 0; text-align: left; }
 }
 </style>
 </head>
@@ -246,6 +249,12 @@ function fuzzySearch(items, query, fields) {
   }));
 }
 
+function fmtExt(ext) {
+  const s = String(ext || '').trim();
+  if (!s) return s;
+  return /^\d+$/.test(s) && s.length < 4 ? s.padStart(4, '0') : s;
+}
+
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
 const ACTION_MAP = { getPhoneDirectory: (runner) => runner.getPhoneDirectory() };
 // 새로 추가되는 분류는 자유 텍스트라 미리 정해둔 예쁜 표시명이 없을 수 있다 — 기존 4개만 표시명을
@@ -331,16 +340,16 @@ function renderResults() {
   }
 
   let html = `<div class="result-count">${results.length}건</div>`;
+  html += '<div class="phone-grid">';
   html += results.map(d => `
     <div class="phone-card cat-${esc(d.cat)}">
       <span class="role">${esc(d.role)}</span>
       <span class="name">${esc(d.name)}</span>
-      <span class="nums">
-        <div class="ext">☎ ${esc(d.ext)}</div>
-        <div class="direct">${esc(d.direct)}</div>
-      </span>
+      <span class="ext">☎ ${esc(fmtExt(d.ext))}</span>
+      <span class="direct">${esc(d.direct)}</span>
     </div>
   `).join('');
+  html += '</div>';
   wrap.innerHTML = html;
 }
 
