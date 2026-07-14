@@ -120,13 +120,16 @@ body {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
 }
 .phone-card {
-  display: flex; flex-direction: column; background: var(--surface); border-radius: 12px;
-  padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 5px solid #ccc;
+  display: flex; flex-direction: row; align-items: center; gap: 10px;
+  background: var(--surface); border-radius: 12px;
+  padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 5px solid #ccc;
 }
-.phone-card .role { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.phone-card .name { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-.phone-card .ext { font-size: 1.15rem; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
-.phone-card .direct { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+.phone-card .info { flex: 1; min-width: 0; }
+.phone-card .role { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.phone-card .name { font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.phone-card .nums { flex-shrink: 0; text-align: right; }
+.phone-card .ext { font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: 0.03em; white-space: nowrap; }
+.phone-card .direct { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
 .cat-관리자행정 { border-left-color: #6c93cf; }
 .cat-1학년 { border-left-color: #d7c36a; }
 .cat-2학년 { border-left-color: #7fb26b; }
@@ -343,10 +346,14 @@ function renderResults() {
   html += '<div class="phone-grid">';
   html += results.map(d => `
     <div class="phone-card cat-${esc(d.cat)}">
-      <span class="role">${esc(d.role)}</span>
-      <span class="name">${esc(d.name)}</span>
-      <span class="ext">☎ ${esc(fmtExt(d.ext))}</span>
-      <span class="direct">${esc(d.direct)}</span>
+      <div class="info">
+        <div class="role">${esc(d.role)}</div>
+        <div class="name">${esc(d.name)}</div>
+      </div>
+      <div class="nums">
+        <div class="ext">☎ ${esc(fmtExt(d.ext))}</div>
+        <div class="direct">${esc(d.direct)}</div>
+      </div>
     </div>
   `).join('');
   html += '</div>';
