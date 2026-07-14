@@ -128,6 +128,35 @@ body {
   font-size: 0.85rem; cursor: pointer; border: none;
 }
 .edit-status-msg { font-size: 0.82rem; color: #1a7c4a; }
+
+/* 학번 조회 모달 */
+.id-lookup-box { max-width: 480px; }
+.id-lookup-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.id-lookup-input {
+  flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 0.9rem; font-family: inherit; background: var(--surface); color: var(--text);
+}
+.id-lookup-input:focus { outline: none; border-color: var(--accent); }
+.id-lookup-add-btn {
+  padding: 9px 16px; border-radius: 8px; background: var(--accent); color: var(--on-accent, #fff);
+  border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.id-lookup-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; margin-bottom: 12px; }
+.lookup-name-chip {
+  display: inline-flex; align-items: center; gap: 4px; background: var(--accent-soft);
+  color: var(--accent); border-radius: 999px; padding: 4px 10px; font-size: 0.83rem; font-weight: 600;
+}
+.lookup-name-chip button {
+  background: none; border: none; cursor: pointer; color: var(--accent); font-size: 0.78rem;
+  padding: 0 0 0 2px; line-height: 1;
+}
+.id-lookup-search-btn {
+  width: 100%; padding: 11px; border: none; border-radius: 10px; background: var(--accent);
+  color: var(--on-accent, #fff); font-size: 0.92rem; font-weight: 700; cursor: pointer; margin-bottom: 14px;
+}
+.id-lookup-search-btn:disabled { opacity: 0.45; cursor: default; }
+#idLookupResult table { margin-top: 0; }
+#idLookupResult .empty-state { padding: 20px 0; }
 .edit-field-select {
   padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem;
   background: var(--surface); max-width: 160px;
@@ -180,6 +209,7 @@ table.stu-table tr.ban-alt td, table.stu-table td { color: var(--text); }
     </label>
     <button class="print-btn" onclick="printRoster()">🖨️ 명렬표 출력</button>
     <button class="print-btn" onclick="downloadExcel()">📥 엑셀 다운로드</button>
+    <button class="print-btn" onclick="openIdLookup()">🔍 학번 조회</button>
     <div id="editModeBar" style="display:none">
       <span id="editSummaryText">변경 0건</span>
       <button class="edit-mode-save-btn" onclick="saveEditedFields()">✅ 수정 완료</button>
@@ -210,6 +240,23 @@ table.stu-table tr.ban-alt td, table.stu-table td { color: var(--text); }
   <div id="activeFilterBanner" class="active-filter-banner">
     <span id="activeFilterText"></span>
     <button class="reset-btn" onclick="resetActivityFilter()">필터 해제</button>
+  </div>
+</div>
+
+<!-- 학번 조회 모달 -->
+<div class="modal-overlay" id="idLookupModal" style="display:none">
+  <div class="modal-box id-lookup-box">
+    <button class="modal-close" onclick="closeIdLookup()">✕</button>
+    <h3 style="margin:0 0 14px;font-size:1.05rem;color:var(--accent);padding-right:24px">🔍 학번 조회 (여러 명)</h3>
+    <div class="id-lookup-input-row">
+      <input id="idLookupInput" class="id-lookup-input" type="text" placeholder="이름 입력 후 Enter">
+      <button class="id-lookup-add-btn" onclick="addLookupName()">추가</button>
+    </div>
+    <div id="idLookupChips" class="id-lookup-chips">
+      <span style="font-size:0.8rem;color:var(--text-muted)">아직 입력된 이름이 없습니다.</span>
+    </div>
+    <button class="id-lookup-search-btn" id="idLookupSearchBtn" onclick="runIdLookup()" disabled>학번 조회하기</button>
+    <div id="idLookupResult"></div>
   </div>
 </div>
 
@@ -786,6 +833,106 @@ function reloadRoster() {
     });
 }
 
+// ── 학번 조회 ──────────────────────────────
+let lookupNames = [];
+
+function openIdLookup() {
+  lookupNames = [];
+  renderLookupChips();
+  document.getElementById('idLookupInput').value = '';
+  document.getElementById('idLookupResult').innerHTML = '';
+  document.getElementById('idLookupSearchBtn').disabled = true;
+  document.getElementById('idLookupModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('idLookupInput').focus(), 50);
+}
+
+function closeIdLookup() {
+  document.getElementById('idLookupModal').style.display = 'none';
+}
+
+function addLookupName() {
+  const input = document.getElementById('idLookupInput');
+  const name = input.value.trim();
+  if (name && !lookupNames.includes(name)) {
+    lookupNames.push(name);
+    renderLookupChips();
+  }
+  input.value = '';
+  input.focus();
+}
+
+function removeLookupName(idx) {
+  lookupNames.splice(idx, 1);
+  renderLookupChips();
+}
+
+function renderLookupChips() {
+  const wrap = document.getElementById('idLookupChips');
+  const btn = document.getElementById('idLookupSearchBtn');
+  if (!lookupNames.length) {
+    wrap.innerHTML = '<span style="font-size:0.8rem;color:var(--text-muted)">아직 입력된 이름이 없습니다.</span>';
+    btn.disabled = true;
+    return;
+  }
+  wrap.innerHTML = lookupNames.map((n, i) =>
+    `<span class="lookup-name-chip">${esc(n)}<button onclick="removeLookupName(${i})">✕</button></span>`
+  ).join('');
+  btn.disabled = false;
+}
+
+function runIdLookup() {
+  if (!lookupNames.length) return;
+
+  // 이름별로 매칭 학생 그룹화 (학번순 정렬)
+  const nameGroups = lookupNames.map(name => {
+    const matches = allStudents
+      .filter(s => s.name === name)
+      .sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }));
+    return { name, students: matches };
+  });
+
+  // 그룹을 그 그룹 내 최솟값 학번 기준으로 정렬 (동명이인은 묶인 채로 이동)
+  nameGroups.sort((a, b) => {
+    const aMin = a.students.length ? String(a.students[0].id) : '9999';
+    const bMin = b.students.length ? String(b.students[0].id) : '9999';
+    return aMin.localeCompare(bMin, undefined, { numeric: true });
+  });
+
+  const results = nameGroups.flatMap(g => g.students);
+  const notFound = nameGroups.filter(g => !g.students.length).map(g => g.name);
+
+  const resultEl = document.getElementById('idLookupResult');
+  let html = '';
+
+  if (notFound.length) {
+    html += `<div style="font-size:0.82rem;color:#c0392b;margin-bottom:8px">찾을 수 없음: ${notFound.map(n => esc(n)).join(', ')}</div>`;
+  }
+
+  if (!results.length) {
+    html += '<div class="empty-state">일치하는 학생이 없습니다.</div>';
+    resultEl.innerHTML = html;
+    return;
+  }
+
+  html += `<div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px">${results.length}명 검색됨</div>`;
+  html += '<table class="stu-table"><thead><tr><th>학번</th><th>이름</th><th>학년</th><th>반</th><th>번호</th></tr></thead><tbody>';
+
+  // 동명이인 표시를 위해 각 이름의 학생 수 파악
+  const nameCounts = {};
+  results.forEach(s => { nameCounts[s.name] = (nameCounts[s.name] || 0) + 1; });
+
+  html += results.map(s => {
+    const isDup = nameCounts[s.name] > 1;
+    return `<tr${isDup ? ' style="background:rgba(255,193,7,0.12)"' : ''}>
+      <td><strong>${esc(s.id)}</strong></td>
+      <td>${esc(s.name)}${isDup ? ' <span style="font-size:0.7rem;color:#b07700">(동명이인)</span>' : ''}</td>
+      <td>${esc(s.grade)}</td><td>${esc(s.ban)}</td><td>${esc(s.num)}</td>
+    </tr>`;
+  }).join('');
+  html += '</tbody></table>';
+  resultEl.innerHTML = html;
+}
+
 let debounceTimer = null;
 document.getElementById('searchBox').addEventListener('input', () => {
   clearTimeout(debounceTimer);
@@ -794,6 +941,14 @@ document.getElementById('searchBox').addEventListener('input', () => {
 
 window.onload = function() {
   showExternalBrowserBannerIfNeeded('inappBanner');
+
+  document.getElementById('idLookupInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addLookupName(); }
+  });
+  document.getElementById('idLookupModal').addEventListener('click', e => {
+    if (e.target.id === 'idLookupModal') closeIdLookup();
+  });
+
   reloadRoster().catch(err => {
     document.getElementById('listWrap').innerHTML =
       `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`;
