@@ -125,6 +125,13 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
 .roster-item.pending-add .action-tag { color: #1a7c4a; }
 .roster-item.pending-remove .action-tag { color: #c0392b; }
 
+.conflict-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 8px; background: var(--bg); cursor: pointer; font-size: 0.86rem; color: var(--text);
+}
+.conflict-item input[type=checkbox] { margin-top: 3px; flex-shrink: 0; }
+.conflict-item .meta { color: var(--text-muted); font-size: 0.78rem; }
+
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; z-index: 100; padding: 16px; }
 .modal-box { background: var(--surface); border-radius: 14px; padding: 20px; max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto; }
 .modal-box h3 { margin: 0 0 6px; font-size: 1rem; color: var(--accent); }
@@ -205,6 +212,19 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
     <p>배정할 학생을 선택하세요.</p>
     <div id="dupCandidateList"></div>
     <button class="modal-cancel-btn" onclick="closeDupModal()">취소</button>
+  </div>
+</div>
+
+<!-- 이미 배정된 학생 덮어쓰기 확인 모달 -->
+<div class="modal-overlay" id="conflictModal">
+  <div class="modal-box">
+    <h3>이미 배정된 학생이 있습니다</h3>
+    <p>아래 학생은 이미 다른 값으로 배정되어 있습니다(다른 선생님이 먼저 저장했을 수 있어요). 덮어쓸 학생만 체크하고 저장하세요.</p>
+    <div id="conflictList"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="modal-cancel-btn" style="flex:1" onclick="closeConflictModal()">취소(아무것도 저장 안 함)</button>
+      <button class="save-btn" style="flex:1" onclick="confirmConflictSave()">선택한 대로 저장</button>
+    </div>
   </div>
 </div>
 
@@ -467,8 +487,34 @@ window.pickDup = function(studentId, name) {
   nameInput.focus();
 };
 
+// 저장 직전에 서버의 최신 값을 다시 확인한다 — 대기 목록에 담아둔 사이 다른 선생님이 같은 학생을
+// 먼저 저장했을 수 있기 때문. 이미 다른 값이 들어있는 학생은 팝업으로 보여주고, 체크한 학생만
+// 덮어쓸지 골라서 저장한다(제거 항목은 원래 위험이 낮아 이 확인을 건너뛴다).
 window.saveAll = async function() {
   const keys = Object.keys(pending);
+  const statusEl = document.getElementById('saveStatusMsg');
+  if (!keys.length) { statusEl.textContent = '저장할 변경사항이 없습니다.'; statusEl.className = 'feedback-msg'; return; }
+  statusEl.textContent = '확인 중...';
+  statusEl.className = 'feedback-msg';
+
+  const conflicts = [];
+  for (const k of keys) {
+    const p = pending[k];
+    if (p.action !== 'add') continue;
+    const snap = await get(ref(db, `years/${currentYear}/students/${p.studentId}/assignments/${p.slotId}`));
+    const currentValue = snap.exists() ? snap.val() : '';
+    if (currentValue && currentValue !== p.groupName) conflicts.push({ key: k, currentValue, ...p });
+  }
+
+  if (conflicts.length) {
+    statusEl.textContent = '';
+    openConflictModal(conflicts, keys);
+    return;
+  }
+  await commitSave(keys);
+};
+
+async function commitSave(keys) {
   const statusEl = document.getElementById('saveStatusMsg');
   if (!keys.length) { statusEl.textContent = '저장할 변경사항이 없습니다.'; statusEl.className = 'feedback-msg'; return; }
   statusEl.textContent = '저장 중...';
@@ -483,12 +529,43 @@ window.saveAll = async function() {
     const p = pending[k];
     const s = students.find(x => x.id === p.studentId);
     if (s) s.assignments[p.slotId] = p.groupName;
+    delete pending[k];
   });
-  pending = {};
   renderPending();
   renderRoster();
   statusEl.textContent = `저장 완료 (${keys.length}건)`;
   statusEl.className = 'feedback-msg ok';
+}
+
+let conflictAllKeys = [];
+function openConflictModal(conflicts, allKeys) {
+  conflictAllKeys = allKeys;
+  const listEl = document.getElementById('conflictList');
+  listEl.innerHTML = conflicts.map(c => `
+    <label class="conflict-item">
+      <input type="checkbox" checked data-key="${esc(c.key)}">
+      <span>${esc(c.name)} <span class="meta">${esc(c.grade)}학년 ${esc(c.ban)}반 ${esc(c.num)}번</span><br>
+      현재: <strong>${esc(c.currentValue)}</strong> → 새 값: <strong>${esc(c.groupName)}</strong></span>
+    </label>`).join('');
+  document.getElementById('conflictModal').style.display = 'flex';
+}
+window.closeConflictModal = function() {
+  document.getElementById('conflictModal').style.display = 'none';
+  const statusEl = document.getElementById('saveStatusMsg');
+  statusEl.textContent = '저장을 취소했습니다. 대기 목록은 그대로 있습니다.';
+  statusEl.className = 'feedback-msg';
+};
+window.confirmConflictSave = async function() {
+  const skipKeys = new Set(
+    [...document.querySelectorAll('#conflictList input[type=checkbox]')]
+      .filter(el => !el.checked)
+      .map(el => el.dataset.key)
+  );
+  skipKeys.forEach(k => delete pending[k]);
+  document.getElementById('conflictModal').style.display = 'none';
+  const finalKeys = conflictAllKeys.filter(k => !skipKeys.has(k));
+  renderPending();
+  await commitSave(finalKeys);
 };
 
 window.refreshData = async function() {
@@ -508,6 +585,9 @@ document.getElementById('nameInput').addEventListener('keydown', (e) => {
 });
 document.getElementById('dupModal').addEventListener('click', (e) => {
   if (e.target.id === 'dupModal') closeDupModal();
+});
+document.getElementById('conflictModal').addEventListener('click', (e) => {
+  if (e.target.id === 'conflictModal') closeConflictModal();
 });
 
 window.addEventListener('DOMContentLoaded', function() {
