@@ -108,6 +108,23 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
 }
 .empty-hint { font-size: 0.82rem; color: var(--text-muted); padding: 8px 0; }
 
+.pending-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.section-hint { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; }
+.save-btn {
+  padding: 8px 18px; border: none; border-radius: 10px; background: #1a7c4a; color: #fff;
+  font-size: 0.88rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.save-btn:disabled { opacity: 0.4; cursor: default; }
+.refresh-btn {
+  padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-muted);
+  font-size: 0.78rem; cursor: pointer; white-space: nowrap;
+}
+.roster-item.pending-add { background: #eafaf1; border: 1px solid #bfe6cf; }
+.roster-item.pending-remove { background: #fdecea; border: 1px solid #f3c6c1; }
+.roster-item .action-tag { font-size: 0.75rem; font-weight: 700; margin-left: 6px; }
+.roster-item.pending-add .action-tag { color: #1a7c4a; }
+.roster-item.pending-remove .action-tag { color: #c0392b; }
+
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; z-index: 100; padding: 16px; }
 .modal-box { background: var(--surface); border-radius: 14px; padding: 20px; max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto; }
 .modal-box h3 { margin: 0 0 6px; font-size: 1rem; color: var(--accent); }
@@ -163,7 +180,20 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
   </div>
 
   <div class="card">
-    <div class="roster-title" id="rosterTitle">활동명을 선택하면 배정된 학생 목록이 여기 보입니다.</div>
+    <div class="pending-head">
+      <div class="roster-title" id="pendingTitle" style="margin:0">저장 대기 중 (0건)</div>
+      <button class="save-btn" id="saveBtn" onclick="saveAll()" disabled>변경사항 저장</button>
+    </div>
+    <div class="section-hint">여러 선생님이 동시에 쓸 수 있어서, 이름을 입력해도 바로 저장되지 않고 여기 대기 목록에 먼저 쌓입니다. 확인 후 "변경사항 저장"을 눌러야 실제로 반영됩니다.</div>
+    <div class="roster-list" id="pendingList"></div>
+    <div class="feedback-msg" id="saveStatusMsg"></div>
+  </div>
+
+  <div class="card">
+    <div class="pending-head">
+      <div class="roster-title" id="rosterTitle" style="margin:0">활동명을 선택하면 배정된 학생 목록이 여기 보입니다.</div>
+      <button class="refresh-btn" onclick="refreshData()">↻ 새로고침</button>
+    </div>
     <div class="roster-list" id="rosterList"></div>
   </div>
 </div>
@@ -253,6 +283,7 @@ async function init() {
   currentConfigSem = cfg.sem;
   document.getElementById('currentSemLabel').textContent = `${currentYear}학년도 ${currentConfigSem}학기 기준으로 배정합니다`;
   await loadAll(currentYear);
+  renderPending();
 }
 
 function selectedGrade() { return document.getElementById('gradeSelect').value; }
@@ -312,6 +343,14 @@ window.onActivityChange = function() {
   renderRoster();
 };
 
+// ── 저장 대기(pending) ──────────────────────────────
+// 여러 선생님이 동시에 접속해 쓰기 때문에, 이름을 입력한다고 바로 Firebase에 쓰지 않는다.
+// 로컬에 모아뒀다가 "변경사항 저장" 클릭 시 그 사이 쌓인 항목들만 각자의 경로로 patch 저장한다
+// (전체 상태를 통째로 덮어쓰지 않으므로 다른 선생님이 그 사이 저장한 다른 학생 배정과 충돌하지 않는다).
+let pending = {}; // key: `${studentId}|${slotId}` -> { studentId, slotId, groupName, action:'add'|'remove', name, grade, ban, num, label }
+
+function pendingKey(studentId, slotId) { return `${studentId}|${slotId}`; }
+
 function renderRoster() {
   const grade = selectedGrade();
   const activity = selectedActivity();
@@ -324,32 +363,58 @@ function renderRoster() {
     return;
   }
 
-  const assigned = students.filter(s => String(s.grade) === grade && (s.assignments || {})[activity.slotId] === activity.groupName)
+  const assigned = students.filter(s => String(s.grade) === grade && (s.assignments || {})[activity.slotId] === activity.groupName
+      && !(pending[pendingKey(s.id, activity.slotId)] && pending[pendingKey(s.id, activity.slotId)].action === 'remove'))
     .sort((a, b) => (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)));
 
   titleEl.textContent = `현재 배정된 학생 (${assigned.length}명)`;
   listEl.innerHTML = assigned.length
     ? assigned.map(s => `<div class="roster-item">
         <span>${esc(s.name)} <span class="meta">${esc(s.grade)}학년 ${esc(s.ban)}반 ${esc(s.num)}번</span></span>
-        <button onclick="unassign('${esc(s.id)}')">제거</button>
+        <button onclick="stageRemoval('${esc(s.id)}')">제거</button>
       </div>`).join('')
     : '<div class="empty-hint">아직 배정된 학생이 없습니다.</div>';
 }
 
-async function assignStudent(studentId) {
-  const activity = selectedActivity();
-  const s = students.find(x => x.id === studentId);
-  s.assignments[activity.slotId] = activity.groupName;
-  await update(ref(db), { [`years/${currentYear}/students/${studentId}/assignments/${activity.slotId}`]: activity.groupName });
+function renderPending() {
+  const keys = Object.keys(pending);
+  document.getElementById('pendingTitle').textContent = `저장 대기 중 (${keys.length}건)`;
+  document.getElementById('saveBtn').disabled = !keys.length;
+  const listEl = document.getElementById('pendingList');
+  listEl.innerHTML = keys.length
+    ? keys.map(k => {
+        const p = pending[k];
+        const tag = p.action === 'add' ? `<span class="action-tag">＋ ${esc(p.label)}</span>` : `<span class="action-tag">－ 제거</span>`;
+        return `<div class="roster-item ${p.action === 'add' ? 'pending-add' : 'pending-remove'}">
+          <span>${esc(p.name)} <span class="meta">${esc(p.grade)}학년 ${esc(p.ban)}반 ${esc(p.num)}번</span>${tag}</span>
+          <button onclick="cancelPending('${esc(k)}')">취소</button>
+        </div>`;
+      }).join('')
+    : '<div class="empty-hint">대기 중인 변경사항이 없습니다.</div>';
+}
+
+window.cancelPending = function(key) {
+  delete pending[key];
+  renderPending();
+  renderRoster();
+};
+
+function stagePending(student, activity, action) {
+  const key = pendingKey(student.id, activity.slotId);
+  pending[key] = {
+    studentId: student.id, slotId: activity.slotId, groupName: action === 'add' ? activity.groupName : '',
+    action, name: student.name, grade: student.grade, ban: student.ban, num: student.num,
+    label: activity.groupName,
+  };
+  renderPending();
   renderRoster();
 }
 
-window.unassign = async function(studentId) {
+window.stageRemoval = function(studentId) {
   const activity = selectedActivity();
   const s = students.find(x => x.id === studentId);
-  if (s) s.assignments[activity.slotId] = '';
-  await update(ref(db), { [`years/${currentYear}/students/${studentId}/assignments/${activity.slotId}`]: '' });
-  renderRoster();
+  if (!s || !activity) return;
+  stagePending(s, activity, 'remove');
 };
 
 function showFeedback(msg, ok) {
@@ -358,7 +423,7 @@ function showFeedback(msg, ok) {
   el.className = 'feedback-msg ' + (ok ? 'ok' : 'err');
 }
 
-window.submitName = async function() {
+window.submitName = function() {
   const grade = selectedGrade();
   const activity = selectedActivity();
   const nameInput = document.getElementById('nameInput');
@@ -371,16 +436,16 @@ window.submitName = async function() {
     return;
   }
   if (candidates.length === 1) {
-    await assignStudent(candidates[0].id);
-    showFeedback(`${name} 학생을 배정했습니다.`, true);
+    stagePending(candidates[0], activity, 'add');
+    showFeedback(`${name} 학생을 저장 대기 목록에 추가했습니다. (아직 저장 전)`, true);
     nameInput.value = '';
     nameInput.focus();
     return;
   }
-  openDupModal(name, candidates);
+  openDupModal(name, candidates, activity);
 };
 
-function openDupModal(name, candidates) {
+function openDupModal(name, candidates, activity) {
   document.getElementById('dupModalTitle').textContent = `"${name}" — 동명이인 ${candidates.length}명`;
   const listEl = document.getElementById('dupCandidateList');
   listEl.innerHTML = candidates
@@ -389,15 +454,51 @@ function openDupModal(name, candidates) {
       <span>${esc(s.name)}</span><span class="meta">${esc(s.grade)}학년 ${esc(s.ban)}반 ${esc(s.num)}번 · 학번 ${esc(s.id)}</span>
     </button>`).join('');
   document.getElementById('dupModal').style.display = 'flex';
+  window._dupActivity = activity;
 }
 window.closeDupModal = function() { document.getElementById('dupModal').style.display = 'none'; };
-window.pickDup = async function(studentId, name) {
-  await assignStudent(studentId);
+window.pickDup = function(studentId, name) {
+  const s = students.find(x => x.id === studentId);
+  stagePending(s, window._dupActivity, 'add');
   closeDupModal();
-  showFeedback(`${name} 학생을 배정했습니다.`, true);
+  showFeedback(`${name} 학생을 저장 대기 목록에 추가했습니다. (아직 저장 전)`, true);
   const nameInput = document.getElementById('nameInput');
   nameInput.value = '';
   nameInput.focus();
+};
+
+window.saveAll = async function() {
+  const keys = Object.keys(pending);
+  const statusEl = document.getElementById('saveStatusMsg');
+  if (!keys.length) { statusEl.textContent = '저장할 변경사항이 없습니다.'; statusEl.className = 'feedback-msg'; return; }
+  statusEl.textContent = '저장 중...';
+  statusEl.className = 'feedback-msg';
+  const patch = {};
+  keys.forEach(k => {
+    const p = pending[k];
+    patch[`years/${currentYear}/students/${p.studentId}/assignments/${p.slotId}`] = p.groupName;
+  });
+  await update(ref(db), patch);
+  keys.forEach(k => {
+    const p = pending[k];
+    const s = students.find(x => x.id === p.studentId);
+    if (s) s.assignments[p.slotId] = p.groupName;
+  });
+  pending = {};
+  renderPending();
+  renderRoster();
+  statusEl.textContent = `저장 완료 (${keys.length}건)`;
+  statusEl.className = 'feedback-msg ok';
+};
+
+window.refreshData = async function() {
+  const statusEl = document.getElementById('feedbackMsg');
+  statusEl.textContent = '새로고침 중...';
+  statusEl.className = 'feedback-msg';
+  await loadAll(currentYear);
+  renderRoster();
+  statusEl.textContent = '새로고침 완료 (대기 중인 변경사항은 그대로 유지됩니다)';
+  statusEl.className = 'feedback-msg ok';
 };
 
 document.getElementById('gradeSelect').addEventListener('change', onGradeChange);
