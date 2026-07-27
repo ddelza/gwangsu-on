@@ -211,7 +211,7 @@ table.edit-table input[type=checkbox] { width: auto; min-width: 0; }
       <button class="toggle-btn" id="toggle-top-teacherSetup" onclick="toggleSection('teacherSetup')">펼쳐보기 ▾</button>
     </div>
     <div class="section-body" id="section-body-teacherSetup" style="display:none">
-      <div class="section-hint">교사에게 배정할 "교과"와 "부서" 목록을 관리합니다. 교과는 학기별로 독립적이고(상단 "보고 있는 학기" 기준, 아래 버튼으로 다른 학기 목록을 그대로 가져올 수 있음), 부서는 연도 전체에서 하나의 목록을 공유합니다. 여기서 만든 목록이 아래 ④ 교사정보 관리의 담당교과/부서 선택지가 됩니다.</div>
+      <div class="section-hint">교사에게 배정할 "교과"와 "부서" 목록을 관리합니다. 둘 다 상단 "보고 있는 학기" 기준으로 학기별로 독립적이며, 각 목록 옆 버튼으로 다른 학기 목록을 그대로 가져올 수 있습니다. 여기서 만든 목록이 아래 ④ 교사정보 관리의 담당교과/부서 선택지가 됩니다.</div>
       <div class="toolbar-row">
         <button class="btn primary" onclick="saveTeacherSetup()">변경사항 저장</button>
         <span class="status-msg" id="teacherSetupStatusMsg"></span>
@@ -227,8 +227,9 @@ table.edit-table input[type=checkbox] { width: auto; min-width: 0; }
           </div>
         </div>
         <div class="sem-block">
-          <h4>부서</h4>
-          <div class="chip-list" id="deptChipList"></div>
+          <h4>부서 (<span id="deptSemLabel"></span>학기)</h4>
+          <button class="btn small" onclick="copyDeptsFromOtherSem()">↺ 다른 학기 목록 그대로 가져오기</button>
+          <div class="chip-list" id="deptChipList" style="margin-top:8px"></div>
           <div class="add-chip-row">
             <input type="text" class="chip-input" id="newDeptInput" placeholder="부서 이름 입력 후 Enter" onkeydown="if(event.key==='Enter'){addDept(this); event.preventDefault();}">
             <button class="btn small" onclick="addDept(document.getElementById('newDeptInput'))">＋ 추가</button>
@@ -298,7 +299,7 @@ let groupOptions = {}; // { [slotId]: [names...] }
 let studentsByGrade = { '1': {}, '2': {}, '3': {} }; // { [grade]: { [studentId]: {ban,num,name,gender,email,assignments} } }
 let teachers = {};     // { [teacherId]: {...} }
 let subjects = { '1': {}, '2': {} }; // { [sem]: { [subjectId]: {label, order} } } — 교과 목록, 학기별
-let departments = {};  // { [deptId]: {label, order} } — 부서 목록, 연도 전체
+let departments = { '1': {}, '2': {} }; // { [sem]: { [deptId]: {label, order} } } — 부서 목록, 학기별(교과와 동일 패턴)
 let dirtyStudents = new Set();  // `${grade}|${id}`
 let deletedStudents = new Set();
 let dirtyTeachers = new Set();
@@ -325,8 +326,9 @@ function subjectsForSem(sem) {
   const m = subjects[sem] || {};
   return Object.entries(m).map(([id, v]) => ({ id, label: v.label, order: v.order || 0 })).sort((a, b) => a.order - b.order);
 }
-function deptList() {
-  return Object.entries(departments).map(([id, v]) => ({ id, label: v.label, order: v.order || 0 })).sort((a, b) => a.order - b.order);
+function deptListFor(sem) {
+  const m = departments[sem] || {};
+  return Object.entries(m).map(([id, v]) => ({ id, label: v.label, order: v.order || 0 })).sort((a, b) => a.order - b.order);
 }
 // 상단 "보고 있는 학기" 선택값 — ①②③④ 모두 이 학기 하나만 보여준다(1학기/2학기를 동시에 보여주지 않음).
 function currentSem() { return document.getElementById('semSelect').value; }
@@ -363,7 +365,7 @@ window.createNewYear = async function() {
   patch[`years/${year}/slots`] = copyFrom ? slots : { '1': {}, '2': {}, '3': {} };
   patch[`years/${year}/groupOptions`] = copyFrom ? groupOptions : {};
   patch[`years/${year}/subjects`] = copyFrom ? subjects : { '1': {}, '2': {} };
-  patch[`years/${year}/departments`] = copyFrom ? departments : {};
+  patch[`years/${year}/departments`] = copyFrom ? departments : { '1': {}, '2': {} };
   patch[`config/knownYears/${year}`] = true;
   await update(ref(db), patch);
   await refreshYearSelect(year);
@@ -399,6 +401,7 @@ async function loadYear(year) {
   subjects = subjectsSnap.exists() ? subjectsSnap.val() : {};
   ['1', '2'].forEach(s => { if (!subjects[s]) subjects[s] = {}; });
   departments = deptsSnap.exists() ? deptsSnap.val() : {};
+  ['1', '2'].forEach(s => { if (!departments[s]) departments[s] = {}; });
 
   dirtyStudents.clear(); deletedStudents.clear(); dirtyTeachers.clear(); deletedTeachers.clear();
   slotsDirty = false;
@@ -776,13 +779,14 @@ function markTeacherSetupDirty() {
 function renderTeacherSetupSection() {
   const sem = currentSem();
   document.getElementById('subjectSemLabel').textContent = sem;
+  document.getElementById('deptSemLabel').textContent = sem;
 
   const subjList = subjectsForSem(sem);
   document.getElementById('subjectChipList').innerHTML = subjList.length
     ? subjList.map(s => `<span class="chip removable">${esc(s.label)}<button onclick="removeSubject('${s.id}')">✕</button></span>`).join('')
     : '<span class="empty-hint">교과가 없습니다.</span>';
 
-  const depts = deptList();
+  const depts = deptListFor(sem);
   document.getElementById('deptChipList').innerHTML = depts.length
     ? depts.map(d => `<span class="chip removable">${esc(d.label)}<button onclick="removeDept('${d.id}')">✕</button></span>`).join('')
     : '<span class="empty-hint">부서가 없습니다.</span>';
@@ -824,9 +828,11 @@ window.copySubjectsFromOtherSem = function() {
 window.addDept = function(inputEl) {
   const label = inputEl.value.trim();
   if (!label) return;
-  if (Object.values(departments).some(d => d.label === label)) { inputEl.value = ''; return; }
-  const id = push(ref(db, `years/${currentYear}/departments`)).key;
-  departments[id] = { label, order: deptList().length };
+  const sem = currentSem();
+  if (!departments[sem]) departments[sem] = {};
+  if (Object.values(departments[sem]).some(d => d.label === label)) { inputEl.value = ''; return; }
+  const id = push(ref(db, `years/${currentYear}/departments/${sem}`)).key;
+  departments[sem][id] = { label, order: deptListFor(sem).length };
   markTeacherSetupDirty();
   inputEl.value = '';
   renderTeacherSetupSection();
@@ -835,7 +841,19 @@ window.addDept = function(inputEl) {
 
 window.removeDept = function(id) {
   if (!confirm('이 부서를 삭제할까요? 이미 배정된 교사가 있으면 배정 정보만 남고(고아 데이터) 더 이상 화면에 표시되지 않습니다.')) return;
-  delete departments[id];
+  const sem = currentSem();
+  if (departments[sem]) delete departments[sem][id];
+  markTeacherSetupDirty();
+  renderTeacherSetupSection();
+  renderTeacherTable();
+};
+
+window.copyDeptsFromOtherSem = function() {
+  const sem = currentSem();
+  const other = sem === '1' ? '2' : '1';
+  if (!Object.keys(departments[other] || {}).length) { alert(`${other}학기 부서 목록이 비어있습니다.`); return; }
+  if (!confirm(`${other}학기 부서 목록을 ${sem}학기로 그대로 복사할까요? (현재 ${sem}학기 목록은 덮어써집니다)`)) return;
+  departments[sem] = JSON.parse(JSON.stringify(departments[other]));
   markTeacherSetupDirty();
   renderTeacherSetupSection();
   renderTeacherTable();
@@ -864,10 +882,10 @@ const DUTY_TRUNCATE_LEN = 30;
 function renderTeacherTable() {
   const sem = currentSem();
   const subjOpts = subjectsForSem(sem);
-  const depts = deptList();
+  const depts = deptListFor(sem);
   const rows = teacherRows();
   let html = '<table class="edit-table"><thead><tr>';
-  html += `<th>이름</th><th>담당교과<br>(${sem}학기)</th><th>담임학년</th><th>담임반</th><th>부서</th><th>업무분장</th><th>부장</th><th>내선번호<br>(4자리)</th><th>내선번호<br>(11자리)</th><th>이메일</th><th></th>`;
+  html += `<th>이름</th><th>담당교과<br>(${sem}학기)</th><th>담임학년</th><th>담임반</th><th>부서<br>(${sem}학기)</th><th>업무분장</th><th>부장</th><th>내선번호<br>(4자리)</th><th>내선번호<br>(11자리)</th><th>이메일</th><th></th>`;
   html += '</tr></thead><tbody>';
   rows.forEach(t => {
     html += '<tr>';
@@ -875,7 +893,7 @@ function renderTeacherTable() {
     html += subjectCell(t.id, sem, (t.subjectBySem || {})[sem], subjOpts);
     html += tCell(t.id, 'homeroom.grade', t.homeroom && t.homeroom.grade);
     html += tCell(t.id, 'homeroom.ban', t.homeroom && t.homeroom.ban);
-    html += deptCell(t.id, t.depts || {}, depts);
+    html += deptCell(t.id, sem, (t.deptsBySem || {})[sem] || {}, depts);
     html += dutyCell(t.id, t.duty);
     html += `<td style="text-align:center"><input type="checkbox" ${t.isDeptHead ? 'checked' : ''} onchange="onTeacherFieldChange('${escAttr(t.id)}','isDeptHead', this.checked)"></td>`;
     html += tCell(t.id, 'ext4', t.ext4);
@@ -905,17 +923,19 @@ window.onSubjectAssignChange = function(id, sem, value) {
   dirtyTeachers.add(id);
 };
 
-// 부서는 한 교사에게 여러 개 배정될 수 있어서 { [deptId]: true } 형태로 저장하고,
-// 표에서는 부서 목록 전체를 체크박스로 보여준다(작은 목록이라 셀렉트보다 한눈에 보기 쉽다).
-function deptCell(id, current, depts) {
+// 부서는 학기별 목록이고(교과와 동일 패턴), 한 교사에게 여러 개 배정될 수 있어서
+// { [sem]: { [deptId]: true } } 형태로 저장한다. 표에서는 그 학기의 부서 목록 전체를
+// 체크박스로 보여준다(작은 목록이라 셀렉트보다 한눈에 보기 쉽다).
+function deptCell(id, sem, current, depts) {
   if (!depts.length) return '<td class="cell-na">부서 없음<br><span style="font-size:0.7rem">(③에서 추가)</span></td>';
   return `<td><div class="dept-check-list">${depts.map(d => `
-    <label class="dept-check-item"><input type="checkbox" ${current[d.id] ? 'checked' : ''} onchange="onDeptToggle('${escAttr(id)}','${d.id}', this.checked)">${esc(d.label)}</label>
+    <label class="dept-check-item"><input type="checkbox" ${current[d.id] ? 'checked' : ''} onchange="onDeptToggle('${escAttr(id)}','${sem}','${d.id}', this.checked)">${esc(d.label)}</label>
   `).join('')}</div></td>`;
 }
-window.onDeptToggle = function(id, deptId, checked) {
-  teachers[id].depts = teachers[id].depts || {};
-  if (checked) teachers[id].depts[deptId] = true; else delete teachers[id].depts[deptId];
+window.onDeptToggle = function(id, sem, deptId, checked) {
+  teachers[id].deptsBySem = teachers[id].deptsBySem || {};
+  teachers[id].deptsBySem[sem] = teachers[id].deptsBySem[sem] || {};
+  if (checked) teachers[id].deptsBySem[sem][deptId] = true; else delete teachers[id].deptsBySem[sem][deptId];
   dirtyTeachers.add(id);
 };
 
@@ -949,7 +969,7 @@ window.onTeacherFieldChange = function(id, field, value) {
 
 window.addTeacherRow = function() {
   const id = push(ref(db, `years/${currentYear}/teachers`)).key;
-  teachers[id] = { name: '', subjectBySem: {}, depts: {}, homeroom: { grade: '', ban: '' }, duty: '', isDeptHead: false, ext4: '', ext11: '', email: '' };
+  teachers[id] = { name: '', subjectBySem: {}, deptsBySem: {}, homeroom: { grade: '', ban: '' }, duty: '', isDeptHead: false, ext4: '', ext11: '', email: '' };
   dirtyTeachers.add(id);
   renderTeacherTable();
 };
@@ -979,12 +999,12 @@ window.downloadTeacherTemplate = function() {
   const subjById = {};
   subjectsForSem(sem).forEach(s => { subjById[s.id] = s.label; });
   const deptById = {};
-  deptList().forEach(d => { deptById[d.id] = d.label; });
+  deptListFor(sem).forEach(d => { deptById[d.id] = d.label; });
 
-  const headers = ['이름', `담당교과(${sem}학기)`, '담임학년', '담임반', '부서(콤마로 구분)', '업무분장', '부장여부(Y/N)', '내선번호(4자리)', '내선번호(11자리)', '이메일'];
+  const headers = ['이름', `담당교과(${sem}학기)`, '담임학년', '담임반', `부서(${sem}학기, 콤마로 구분)`, '업무분장', '부장여부(Y/N)', '내선번호(4자리)', '내선번호(11자리)', '이메일'];
   const rows = teacherRows().map(t => {
     const subjId = (t.subjectBySem || {})[sem];
-    const deptLabels = Object.keys(t.depts || {}).map(did => deptById[did]).filter(Boolean).join(', ');
+    const deptLabels = Object.keys((t.deptsBySem || {})[sem] || {}).map(did => deptById[did]).filter(Boolean).join(', ');
     return [
       t.name || '', subjId ? (subjById[subjId] || '') : '', (t.homeroom && t.homeroom.grade) || '', (t.homeroom && t.homeroom.ban) || '',
       deptLabels, t.duty || '', t.isDeptHead ? 'Y' : 'N', t.ext4 || '', t.ext11 || '', t.email || '',
@@ -1011,14 +1031,14 @@ window.onTeacherExcelUpload = function(event) {
     const header = rows[0].map(h => String(h).trim());
     const col = (name) => header.indexOf(name);
     const cName = col('이름'), cSubject = col(`담당교과(${sem}학기)`), cHG = col('담임학년'), cHB = col('담임반'),
-      cDepts = col('부서(콤마로 구분)'), cDuty = col('업무분장'), cHead = col('부장여부(Y/N)'),
+      cDepts = col(`부서(${sem}학기, 콤마로 구분)`), cDuty = col('업무분장'), cHead = col('부장여부(Y/N)'),
       cExt4 = col('내선번호(4자리)'), cExt11 = col('내선번호(11자리)'), cEmail = col('이메일');
     if (cName < 0) { alert('"이름" 열을 찾을 수 없습니다. 템플릿 형식을 확인해주세요.'); return; }
 
     const subjByLabel = {};
     subjectsForSem(sem).forEach(s => { subjByLabel[s.label] = s.id; });
     const deptByLabel = {};
-    deptList().forEach(d => { deptByLabel[d.label] = d.id; });
+    deptListFor(sem).forEach(d => { deptByLabel[d.label] = d.id; });
     let addedListEntries = false;
 
     let count = 0;
@@ -1048,8 +1068,9 @@ window.onTeacherExcelUpload = function(event) {
         String(row[cDepts] || '').split(',').map(s => s.trim()).filter(Boolean).forEach(label => {
           let did = deptByLabel[label];
           if (!did) {
-            did = push(ref(db, `years/${currentYear}/departments`)).key;
-            departments[did] = { label, order: deptList().length };
+            did = push(ref(db, `years/${currentYear}/departments/${sem}`)).key;
+            if (!departments[sem]) departments[sem] = {};
+            departments[sem][did] = { label, order: deptListFor(sem).length };
             deptByLabel[label] = did;
             addedListEntries = true;
           }
@@ -1060,7 +1081,7 @@ window.onTeacherExcelUpload = function(event) {
       teachers[id] = {
         name,
         subjectBySem: subjId ? { [sem]: subjId } : {},
-        depts,
+        deptsBySem: Object.keys(depts).length ? { [sem]: depts } : {},
         homeroom: { grade: cHG >= 0 ? String(row[cHG] || '').trim() : '', ban: cHB >= 0 ? String(row[cHB] || '').trim() : '' },
         duty: cDuty >= 0 ? String(row[cDuty] || '').trim() : '',
         isDeptHead: cHead >= 0 ? /^y/i.test(String(row[cHead] || '').trim()) : false,
