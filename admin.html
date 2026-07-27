@@ -96,9 +96,9 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
 .tab-btn { padding: 6px 16px; border-radius: 999px; border: none; background: var(--accent-soft); color: var(--accent); font-size: 0.85rem; cursor: pointer; font-weight: 600; }
 .tab-btn.active { background: var(--accent); color: var(--on-accent, #fff); }
 
-.sem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 700px) { .sem-grid { grid-template-columns: 1fr; } }
+.slots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: start; }
 .sem-block h4 { margin: 0 0 8px; font-size: 0.88rem; color: var(--text); }
+table.edit-table td.cell-na { text-align: center; color: var(--text-muted); background: var(--bg); }
 .slot-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 10px; background: var(--bg); }
 .slot-card-head { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
 .slot-label-input { flex: 1; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.86rem; font-weight: 700; background: var(--surface); color: var(--text); }
@@ -141,22 +141,26 @@ table.edit-table input[type=checkbox] { width: auto; min-width: 0; }
     <select id="yearSelect"></select>
     <button class="btn" onclick="createNewYear()">＋ 새 연도 시작</button>
     <div class="spacer"></div>
-    <label>설정할 학기</label>
-    <select id="semSelect"><option value="1">1학기</option><option value="2">2학기</option></select>
+    <label>보고 있는 학기</label>
+    <select id="semSelect" onchange="onSemFilterChange()"><option value="1">1학기</option><option value="2">2학기</option></select>
     <button class="btn primary" onclick="setCurrentSemester()">이 학기를 현재 학기로 설정</button>
     <div class="current-config-label" id="currentConfigLabel">현재 설정 불러오는 중...</div>
   </div>
 
   <div class="section-card">
     <h2>① 활동 슬롯 &amp; 반 이름 관리</h2>
-    <div class="section-hint">동아리/주제선택/스포츠클럽 등 "슬롯"을 학년·학기별로 자유롭게 추가/삭제/이름변경합니다. 슬롯 개수와 존재 여부는 학년마다, 학기마다 달라도 됩니다. 슬롯 밑의 목록은 그 슬롯에서 고를 수 있는 반/그룹 이름입니다.</div>
+    <div class="section-hint">동아리/주제선택/스포츠클럽 등 "슬롯"을 학년·학기별로 자유롭게 추가/삭제/이름변경합니다. 슬롯 개수와 존재 여부는 학년마다, 학기마다 달라도 됩니다. 슬롯 밑의 목록은 그 슬롯에서 고를 수 있는 반/그룹 이름입니다. 1학기와 2학기는 서로 독립적이라 자동으로 같은 값이 채워지지 않습니다 — 2학기 목록이 아직 정해지지 않았다면 비워두세요.</div>
+    <div class="toolbar-row">
+      <button class="btn primary" onclick="saveSlots()">변경사항 저장</button>
+      <span class="status-msg" id="slotStatusMsg"></span>
+    </div>
     <div class="tabs" id="slotGradeTabs"></div>
-    <div class="sem-grid" id="slotsWrap"></div>
+    <div id="slotsWrap"></div>
   </div>
 
   <div class="section-card">
     <h2>② 학생정보 관리</h2>
-    <div class="section-hint">학년 탭을 선택해 학생 명단을 편집합니다. 활동 배정 열은 위 ①에서 만든 슬롯을 그대로 따라갑니다.</div>
+    <div class="section-hint">학년 탭을 선택해 학생 명단을 편집합니다("전체" 탭은 모든 학년을 한 표에서 봅니다). 활동 배정 열은 위 ①에서 만든 슬롯 중 상단에서 "보고 있는 학기"로 고른 학기 것만 보여줍니다.</div>
     <div class="tabs" id="studentGradeTabs"></div>
     <div class="toolbar-row">
       <button class="btn" onclick="addStudentRow()">＋ 학생 추가</button>
@@ -213,6 +217,7 @@ function esc(str) {
 function escAttr(str) { return esc(str).replace(/"/g, '&quot;'); }
 
 const GRADES = ['1', '2', '3'];
+const GRADE_TAB_OPTIONS = ['all', ...GRADES];
 
 let currentYear = null;
 let allYears = [];
@@ -233,6 +238,9 @@ function slotsFor(grade, sem) {
   if (!g) return [];
   return Object.entries(g).map(([id, v]) => ({ id, label: v.label, order: v.order || 0 })).sort((a,b) => a.order - b.order);
 }
+// 상단 "보고 있는 학기" 선택값 — ①②는 항상 이 학기 하나만 보여준다(1학기/2학기를 동시에 보여주지 않음).
+function currentSem() { return document.getElementById('semSelect').value; }
+window.onSemFilterChange = function() { renderSlotsSection(); renderStudentTable(); };
 
 // ── 연도 목록 / 선택 ──────────────────────────────
 // RTDB 보안 규칙이 /years/$year 아래만 열려있고 /years 자체는 안 열려있어서 부모 경로를 직접
@@ -296,6 +304,10 @@ async function loadYear(year) {
   teachers = teachersSnap.exists() ? teachersSnap.val() : {};
 
   dirtyStudents.clear(); deletedStudents.clear(); dirtyTeachers.clear(); deletedTeachers.clear();
+  slotsDirty = false;
+  document.getElementById('slotStatusMsg').textContent = '';
+  document.getElementById('studentStatusMsg').textContent = '';
+  document.getElementById('teacherStatusMsg').textContent = '';
 
   await refreshCurrentConfigLabel();
   renderSlotGradeTabs();
@@ -311,6 +323,9 @@ async function refreshCurrentConfigLabel() {
   if (snap.exists()) {
     const c = snap.val();
     el.textContent = `현재 사이트 전체에 보여지는 학기: ${c.year}학년도 ${c.sem}학기`;
+    // 지금 보고 있는 연도가 사이트 전체의 "현재 학기" 연도와 같으면, 학기 선택도 그 값으로 맞춰서
+    // 처음 열었을 때 실제로 보여지고 있는 학기 데이터를 바로 보여준다.
+    if (String(c.year) === String(currentYear)) document.getElementById('semSelect').value = String(c.sem);
   } else {
     el.textContent = '현재 설정된 학기가 없습니다 — 아래 버튼으로 지정해주세요.';
   }
@@ -326,19 +341,22 @@ window.setCurrentSemester = async function() {
 
 // ── ① 활동 슬롯 관리 ──────────────────────────────
 function renderSlotGradeTabs() {
-  document.getElementById('slotGradeTabs').innerHTML = GRADES.map(g =>
-    `<button class="tab-btn${slotGradeTab === g ? ' active' : ''}" onclick="setSlotGradeTab('${g}')">${g}학년</button>`
+  document.getElementById('slotGradeTabs').innerHTML = GRADE_TAB_OPTIONS.map(g =>
+    `<button class="tab-btn${slotGradeTab === g ? ' active' : ''}" onclick="setSlotGradeTab('${g}')">${g === 'all' ? '전체' : g + '학년'}</button>`
   ).join('');
 }
 window.setSlotGradeTab = function(g) { slotGradeTab = g; renderSlotGradeTabs(); renderSlotsSection(); };
 
 function renderSlotsSection() {
-  const grade = slotGradeTab;
+  const sem = currentSem();
+  const isAll = slotGradeTab === 'all';
+  const grades = isAll ? GRADES : [slotGradeTab];
   const wrap = document.getElementById('slotsWrap');
-  wrap.innerHTML = ['1', '2'].map(sem => {
+  wrap.className = isAll ? 'slots-grid' : '';
+  wrap.innerHTML = grades.map(grade => {
     const list = slotsFor(grade, sem);
     return `<div class="sem-block">
-      <h4>${sem}학기</h4>
+      ${isAll ? `<h4>${grade}학년</h4>` : ''}
       ${list.map(s => slotCardHtml(grade, sem, s)).join('') || '<div class="empty-hint">아직 슬롯이 없습니다.</div>'}
       <div class="add-slot-row">
         <input type="text" class="slot-name-input" placeholder="새 슬롯 이름 (예: 동아리)" id="newSlotInput-${grade}-${sem}">
@@ -364,28 +382,36 @@ function slotCardHtml(grade, sem, slot) {
   </div>`;
 }
 
-window.addSlot = async function(grade, sem) {
+// 슬롯/반 이름 편집도 ②③과 동일하게 화면에서만 바뀌고, "변경사항 저장"을 눌러야 실제 저장된다.
+// (예전엔 클릭 즉시 저장돼서 반/그룹 이름 칩을 실수로 지우면 되돌릴 방법이 없었다.)
+let slotsDirty = false;
+function markSlotsDirty() {
+  slotsDirty = true;
+  document.getElementById('slotStatusMsg').textContent = '저장하지 않은 변경사항이 있습니다.';
+}
+
+window.addSlot = function(grade, sem) {
   const input = document.getElementById(`newSlotInput-${grade}-${sem}`);
   const label = input.value.trim();
   if (!label) return;
   const slotId = push(ref(db, `years/${currentYear}/slots/${grade}/${sem}`)).key;
   const order = slotsFor(grade, sem).length;
-  await update(ref(db), { [`years/${currentYear}/slots/${grade}/${sem}/${slotId}`]: { label, order } });
   if (!slots[grade]) slots[grade] = {};
   if (!slots[grade][sem]) slots[grade][sem] = {};
   slots[grade][sem][slotId] = { label, order };
+  markSlotsDirty();
   renderSlotsSection();
   renderStudentTable();
 };
 
-window.renameSlot = async function(slotId, newLabel) {
+window.renameSlot = function(slotId, newLabel) {
   newLabel = newLabel.trim();
   if (!newLabel) return;
   for (const g of GRADES) {
     for (const sem of ['1', '2']) {
       if (slots[g] && slots[g][sem] && slots[g][sem][slotId]) {
         slots[g][sem][slotId].label = newLabel;
-        await update(ref(db), { [`years/${currentYear}/slots/${g}/${sem}/${slotId}/label`]: newLabel });
+        markSlotsDirty();
         renderStudentTable();
         return;
       }
@@ -393,77 +419,102 @@ window.renameSlot = async function(slotId, newLabel) {
   }
 };
 
-window.deleteSlot = async function(grade, sem, slotId) {
-  if (!confirm('이 슬롯을 삭제할까요? 이미 배정된 학생 데이터는 남아있지만(고아 데이터) 더 이상 화면에 표시되지 않습니다.')) return;
+window.deleteSlot = function(grade, sem, slotId) {
+  if (!confirm('이 슬롯을 삭제할까요? (저장을 눌러야 실제로 반영됩니다) 이미 배정된 학생 데이터는 남아있지만(고아 데이터) 더 이상 화면에 표시되지 않습니다.')) return;
   delete slots[grade][sem][slotId];
   delete groupOptions[slotId];
-  await update(ref(db), {
-    [`years/${currentYear}/slots/${grade}/${sem}/${slotId}`]: null,
-    [`years/${currentYear}/groupOptions/${slotId}`]: null,
-  });
+  markSlotsDirty();
   renderSlotsSection();
   renderStudentTable();
 };
 
-window.addGroupOption = async function(slotId, inputEl) {
+window.addGroupOption = function(slotId, inputEl) {
   const name = inputEl.value.trim();
   if (!name) return;
   const list = groupOptions[slotId] || [];
   if (list.includes(name)) { inputEl.value = ''; return; }
   list.push(name);
   groupOptions[slotId] = list;
-  await update(ref(db), { [`years/${currentYear}/groupOptions/${slotId}`]: list });
+  markSlotsDirty();
   inputEl.value = '';
   renderSlotsSection();
   renderStudentTable();
 };
 
-window.removeGroupOption = async function(slotId, idx) {
+window.removeGroupOption = function(slotId, idx) {
   const list = groupOptions[slotId] || [];
   list.splice(idx, 1);
-  groupOptions[slotId] = list;
-  await update(ref(db), { [`years/${currentYear}/groupOptions/${slotId}`]: list.length ? list : null });
+  groupOptions[slotId] = list.length ? list : [];
+  markSlotsDirty();
   renderSlotsSection();
   renderStudentTable();
 };
 
+window.saveSlots = async function() {
+  const statusEl = document.getElementById('slotStatusMsg');
+  if (!slotsDirty) { statusEl.textContent = '변경사항이 없습니다.'; return; }
+  statusEl.textContent = '저장 중...';
+  const cleanOptions = {};
+  Object.entries(groupOptions).forEach(([slotId, list]) => { cleanOptions[slotId] = (list && list.length) ? list : null; });
+  await update(ref(db), {
+    [`years/${currentYear}/slots`]: slots,
+    [`years/${currentYear}/groupOptions`]: cleanOptions,
+  });
+  slotsDirty = false;
+  statusEl.textContent = '저장 완료';
+};
+
 // ── ② 학생정보 관리 ──────────────────────────────
+function totalStudentCount() { return GRADES.reduce((sum, g) => sum + Object.keys(studentsByGrade[g] || {}).length, 0); }
+
 function renderStudentGradeTabs() {
-  document.getElementById('studentGradeTabs').innerHTML = GRADES.map(g =>
-    `<button class="tab-btn${studentGradeTab === g ? ' active' : ''}" onclick="setStudentGradeTab('${g}')">${g}학년 (${Object.keys(studentsByGrade[g] || {}).length}명)</button>`
+  document.getElementById('studentGradeTabs').innerHTML = GRADE_TAB_OPTIONS.map(g =>
+    `<button class="tab-btn${studentGradeTab === g ? ' active' : ''}" onclick="setStudentGradeTab('${g}')">${g === 'all' ? `전체 (${totalStudentCount()}명)` : `${g}학년 (${Object.keys(studentsByGrade[g] || {}).length}명)`}</button>`
   ).join('');
 }
 window.setStudentGradeTab = function(g) { studentGradeTab = g; renderStudentGradeTabs(); renderStudentTable(); };
 
 function studentRowsForGrade(grade) {
   return Object.entries(studentsByGrade[grade] || {})
-    .map(([id, s]) => ({ id, ...s }))
+    .map(([id, s]) => ({ id, grade, ...s }))
     .sort((a, b) => (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)));
+}
+function allStudentRows() {
+  return GRADES.flatMap(g => studentRowsForGrade(g))
+    .sort((a, b) => (Number(a.grade) - Number(b.grade)) || (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)));
+}
+// isAll일 때 컬럼 목록: 학년별 슬롯을 이어붙이고 "N학년 라벨"로 표시. 각 셀은 그 학생의 학년과
+// 컬럼의 학년이 같을 때만 배정 드롭다운을 보여주고, 다르면 "해당없음" 표시만 한다.
+function studentColumnsFor(isAll, grade, sem) {
+  if (isAll) return GRADES.flatMap(g => slotsFor(g, sem).map(s => ({ grade: g, id: s.id, label: `${g}학년 ${s.label}` })));
+  return slotsFor(grade, sem).map(s => ({ grade, id: s.id, label: s.label }));
 }
 
 function renderStudentTable() {
-  const grade = studentGradeTab;
-  const rows = studentRowsForGrade(grade);
-  const sem1Slots = slotsFor(grade, '1');
-  const sem2Slots = slotsFor(grade, '2');
+  const sem = currentSem();
+  const isAll = studentGradeTab === 'all';
+  const rows = isAll ? allStudentRows() : studentRowsForGrade(studentGradeTab);
+  const columns = studentColumnsFor(isAll, studentGradeTab, sem);
 
   let html = '<table class="edit-table"><thead><tr>';
+  if (isAll) html += '<th>학년</th>';
   html += '<th>반</th><th>번호</th><th>학번</th><th>성명</th><th>성별</th><th>이메일</th>';
-  sem1Slots.forEach(s => html += `<th>1학기<br>${esc(s.label)}</th>`);
-  sem2Slots.forEach(s => html += `<th>2학기<br>${esc(s.label)}</th>`);
+  columns.forEach(c => html += `<th>${esc(c.label)}</th>`);
   html += '<th></th></tr></thead><tbody>';
 
   rows.forEach(s => {
     html += `<tr>`;
-    html += textCell(grade, s.id, 'ban', s.ban);
-    html += textCell(grade, s.id, 'num', s.num);
+    if (isAll) html += `<td>${esc(s.grade)}학년</td>`;
+    html += textCell(s.grade, s.id, 'ban', s.ban);
+    html += textCell(s.grade, s.id, 'num', s.num);
     html += `<td>${esc(s.id)}</td>`;
-    html += textCell(grade, s.id, 'name', s.name);
-    html += genderCell(grade, s.id, s.gender);
-    html += textCell(grade, s.id, 'email', s.email);
-    sem1Slots.forEach(slot => html += assignCell(grade, s.id, slot.id, s.assignments[slot.id]));
-    sem2Slots.forEach(slot => html += assignCell(grade, s.id, slot.id, s.assignments[slot.id]));
-    html += `<td><button class="btn danger small" onclick="deleteStudentRow('${grade}','${escAttr(s.id)}')">삭제</button></td>`;
+    html += textCell(s.grade, s.id, 'name', s.name);
+    html += genderCell(s.grade, s.id, s.gender);
+    html += textCell(s.grade, s.id, 'email', s.email);
+    columns.forEach(c => {
+      html += c.grade === s.grade ? assignCell(s.grade, s.id, c.id, s.assignments[c.id]) : '<td class="cell-na">-</td>';
+    });
+    html += `<td><button class="btn danger small" onclick="deleteStudentRow('${s.grade}','${escAttr(s.id)}')">삭제</button></td>`;
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -500,7 +551,13 @@ window.onStudentAssignChange = function(grade, id, slotId, value) {
 };
 
 window.addStudentRow = function() {
-  const grade = studentGradeTab;
+  let grade = studentGradeTab;
+  if (grade === 'all') {
+    const input = prompt('추가할 학생의 학년을 입력하세요 (1, 2, 3 중 하나)');
+    if (!input) return;
+    grade = input.trim();
+    if (!GRADES.includes(grade)) { alert('1, 2, 3 중 하나를 입력해주세요.'); return; }
+  }
   const id = prompt(`${grade}학년에 추가할 학생의 학번을 입력하세요.`);
   if (!id) return;
   const trimmed = id.trim();
@@ -540,28 +597,28 @@ window.saveStudents = async function() {
 };
 
 window.downloadStudentTemplate = function() {
-  const grade = studentGradeTab;
-  const sem1Slots = slotsFor(grade, '1');
-  const sem2Slots = slotsFor(grade, '2');
-  const headers = ['반', '번호', '학번', '성명', '성별', '이메일',
-    ...sem1Slots.map(s => `1학기 ${s.label}`), ...sem2Slots.map(s => `2학기 ${s.label}`)];
-  const rows = studentRowsForGrade(grade).map(s => [
+  const sem = currentSem();
+  const isAll = studentGradeTab === 'all';
+  const columns = studentColumnsFor(isAll, studentGradeTab, sem);
+  const headers = [...(isAll ? ['학년'] : []), '반', '번호', '학번', '성명', '성별', '이메일', ...columns.map(c => c.label)];
+  const rows = (isAll ? allStudentRows() : studentRowsForGrade(studentGradeTab)).map(s => [
+    ...(isAll ? [s.grade] : []),
     s.ban, s.num, s.id, s.name, s.gender, s.email,
-    ...sem1Slots.map(slot => s.assignments[slot.id] || ''),
-    ...sem2Slots.map(slot => s.assignments[slot.id] || ''),
+    ...columns.map(c => c.grade === s.grade ? (s.assignments[c.id] || '') : ''),
   ]);
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, `${grade}학년`);
-  XLSX.writeFile(wb, `${currentYear}_${grade}학년_학생정보_템플릿.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, isAll ? '전체' : `${studentGradeTab}학년`);
+  XLSX.writeFile(wb, `${currentYear}_${isAll ? '전체' : studentGradeTab + '학년'}_${sem}학기_학생정보_템플릿.xlsx`);
 };
 
+// 업로드는 "보고 있는 학기" 한 학기 분량만 채운다 — 이미 저장돼 있는 다른 학기 배정은
+// 그대로 두고, 이 학기에 해당하는 슬롯 값만 덮어쓴다(통째로 교체하면 다른 학기 데이터가 날아간다).
 window.onStudentExcelUpload = function(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const grade = studentGradeTab;
-  const sem1Slots = slotsFor(grade, '1');
-  const sem2Slots = slotsFor(grade, '2');
+  const sem = currentSem();
+  const isAll = studentGradeTab === 'all';
   const reader = new FileReader();
   reader.onload = (e) => {
     const wb = XLSX.read(e.target.result, { type: 'array' });
@@ -570,8 +627,9 @@ window.onStudentExcelUpload = function(event) {
     if (!rows.length) { alert('빈 파일입니다.'); return; }
     const header = rows[0].map(h => String(h).trim());
     const col = (name) => header.indexOf(name);
-    const cBan = col('반'), cNum = col('번호'), cId = col('학번'), cName = col('성명'), cGender = col('성별'), cEmail = col('이메일');
+    const cGrade = col('학년'), cBan = col('반'), cNum = col('번호'), cId = col('학번'), cName = col('성명'), cGender = col('성별'), cEmail = col('이메일');
     if (cId < 0 || cName < 0) { alert('"학번", "성명" 열을 찾을 수 없습니다. 템플릿 형식을 확인해주세요.'); return; }
+    if (isAll && cGrade < 0) { alert('"전체" 탭 업로드는 "학년" 열이 필요합니다. 템플릿을 다시 다운로드해주세요.'); return; }
 
     let count = 0;
     for (let i = 1; i < rows.length; i++) {
@@ -579,20 +637,21 @@ window.onStudentExcelUpload = function(event) {
       const id = String(row[cId] || '').trim();
       const name = String(row[cName] || '').trim();
       if (!id || !name) continue;
+      const grade = isAll ? String(row[cGrade] || '').trim() : studentGradeTab;
+      if (!GRADES.includes(grade)) continue;
+      const gradeSlots = slotsFor(grade, sem);
       const assignments = {};
-      sem1Slots.forEach(slot => {
-        const ci = header.indexOf(`1학기 ${slot.label}`);
+      gradeSlots.forEach(slot => {
+        const label = isAll ? `${grade}학년 ${slot.label}` : slot.label;
+        const ci = header.indexOf(label);
         if (ci >= 0) assignments[slot.id] = String(row[ci] || '').trim();
       });
-      sem2Slots.forEach(slot => {
-        const ci = header.indexOf(`2학기 ${slot.label}`);
-        if (ci >= 0) assignments[slot.id] = String(row[ci] || '').trim();
-      });
+      const existing = studentsByGrade[grade][id];
       studentsByGrade[grade][id] = {
         ban: cBan >= 0 ? row[cBan] : '', num: cNum >= 0 ? row[cNum] : '', name,
         gender: cGender >= 0 ? String(row[cGender] || '').trim() : '',
         email: cEmail >= 0 ? String(row[cEmail] || '').trim() : '',
-        assignments,
+        assignments: { ...(existing ? existing.assignments : {}), ...assignments },
       };
       dirtyStudents.add(`${grade}|${id}`);
       count++;
