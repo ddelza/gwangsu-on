@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <script>(function(){try{var t=localStorage.getItem('gwangsu_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
@@ -85,6 +85,10 @@ body {
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
 .filter-wrap { max-width: 1000px; margin: 0 auto; padding: 16px 16px 8px; }
+.current-sem-banner {
+  display: flex; align-items: center; gap: 8px; background: var(--accent-soft); color: var(--accent);
+  border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; font-size: 0.85rem; font-weight: 600;
+}
 .search-box { width: 100%; padding: 12px 14px; font-size: 1rem; border: 2px solid var(--border); border-radius: 12px; outline: none; margin-bottom: 10px; }
 .search-box:focus { border-color: var(--accent); }
 .filter-card { background: var(--surface); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
@@ -108,26 +112,11 @@ body {
   padding: 10px 14px; margin-bottom: 10px; font-size: 0.85rem; color: var(--accent);
   display: none; align-items: center; justify-content: space-between; gap: 10px;
 }
-.edit-mode-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.edit-mode-btn {
-  padding: 8px 16px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff);
-  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
-}
+.tool-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .print-btn {
   padding: 8px 16px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
   font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border);
 }
-#editModeBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-#editSummaryText { font-size: 0.85rem; color: #444; font-weight: 600; }
-.edit-mode-save-btn {
-  padding: 7px 16px; border-radius: 999px; background: #1a7c4a; color: #fff;
-  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
-}
-.edit-mode-cancel-btn {
-  padding: 7px 16px; border-radius: 999px; background: #f0f2f6; color: #555;
-  font-size: 0.85rem; cursor: pointer; border: none;
-}
-.edit-status-msg { font-size: 0.82rem; color: #1a7c4a; }
 
 /* 학번 조회 모달 */
 .id-lookup-box { max-width: 480px; }
@@ -157,14 +146,9 @@ body {
 .id-lookup-search-btn:disabled { opacity: 0.45; cursor: default; }
 #idLookupResult table { margin-top: 0; }
 #idLookupResult .empty-state { padding: 20px 0; }
-.edit-field-select {
-  padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem;
-  background: var(--surface); max-width: 160px;
-}
-.edit-field-select.dirty { border-color: #1a7c4a; background: #eafaf1; }
-.edit-elective-field { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
-.edit-elective-field:last-child { margin-bottom: 0; }
-.edit-elective-label { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+.modal-box { background: var(--surface); border-radius: 14px; padding: 20px; max-width: 640px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; }
+.modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--text-muted); }
 .list-wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px 40px; overflow-x: auto; }
 .result-count { font-size: 0.82rem; color: var(--text-muted); margin: 4px 2px 10px; }
 table.stu-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.85rem; }
@@ -174,6 +158,7 @@ table.stu-table tr:last-child td { border-bottom: none; }
 table.stu-table tr.ban-start td { border-top: 2px solid var(--text-muted); }
 table.stu-table tr.ban-alt td { background: var(--accent-soft); }
 table.stu-table tr.ban-alt td, table.stu-table td { color: var(--text); }
+table.stu-table td.activity-cell { white-space: normal; min-width: 180px; font-size: 0.8rem; line-height: 1.5; }
 .cell-empty { color: #bbb; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
 @media (max-width: 600px) {
@@ -202,22 +187,16 @@ table.stu-table tr.ban-alt td, table.stu-table td { color: var(--text); }
 </div>
 
 <div class="filter-wrap">
+  <div class="current-sem-banner">🗓 <span id="currentSemLabel">불러오는 중...</span></div>
   <input id="searchBox" class="search-box" type="text" placeholder="이름, 학번, 반, 이메일, 동아리/스포츠클럽 등으로 검색">
 
-  <div class="filter-card edit-mode-card">
-    <button id="editModeToggleBtn" class="edit-mode-btn" onclick="enterEditMode()">✏️ 수정모드</button>
+  <div class="filter-card tool-card">
     <label style="font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
       <input type="checkbox" id="includeEmailChk"> 이메일 포함
     </label>
     <button class="print-btn" onclick="printRoster()">🖨️ 명렬표 출력</button>
     <button class="print-btn" onclick="downloadExcel()">📥 엑셀 다운로드</button>
     <button class="print-btn" onclick="openIdLookup()">🔍 학번 조회</button>
-    <div id="editModeBar" style="display:none">
-      <span id="editSummaryText">변경 0건</span>
-      <button class="edit-mode-save-btn" onclick="saveEditedFields()">✅ 수정 완료</button>
-      <button class="edit-mode-cancel-btn" onclick="exitEditMode()">취소</button>
-    </div>
-    <div id="editStatusMsg" class="edit-status-msg"></div>
   </div>
 
   <div class="filter-card">
@@ -230,13 +209,8 @@ table.stu-table tr.ban-alt td, table.stu-table td { color: var(--text); }
   </div>
 
   <div class="filter-card">
-    <div class="filter-row-label">주제선택 / 동아리 (학년마다 항목이 다릅니다 — 1학년: 주제선택(화)·주제선택(금), 3학년: 동아리, 2학년: 없음)</div>
-    <div id="electiveRow" class="activity-row"></div>
-  </div>
-
-  <div class="filter-card">
-    <div class="filter-row-label">스포츠클럽 (학년별로 한 클럽을 선택하면 그 그룹 학생만 모아 보여줍니다)</div>
-    <div id="sportRow" class="activity-row"></div>
+    <div class="filter-row-label">활동 배정 (동아리/주제선택/스포츠클럽 등 — 학년·학기마다 항목이 다를 수 있습니다)</div>
+    <div id="activitySlotRow" class="activity-row"></div>
   </div>
 
   <div id="activeFilterBanner" class="active-filter-banner">
@@ -266,36 +240,42 @@ table.stu-table tr.ban-alt td, table.stu-table td { color: var(--text); }
   <div class="empty-state">불러오는 중...</div>
 </div>
 
-<script>
-function callApi(action, params, opts) {
-  params = params || {}; opts = opts || {};
-  return new Promise((resolve, reject) => {
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
-      const mapper = opts.actionMap && opts.actionMap[action];
-      if (mapper) { mapper(runner, params); }
-      else { reject(new Error(`callApi: action "${action}"에 대한 actionMap 항목이 없습니다.`)); }
-      return;
-    }
-    const url = new URL(opts.scriptUrl);
-    url.searchParams.set('action', action);
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    fetch(url.toString()).then(r => r.json())
-      .then(data => { if (data && data.error) reject(new Error(data.error)); else resolve(data); })
-      .catch(reject);
-  });
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// gwangsu-on Firebase 프로젝트 — 학생정보/교사정보/동아리 데이터는 이제 이 Realtime Database가
+// 원본이다 (admin.html이 유일한 쓰기 창구). 이 페이지는 읽기 전용으로 /config/current가 가리키는
+// 연도의 데이터를 한 번 불러온다.
+//
+// "활동 슬롯" 모델: 학년+학기마다 동아리/주제선택/스포츠클럽 등 활동의 개수·이름·존재 여부가
+// 해마다 달라질 수 있어서, 고정된 필드 대신 admin.html이 자유롭게 추가/삭제하는 슬롯 목록을 쓴다.
+//   /years/{year}/slots/{grade}/{sem}/{slotId} = { label, order }
+//   /years/{year}/students/{studentId} = { grade, ban, num, name, gender, email, assignments: { [slotId]: value } }
+const firebaseConfig = {
+  apiKey: "AIzaSyB_D2Wi944YQL-1rCdgeNU-tD8lpMek_wM",
+  authDomain: "gwangsu-on.firebaseapp.com",
+  databaseURL: "https://gwangsu-on-default-rtdb.firebaseio.com",
+  projectId: "gwangsu-on",
+  storageBucket: "gwangsu-on.firebasestorage.app",
+  messagingSenderId: "684885628658",
+  appId: "1:684885628658:web:b471726b604754a82b626b",
+  measurementId: "G-6X5DH4EP5N"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 function detectInAppBrowser() {
   const ua = navigator.userAgent || '';
   return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua);
 }
-function openInExternalBrowser() {
+window.openInExternalBrowser = function() {
   const url = window.location.href;
   const ua = navigator.userAgent || '';
   if (/KAKAOTALK/i.test(ua)) window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
   else if (/NAVER/i.test(ua)) window.location.href = 'naversearchapp://inappbrowser?app=naversearchapp&url=' + encodeURIComponent(url);
   else window.location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
-}
+};
 function showExternalBrowserBannerIfNeeded(bannerId) {
   if (detectInAppBrowser()) { const el = document.getElementById(bannerId); if (el) el.style.display = 'block'; }
 }
@@ -303,6 +283,7 @@ function esc(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+function escAttr(str) { return esc(str).replace(/"/g, '&quot;'); }
 function fuzzySearch(items, query, fields) {
   const q = String(query || '').trim().toLowerCase();
   if (!q) return items;
@@ -313,35 +294,26 @@ function fuzzySearch(items, query, fields) {
   }));
 }
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
-const ACTION_MAP = { getStudentRoster: (runner) => runner.getStudentRoster() };
-
-// 같은 학년 내 반 구분용 색상 팔레트 (반이 바뀔 때마다 순환 적용)
-const BAN_COLORS = ['#eef3fc', '#fdf2e9', '#eafaf1', '#fbeee6', '#f5eef8', '#eafafa'];
-
 let allStudents = [];
-let studentById = {};
-// structure 탭에서 받아온 "고를 수 있는 이름 목록"(grade -> "1학기 스포츠클럽" 등 -> [이름...]).
-// 아직 정해지지 않은 학기는 비어있으므로, 수정모드 드롭다운은 이 목록과 현재 배정된 값들을 합쳐서 보여준다.
-let fieldOptions = {};
-function curatedOptions(grade, sem, label) {
-  const g = fieldOptions[String(grade)];
-  return (g && g[`${sem}학기 ${label}`]) || [];
-}
+// { [grade]: { [sem]: [{id,label,order}, ...] } } — order로 정렬된 배열
+let slotsByGradeSem = {};
+let currentYear = null;
+let currentSem = 1;
 let activeGrade = '';
 let activeBan = '';
-// 활동(주제선택/동아리/스포츠클럽) 단위로 학생을 모아볼 때 사용 — 설정되면 학년/반 필터보다 우선한다.
-// type: 'elective' | 'sport'
-let activityFilter = null; // { grade, type, value }
+// 슬롯 단위로 학생을 모아볼 때 사용 — 설정되면 학년/반 필터보다 우선한다.
+let activityFilter = null; // { grade, sem, slotId, label, value }
 
-// 수정모드 — 여러 학생을 동시에 고친 뒤 "수정 완료" 한 번으로 일괄 저장한다.
-let editMode = false;
-let pendingEdits = {}; // key: `${id}|${sem}|${label}` -> { id, grade, sem, label, value }
+function slotsFor(grade, sem) {
+  return (slotsByGradeSem[String(grade)] && slotsByGradeSem[String(grade)][String(sem)]) || [];
+}
+function allSlotsForGrade(grade) {
+  return [1, 2].flatMap(sem => slotsFor(grade, sem).map(s => ({ ...s, sem })));
+}
 
 function studentSearchText(s) {
-  const sem1Extras = s.sem1.extras.map(e => e.value).join(' ');
-  const sem2Extras = s.sem2.extras.map(e => e.value).join(' ');
-  return [s.name, s.id, s.grade, s.ban, s.num, s.email, s.sem1.sport, sem1Extras, s.sem2.sport, sem2Extras].join(' ');
+  const vals = Object.values(s.assignments || {});
+  return [s.name, s.id, s.grade, s.ban, s.num, s.email, ...vals].join(' ');
 }
 
 function uniqueSorted(arr) {
@@ -354,25 +326,11 @@ function gradesAvailable() {
 function bansForGrade(grade) {
   return uniqueSorted(allStudents.filter(s => String(s.grade) === String(grade)).map(s => String(s.ban)));
 }
-// 학년마다 "주제선택"인지 "동아리"인지, 필드가 몇 개인지(1학년은 화/금 2개) 다르므로
-// 한 학년의 학생 데이터에 실제로 들어있는 extras 구조(라벨 목록)를 그대로 기준으로 삼는다.
-function extraFieldDefsForGrade(grade) {
-  const sample = allStudents.find(s => String(s.grade) === String(grade));
-  if (!sample) return [];
-  return sample.sem1.extras.map((e, idx) => ({ label: e.label, idx }));
-}
-function electiveOptionsForGradeField(grade, idx) {
-  const vals = [];
-  allStudents.filter(s => String(s.grade) === String(grade)).forEach(s => {
-    [s.sem1, s.sem2].forEach(sem => { const e = sem.extras[idx]; if (e && e.value) vals.push(e.value); });
-  });
-  return uniqueSorted(vals);
-}
-function sportOptionsForGrade(grade) {
-  const vals = [];
-  allStudents.filter(s => String(s.grade) === String(grade)).forEach(s => {
-    [s.sem1, s.sem2].forEach(sem => { if (sem.sport) vals.push(sem.sport); });
-  });
+function slotOptions(grade, slotId) {
+  const vals = allStudents
+    .filter(s => String(s.grade) === String(grade))
+    .map(s => (s.assignments || {})[slotId])
+    .filter(Boolean);
   return uniqueSorted(vals);
 }
 
@@ -417,66 +375,46 @@ function renderGradeChips() {
 
 function renderActivitySelects() {
   const grades = gradesAvailable();
-
-  const electiveRow = document.getElementById('electiveRow');
-  electiveRow.innerHTML = grades.map(g => {
-    const fields = extraFieldDefsForGrade(g);
-    return fields.map(f => {
-      const opts = electiveOptionsForGradeField(g, f.idx);
-      const selected = activityFilter && activityFilter.type === 'elective'
-        && String(activityFilter.grade) === g && activityFilter.fieldIdx === f.idx;
-      if (!opts.length) {
-        return `<select class="activity-select" disabled><option>${g}학년 ${esc(f.label)} (없음)</option></select>`;
-      }
-      return `<select class="activity-select${selected ? ' locked' : ''}" data-grade="${g}" data-type="elective" data-field-idx="${f.idx}" data-field-label="${escAttr(f.label)}" onchange="onActivitySelect(this)">
-        <option value="">${g}학년 ${esc(f.label)}</option>
+  const row = document.getElementById('activitySlotRow');
+  row.innerHTML = grades.map(g => {
+    return allSlotsForGrade(g).map(slot => {
+      const opts = slotOptions(g, slot.id);
+      if (!opts.length) return '';
+      const selected = activityFilter && activityFilter.grade === g && activityFilter.slotId === slot.id;
+      return `<select class="activity-select${selected ? ' locked' : ''}" data-grade="${g}" data-slot-id="${slot.id}" data-sem="${slot.sem}" data-label="${escAttr(slot.label)}" onchange="onActivitySelect(this)">
+        <option value="">${g}학년 ${slot.sem}학기 ${esc(slot.label)}</option>
         ${opts.map(o => `<option value="${escAttr(o)}"${selected && activityFilter.value === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}
       </select>`;
     }).join('');
   }).join('');
-
-  const sportRow = document.getElementById('sportRow');
-  sportRow.innerHTML = grades.map(g => {
-    const opts = sportOptionsForGrade(g);
-    const selected = activityFilter && activityFilter.type === 'sport' && String(activityFilter.grade) === g;
-    return `<select class="activity-select${selected ? ' locked' : ''}" data-grade="${g}" data-type="sport" onchange="onActivitySelect(this)">
-      <option value="">${g}학년 스포츠클럽</option>
-      ${opts.map(o => `<option value="${escAttr(o)}"${selected && activityFilter.value === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}
-    </select>`;
-  }).join('');
-}
-
-function escAttr(str) {
-  return esc(str).replace(/"/g, '&quot;');
 }
 
 function clearActivityFilterSelects() {
   document.querySelectorAll('.activity-select').forEach(sel => { sel.value = ''; sel.classList.remove('locked'); });
 }
 
-function onActivitySelect(selectEl) {
+window.onActivitySelect = function(selectEl) {
   const value = selectEl.value;
   if (!value) { activityFilter = null; renderAll(); return; }
   activityFilter = {
     grade: selectEl.dataset.grade,
-    type: selectEl.dataset.type,
+    sem: Number(selectEl.dataset.sem),
+    slotId: selectEl.dataset.slotId,
+    label: selectEl.dataset.label,
     value,
-    fieldIdx: selectEl.dataset.fieldIdx !== undefined ? Number(selectEl.dataset.fieldIdx) : undefined,
-    fieldLabel: selectEl.dataset.fieldLabel,
   };
   activeGrade = selectEl.dataset.grade;
   activeBan = '';
-  // 다른 드롭다운들은 선택 해제(한 번에 하나의 활동 그룹만 본다)
   document.querySelectorAll('.activity-select').forEach(sel => { if (sel !== selectEl) sel.value = ''; });
   renderAll();
-}
+};
 
-function resetActivityFilter() {
+window.resetActivityFilter = function() {
   activityFilter = null;
   activeBan = '';
   clearActivityFilterSelects();
   renderAll();
-}
+};
 
 function renderAll() {
   renderGradeChips();
@@ -488,34 +426,30 @@ function renderAll() {
 function renderActiveFilterBanner() {
   const banner = document.getElementById('activeFilterBanner');
   if (!activityFilter) { banner.style.display = 'none'; return; }
-  const typeLabel = activityFilter.type === 'sport' ? '스포츠클럽' : (activityFilter.fieldLabel || '주제선택/동아리');
   document.getElementById('activeFilterText').textContent =
-    `${activityFilter.grade}학년 ${typeLabel} "${activityFilter.value}" 그룹만 표시 중`;
+    `${activityFilter.grade}학년 ${activityFilter.sem}학기 ${activityFilter.label} "${activityFilter.value}" 그룹만 표시 중`;
   banner.style.display = 'flex';
 }
 
-function semExtraText(sem) {
-  if (!sem.extras.length) return '';
-  if (sem.extras.length === 1) return sem.extras[0].value;
-  return sem.extras.map(e => `${e.label}: ${e.value || '미배정'}`).join(' / ');
+function activitiesText(s, sem) {
+  const slots = slotsFor(s.grade, sem);
+  if (!slots.length) return '';
+  const parts = slots.map(slot => {
+    const v = (s.assignments || {})[slot.id] || '';
+    return slots.length === 1 ? v : `${slot.label}: ${v || '미배정'}`;
+  }).filter(Boolean);
+  return parts.join(slots.length === 1 ? '' : ' · ');
 }
 
 function studentMatchesActivity(s) {
   if (!activityFilter) return true;
   if (String(s.grade) !== String(activityFilter.grade)) return false;
-  if (activityFilter.type === 'sport') {
-    return s.sem1.sport === activityFilter.value || s.sem2.sport === activityFilter.value;
-  }
-  return [s.sem1, s.sem2].some(sem => {
-    const e = sem.extras[activityFilter.fieldIdx];
-    return e && e.value === activityFilter.value;
-  });
+  return (s.assignments || {})[activityFilter.slotId] === activityFilter.value;
 }
 
-function renderResults() {
+function filteredSortedResults() {
   const q = document.getElementById('searchBox').value;
   let results = allStudents;
-
   if (activityFilter) {
     results = results.filter(studentMatchesActivity);
   } else {
@@ -523,12 +457,15 @@ function renderResults() {
     if (activeBan) results = results.filter(s => String(s.ban) === activeBan);
   }
   results = fuzzySearch(results, q, ['_searchText']);
-
-  results = results.slice().sort((a, b) => {
+  return results.slice().sort((a, b) => {
     if (a.grade !== b.grade) return a.grade - b.grade;
     if (a.ban !== b.ban) return a.ban - b.ban;
     return a.num - b.num;
   });
+}
+
+function renderResults() {
+  const results = filteredSortedResults();
 
   const wrap = document.getElementById('listWrap');
   if (!results.length) {
@@ -539,10 +476,8 @@ function renderResults() {
   let html = `<div class="result-count">${results.length}명</div>`;
   html += '<table class="stu-table"><thead><tr>';
   html += '<th>학년</th><th>반</th><th>번호</th><th>학번</th><th>이름</th><th>이메일</th>';
-  html += '<th>1학기 스포츠클럽</th><th>1학기 주제선택/동아리</th>';
-  html += '<th>2학기 스포츠클럽</th><th>2학기 주제선택/동아리</th>';
+  html += '<th>1학기 활동</th><th>2학기 활동</th>';
   html += '</tr></thead><tbody>';
-  // 같은 학년 안에서 반이 바뀔 때마다 색을 한 칸씩 순환시켜 반 구분을 눈에 띄게 한다.
   let prevBanKey = null;
   let banColorIdx = -1;
   html += results.map(s => {
@@ -550,154 +485,23 @@ function renderResults() {
     const banKey = `${s.grade}-${s.ban}`;
     const isBanStart = banKey !== prevBanKey;
     if (isBanStart) { prevBanKey = banKey; banColorIdx = (banColorIdx + 1) % 2; }
-    const sportCell = (semKey) => editMode ? editableSportSelect(s, semKey) : cell(s[semKey].sport);
-    const electiveCell = (semKey) => editMode ? editableElectiveSelects(s, semKey) : cell(semExtraText(s[semKey]));
     return `<tr class="${isBanStart ? 'ban-start ' : ''}${banColorIdx === 1 ? 'ban-alt' : ''}">
       <td>${esc(s.grade)}</td><td>${esc(s.ban)}</td><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td>
       <td style="font-size:0.78rem;color:var(--text-muted)">${esc(s.email||'')}</td>
-      <td>${sportCell('sem1')}</td><td>${electiveCell('sem1')}</td>
-      <td>${sportCell('sem2')}</td><td>${electiveCell('sem2')}</td>
+      <td class="activity-cell">${cell(activitiesText(s, 1))}</td>
+      <td class="activity-cell">${cell(activitiesText(s, 2))}</td>
     </tr>`;
   }).join('');
   html += '</tbody></table>';
   wrap.innerHTML = html;
 }
 
-// ── 수정모드 ──────────────────────────────
-// semKey: 'sem1' | 'sem2'
-function pendingKey(id, sem, label) { return `${id}|${sem}|${label}`; }
-
-function editableSportSelect(s, semKey) {
-  const sem = semKey === 'sem1' ? 1 : 2;
-  const key = pendingKey(s.id, sem, '스포츠클럽');
-  const current = key in pendingEdits ? pendingEdits[key].value : s[semKey].sport;
-  const opts = uniqueSorted([...sportOptionsForGrade(s.grade), ...curatedOptions(s.grade, sem, '스포츠클럽'), current]);
-  const dirty = key in pendingEdits;
-  return `<select class="edit-field-select${dirty ? ' dirty' : ''}"
-      data-id="${escAttr(s.id)}" data-grade="${esc(s.grade)}" data-sem="${sem}" data-label="스포츠클럽"
-      onchange="onEditFieldChange(this)">
-    <option value=""${!current ? ' selected' : ''}>미배정</option>
-    ${opts.map(o => `<option value="${escAttr(o)}"${o === current ? ' selected' : ''}>${esc(o)}</option>`).join('')}
-  </select>`;
-}
-
-function editableElectiveSelects(s, semKey) {
-  const sem = semKey === 'sem1' ? 1 : 2;
-  const extras = s[semKey].extras;
-  if (!extras.length) return '<span class="cell-empty">해당없음</span>';
-  return extras.map((e, idx) => {
-    const key = pendingKey(s.id, sem, e.label);
-    const current = key in pendingEdits ? pendingEdits[key].value : e.value;
-    const opts = uniqueSorted([...electiveOptionsForGradeField(s.grade, idx), ...curatedOptions(s.grade, sem, e.label), current]);
-    const dirty = key in pendingEdits;
-    return `<div class="edit-elective-field">
-      <span class="edit-elective-label">${esc(e.label)}</span>
-      <select class="edit-field-select${dirty ? ' dirty' : ''}"
-          data-id="${escAttr(s.id)}" data-grade="${esc(s.grade)}" data-sem="${sem}" data-label="${escAttr(e.label)}"
-          onchange="onEditFieldChange(this)">
-        <option value=""${!current ? ' selected' : ''}>미배정</option>
-        ${opts.map(o => `<option value="${escAttr(o)}"${o === current ? ' selected' : ''}>${esc(o)}</option>`).join('')}
-      </select>
-    </div>`;
-  }).join('');
-}
-
-function originalFieldValue(student, sem, label) {
-  const semObj = sem === 1 ? student.sem1 : student.sem2;
-  if (label === '스포츠클럽') return semObj.sport;
-  const e = semObj.extras.find(x => x.label === label);
-  return e ? e.value : '';
-}
-
-function onEditFieldChange(selectEl) {
-  const id = selectEl.dataset.id;
-  const grade = selectEl.dataset.grade;
-  const sem = Number(selectEl.dataset.sem);
-  const label = selectEl.dataset.label;
-  const value = selectEl.value;
-  const key = pendingKey(id, sem, label);
-  const student = studentById[id];
-  const orig = originalFieldValue(student, sem, label);
-
-  if (value === (orig || '')) {
-    delete pendingEdits[key];
-    selectEl.classList.remove('dirty');
-  } else {
-    pendingEdits[key] = { id, grade, sem, label, value };
-    selectEl.classList.add('dirty');
-  }
-  updateEditSummary();
-}
-
-function updateEditSummary() {
-  const n = Object.keys(pendingEdits).length;
-  document.getElementById('editSummaryText').textContent = `변경 ${n}건`;
-}
-
-function enterEditMode() {
-  editMode = true;
-  document.getElementById('editModeToggleBtn').style.display = 'none';
-  document.getElementById('editModeBar').style.display = 'flex';
-  updateEditSummary();
-  renderResults();
-}
-
-function exitEditMode() {
-  editMode = false;
-  pendingEdits = {};
-  document.getElementById('editModeToggleBtn').style.display = 'inline-block';
-  document.getElementById('editModeBar').style.display = 'none';
-  document.getElementById('editStatusMsg').textContent = '';
-  renderResults();
-}
-
-async function saveEditedFields() {
-  const changes = Object.values(pendingEdits);
-  const statusEl = document.getElementById('editStatusMsg');
-  if (!changes.length) { statusEl.textContent = '변경된 내용이 없습니다.'; return; }
-  statusEl.textContent = '저장 중...';
-  try {
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'updateStudentFields', changes }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    if (data.errors && data.errors.length) {
-      statusEl.textContent = `${data.updated}건 저장, ${data.errors.length}건 실패: ${data.errors.join(', ')}`;
-    } else {
-      statusEl.textContent = `${data.updated}건 저장되었습니다.`;
-    }
-    pendingEdits = {};
-    updateEditSummary();
-    await reloadRoster();
-  } catch (err) {
-    statusEl.textContent = '저장 실패: ' + (err.message || String(err));
-  }
-}
-
 function printRoster() {
-  const q = document.getElementById('searchBox').value;
-  let results = allStudents;
-  if (activityFilter) {
-    results = results.filter(studentMatchesActivity);
-  } else {
-    if (activeGrade) results = results.filter(s => String(s.grade) === activeGrade);
-    if (activeBan)   results = results.filter(s => String(s.ban) === activeBan);
-  }
-  results = fuzzySearch(results, q, ['_searchText']);
-  results = results.slice().sort((a, b) => {
-    if (a.grade !== b.grade) return a.grade - b.grade;
-    if (a.ban   !== b.ban)   return a.ban - b.ban;
-    return a.num - b.num;
-  });
+  const results = filteredSortedResults();
   if (!results.length) { alert('출력할 학생이 없습니다.'); return; }
 
-  // 그룹 결정: 활동 필터 활성화 시 한 장으로, 아니면 반별로
   const groupMap = new Map();
   if (activityFilter) {
-    const typeLabel = activityFilter.type === 'sport' ? '스포츠클럽' : (activityFilter.fieldLabel || '');
     const title = `${activityFilter.grade}학년 ${activityFilter.value}`;
     groupMap.set(title, results);
   } else {
@@ -712,12 +516,10 @@ function printRoster() {
   const withEmail = document.getElementById('includeEmailChk').checked;
 
   const pages = [...groupMap.entries()].map(([className, students], pi) => {
-    // 열당 최대 30명 (이메일 포함 시 한 열로 제한)
     const PER_COL = withEmail ? students.length : 30;
     const COLS = withEmail ? 1 : Math.ceil(students.length / PER_COL);
     const rows = withEmail ? students.length : PER_COL;
 
-    // 열 우선 배치
     const colData = Array.from({length: COLS}, (_, c) =>
       Array.from({length: rows}, (_, r) => students[c * rows + r] || null)
     );
@@ -731,7 +533,6 @@ function printRoster() {
       `<tr>${Array.from({length: COLS}, (_, c) => {
         const s = colData[c][r];
         const sep = c < COLS - 1 ? '<td class="c-sep"></td>' : '';
-        const emailCol = withEmail ? '<td class="c-email"></td>' : '';
         if (!s) return `<td class="c-id"></td><td class="c-gender"></td><td class="c-name"></td>${withEmail ? '<td class="c-email"></td>' : ''}<td class="c-sign"></td>${sep}`;
         const emailCell = withEmail ? `<td class="c-email">${s.email||''}</td>` : '';
         return `<td class="c-id">${s.id}</td><td class="c-gender">${s.gender||''}</td><td class="c-name">${s.name}</td>${emailCell}<td class="c-sign"></td>${sep}`;
@@ -782,32 +583,19 @@ ${pages}
 }
 
 function downloadExcel() {
-  const q = document.getElementById('searchBox').value;
   const withEmail = document.getElementById('includeEmailChk').checked;
-  let results = allStudents;
-  if (activityFilter) {
-    results = results.filter(studentMatchesActivity);
-  } else {
-    if (activeGrade) results = results.filter(s => String(s.grade) === activeGrade);
-    if (activeBan)   results = results.filter(s => String(s.ban) === activeBan);
-  }
-  results = fuzzySearch(results, q, ['_searchText']);
-  results = results.slice().sort((a, b) => {
-    if (a.grade !== b.grade) return a.grade - b.grade;
-    if (a.ban   !== b.ban)   return a.ban - b.ban;
-    return a.num - b.num;
-  });
+  const results = filteredSortedResults();
   if (!results.length) { alert('다운로드할 학생이 없습니다.'); return; }
 
   const q2 = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
   const headers = ['학년', '반', '번호', '학번', '이름'];
   if (withEmail) headers.push('이메일');
-  headers.push('1학기 스포츠클럽', '1학기 주제선택/동아리', '2학기 스포츠클럽', '2학기 주제선택/동아리');
+  headers.push('1학기 활동', '2학기 활동');
 
   const rows = results.map(s => {
     const row = [s.grade, s.ban, s.num, s.id, s.name];
     if (withEmail) row.push(s.email || '');
-    row.push(s.sem1.sport || '', semExtraText(s.sem1), s.sem2.sport || '', semExtraText(s.sem2));
+    row.push(activitiesText(s, 1), activitiesText(s, 2));
     return row.map(q2).join(',');
   });
 
@@ -823,22 +611,58 @@ function downloadExcel() {
   document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
 }
+window.printRoster = printRoster;
+window.downloadExcel = downloadExcel;
 
-function reloadRoster() {
-  return callApi('getStudentRoster', {}, { scriptUrl: APPS_SCRIPT_URL, actionMap: ACTION_MAP })
-    .then(data => {
-      allStudents = (data.students || []).map(s => ({ ...s, _searchText: '' }));
-      allStudents.forEach(s => { s._searchText = studentSearchText(s); });
-      studentById = Object.fromEntries(allStudents.map(s => [s.id, s]));
-      fieldOptions = data.fieldOptions || {};
-      renderAll();
+async function loadCurrentConfig() {
+  const snap = await get(ref(db, 'config/current'));
+  if (snap.exists()) return snap.val();
+  return { year: new Date().getFullYear(), sem: 1 };
+}
+
+async function loadSlots(year) {
+  const snap = await get(ref(db, `years/${year}/slots`));
+  if (!snap.exists()) return {};
+  const raw = snap.val();
+  const out = {};
+  Object.entries(raw).forEach(([grade, semMap]) => {
+    out[grade] = {};
+    Object.entries(semMap || {}).forEach(([sem, slotMap]) => {
+      out[grade][sem] = Object.entries(slotMap || {})
+        .map(([id, v]) => ({ id, label: v.label, order: v.order || 0 }))
+        .sort((a, b) => a.order - b.order);
     });
+  });
+  return out;
+}
+
+async function loadStudents(year) {
+  const snap = await get(ref(db, `years/${year}/students`));
+  if (!snap.exists()) return [];
+  const map = snap.val();
+  return Object.entries(map).map(([id, s]) => ({
+    id, grade: s.grade, ban: s.ban, num: s.num, name: s.name,
+    gender: s.gender || '', email: s.email || '', assignments: s.assignments || {},
+  }));
+}
+
+async function reloadRoster() {
+  const cfg = await loadCurrentConfig();
+  currentYear = cfg.year;
+  currentSem = cfg.sem;
+  document.getElementById('currentSemLabel').textContent = `${currentYear}학년도 ${currentSem}학기 기준`;
+
+  const [students, slots] = await Promise.all([loadStudents(currentYear), loadSlots(currentYear)]);
+  slotsByGradeSem = slots;
+  allStudents = students.map(s => ({ ...s, _searchText: '' }));
+  allStudents.forEach(s => { s._searchText = studentSearchText(s); });
+  renderAll();
 }
 
 // ── 학번 조회 ──────────────────────────────
 let lookupNames = [];
 
-function openIdLookup() {
+window.openIdLookup = function() {
   lookupNames = [];
   renderLookupChips();
   document.getElementById('idLookupInput').value = '';
@@ -846,13 +670,13 @@ function openIdLookup() {
   document.getElementById('idLookupSearchBtn').disabled = true;
   document.getElementById('idLookupModal').style.display = 'flex';
   setTimeout(() => document.getElementById('idLookupInput').focus(), 50);
-}
+};
 
-function closeIdLookup() {
+window.closeIdLookup = function() {
   document.getElementById('idLookupModal').style.display = 'none';
-}
+};
 
-function addLookupName() {
+window.addLookupName = function() {
   const input = document.getElementById('idLookupInput');
   const name = input.value.trim();
   if (name && !lookupNames.includes(name)) {
@@ -861,12 +685,12 @@ function addLookupName() {
   }
   input.value = '';
   input.focus();
-}
+};
 
-function removeLookupName(idx) {
+window.removeLookupName = function(idx) {
   lookupNames.splice(idx, 1);
   renderLookupChips();
-}
+};
 
 function renderLookupChips() {
   const wrap = document.getElementById('idLookupChips');
@@ -882,10 +706,9 @@ function renderLookupChips() {
   btn.disabled = false;
 }
 
-function runIdLookup() {
+window.runIdLookup = function() {
   if (!lookupNames.length) return;
 
-  // 이름별로 매칭 학생 그룹화 (학번순 정렬)
   const nameGroups = lookupNames.map(name => {
     const matches = allStudents
       .filter(s => s.name === name)
@@ -893,7 +716,6 @@ function runIdLookup() {
     return { name, students: matches };
   });
 
-  // 그룹을 그 그룹 내 최솟값 학번 기준으로 정렬 (동명이인은 묶인 채로 이동)
   nameGroups.sort((a, b) => {
     const aMin = a.students.length ? String(a.students[0].id) : '9999';
     const bMin = b.students.length ? String(b.students[0].id) : '9999';
@@ -919,7 +741,6 @@ function runIdLookup() {
   html += `<div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px">${results.length}명 검색됨</div>`;
   html += '<table class="stu-table"><thead><tr><th>학번</th><th>이름</th><th>학년</th><th>반</th><th>번호</th></tr></thead><tbody>';
 
-  // 동명이인 표시를 위해 각 이름의 학생 수 파악
   const nameCounts = {};
   results.forEach(s => { nameCounts[s.name] = (nameCounts[s.name] || 0) + 1; });
 
@@ -933,7 +754,7 @@ function runIdLookup() {
   }).join('');
   html += '</tbody></table>';
   resultEl.innerHTML = html;
-}
+};
 
 let debounceTimer = null;
 document.getElementById('searchBox').addEventListener('input', () => {
@@ -941,7 +762,7 @@ document.getElementById('searchBox').addEventListener('input', () => {
   debounceTimer = setTimeout(renderResults, 150);
 });
 
-window.onload = function() {
+window.addEventListener('DOMContentLoaded', function() {
   showExternalBrowserBannerIfNeeded('inappBanner');
 
   document.getElementById('idLookupInput').addEventListener('keydown', e => {
@@ -952,10 +773,11 @@ window.onload = function() {
   });
 
   reloadRoster().catch(err => {
+    document.getElementById('currentSemLabel').textContent = '불러오기 실패';
     document.getElementById('listWrap').innerHTML =
       `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`;
   });
-};
+});
 </script>
 </body>
 </html>
