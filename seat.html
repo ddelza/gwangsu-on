@@ -155,6 +155,11 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
 .step1-footer { margin-top:18px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
 .stu-summary { font-size:0.88rem; color:var(--text-muted); }
 
+.sheet-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:14px; background:var(--accent-soft); border-radius:10px; margin-bottom:10px; max-width:580px; }
+.sheet-form label { font-size:0.85rem; font-weight:600; }
+.sheet-sel { padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.85rem; font-family:inherit; }
+.import-msg { font-size:0.8rem; color:var(--text-muted); margin-bottom:10px; min-height:1.2em; }
+
 /* ── Step 2: Desk grid ── */
 .step2-top { display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
 .step2-top label { font-size:0.88rem; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; }
@@ -299,6 +304,24 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
           <input type="file" id="excelUpload" accept=".xlsx,.xls" style="display:none" onchange="handleFileInput(this)">
         </label>
         <button class="btn-secondary" onclick="showDirectInput()">✏️ 직접 입력하기</button>
+        <button class="btn-secondary" onclick="showSheetImport()">📋 학년·반 불러오기</button>
+      </div>
+
+      <!-- 학년·반 불러오기 -->
+      <div id="sheetPanel" style="display:none">
+        <div class="sheet-form">
+          <label>학년</label>
+          <select id="importGrade" class="sheet-sel">
+            <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
+          </select>
+          <label>반</label>
+          <select id="importBan" class="sheet-sel">
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            <option>6</option><option>7</option><option>8</option><option>9</option>
+          </select>
+          <button class="btn-primary" id="btnImport" onclick="importFromSheet()" style="padding:8px 16px;font-size:0.85rem">불러오기</button>
+        </div>
+        <div class="import-msg" id="importMsg"></div>
       </div>
 
       <!-- Upload zone -->
@@ -426,6 +449,8 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ── STATE ─────────────────────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
+let rosterCache = null;
 let students   = [];        // [{name, gender}]
 let gridRows   = 8;
 let gridCols   = 8;
@@ -525,9 +550,55 @@ function processExcelFile(file) {
 
 function showDirectInput() {
   document.getElementById('uploadZone').style.display = 'none';
+  document.getElementById('sheetPanel').style.display = 'none';
   document.getElementById('tableWrap').style.display = '';
   if (document.getElementById('stuRows').children.length === 0) addRow();
   updateStep1Footer();
+}
+
+function showSheetImport() {
+  document.getElementById('uploadZone').style.display = 'none';
+  document.getElementById('sheetPanel').style.display = '';
+}
+
+// ── 학년·반 불러오기 ────────────────────────────────────────
+async function getRoster() {
+  if (rosterCache) return rosterCache;
+  const url = `${APPS_SCRIPT_URL}?action=getStudentRoster`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    rosterCache = data; return data;
+  } catch (e) {
+    return new Promise((resolve, reject) => {
+      const cb = '__seat_gr_' + Date.now();
+      const to = setTimeout(() => { delete window[cb]; reject(new Error('응답 시간 초과')); }, 8000);
+      window[cb] = d => { clearTimeout(to); delete window[cb]; if (d.error) reject(new Error(d.error)); else { rosterCache = d; resolve(d); } };
+      const sc = document.createElement('script');
+      sc.src = url + '&callback=' + cb;
+      sc.onerror = () => { clearTimeout(to); delete window[cb]; reject(new Error('네트워크 오류')); };
+      document.body.appendChild(sc);
+    });
+  }
+}
+
+async function importFromSheet() {
+  const grade = document.getElementById('importGrade').value;
+  const ban = document.getElementById('importBan').value;
+  const msg = document.getElementById('importMsg');
+  const btn = document.getElementById('btnImport');
+  btn.disabled = true; msg.textContent = '불러오는 중...';
+  try {
+    const data = await getRoster();
+    const matched = (data.students || []).filter(s => String(s.grade) === grade && String(s.ban) === ban);
+    if (!matched.length) { msg.textContent = `${grade}학년 ${ban}반 학생을 찾지 못했습니다.`; return; }
+    matched.sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
+    students = matched.map(s => ({ name: s.name, gender: s.gender || '미기재' }));
+    populateTable();
+    msg.textContent = `${grade}학년 ${ban}반 ${students.length}명 불러옴`;
+  } catch (err) { msg.textContent = '실패: ' + (err.message || String(err)); }
+  finally { btn.disabled = false; }
 }
 
 function populateTable() {
