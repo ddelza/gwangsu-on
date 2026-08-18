@@ -238,7 +238,10 @@ table.class-table tr:last-child td { border-bottom: none; }
     <div class="card">
       <div class="pending-head">
         <div class="roster-title" style="margin:0">반별 배정표</div>
-        <button class="refresh-btn" onclick="refreshDataClass()">↻ 새로고침</button>
+        <div style="display:flex;gap:8px">
+          <button class="refresh-btn" onclick="refreshDataClass()">↻ 새로고침</button>
+          <button class="save-btn" id="saveBtnTop" onclick="saveAll()" disabled>변경사항 저장</button>
+        </div>
       </div>
       <div class="section-hint">스프레드시트에서 배정하던 방식과 같습니다. 각 학생의 슬롯 칸에서 값을 바꾸면 아래 "저장 대기 중" 목록에 쌓이고, "변경사항 저장"을 눌러야 실제로 반영됩니다.</div>
       <div class="class-table-wrap" id="classTableWrap"><div class="empty-hint">학년과 반을 선택하세요.</div></div>
@@ -397,11 +400,11 @@ function renderClassTable() {
   if (!rows.length) { wrap.innerHTML = '<div class="empty-hint">해당 반에 학생이 없습니다.</div>'; return; }
   if (!slotList.length) { wrap.innerHTML = '<div class="empty-hint">이 학년·학기에는 배정 항목이 아직 없습니다 (관리자 페이지에서 먼저 등록해주세요).</div>'; return; }
 
-  let html = '<table class="class-table"><thead><tr><th>번호</th><th>학번</th><th>성명</th><th>성별</th><th>구글계정</th>';
+  let html = '<table class="class-table"><thead><tr><th>번호</th><th>학번</th><th>성명</th><th>성별</th>';
   slotList.forEach(sl => { html += `<th>${esc(sl.label)}</th>`; });
   html += '</tr></thead><tbody>';
   rows.forEach(s => {
-    html += `<tr><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(s.gender || '-')}</td><td>${esc(s.email || '-')}</td>`;
+    html += `<tr><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(s.gender || '-')}</td>`;
     slotList.forEach(sl => {
       const key = pendingKey(s.id, sl.id);
       const pendingVal = pending[key];
@@ -537,6 +540,7 @@ function renderPending() {
   const keys = Object.keys(pending);
   document.getElementById('pendingTitle').textContent = `저장 대기 중 (${keys.length}건)`;
   document.getElementById('saveBtn').disabled = !keys.length;
+  document.getElementById('saveBtnTop').disabled = !keys.length;
   const listEl = document.getElementById('pendingList');
   listEl.innerHTML = keys.length
     ? keys.map(k => {
