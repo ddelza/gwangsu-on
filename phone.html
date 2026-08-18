@@ -85,6 +85,10 @@ body {
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
 .filter-wrap { max-width: 900px; margin: 0 auto; padding: 20px 16px 8px; }
+.current-sem-banner {
+  display: flex; align-items: center; gap: 8px; background: var(--accent-soft); color: var(--accent);
+  border-radius: 10px; padding: 8px 14px; margin-bottom: 14px; font-size: 0.85rem; font-weight: 600;
+}
 .search-box { width: 100%; padding: 14px 16px; font-size: 1.05rem; border: 2px solid var(--border); border-radius: 12px; outline: none; margin-bottom: 12px; }
 .search-box:focus { border-color: var(--accent); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
@@ -95,25 +99,11 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.82rem; color: #444; line-height: 1.7;
 }
 .howto-card b { color: var(--accent); }
-.edit-mode-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-.edit-mode-btn {
+.toolbar-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.admin-edit-link {
   padding: 8px 16px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff);
-  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none;
 }
-#editModeBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.edit-mode-save-btn {
-  padding: 7px 16px; border-radius: 999px; background: #1a7c4a; color: #fff;
-  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
-}
-.edit-mode-add-btn {
-  padding: 7px 16px; border-radius: 999px; background: #f0f2f6; color: var(--accent);
-  font-size: 0.85rem; cursor: pointer; border: none;
-}
-.edit-mode-cancel-btn {
-  padding: 7px 16px; border-radius: 999px; background: #f0f2f6; color: #555;
-  font-size: 0.85rem; cursor: pointer; border: none;
-}
-.edit-status-msg { font-size: 0.82rem; color: #1a7c4a; }
 .list-wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 40px; }
 .result-count { font-size: 0.82rem; color: var(--text-muted); margin: 4px 2px 10px; }
 .phone-grid {
@@ -130,29 +120,9 @@ body {
 .phone-card .nums { flex-shrink: 0; text-align: right; }
 .phone-card .ext { font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: 0.03em; white-space: nowrap; }
 .phone-card .direct { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
-.cat-관리자행정 { border-left-color: #6c93cf; }
-.cat-1학년 { border-left-color: #d7c36a; }
-.cat-2학년 { border-left-color: #7fb26b; }
-.cat-3학년 { border-left-color: #c98aa8; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
 .footer-note { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; font-size: 0.82rem; color: #666; text-align: center; }
 
-/* 수정모드 */
-.phone-edit-card {
-  background: var(--surface); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-}
-.phone-edit-card input, .phone-edit-card select {
-  padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem;
-}
-.phone-edit-card .ed-cat { width: 110px; }
-.phone-edit-card .ed-role { width: 130px; }
-.phone-edit-card .ed-name { width: 80px; }
-.phone-edit-card .ed-ext { width: 70px; }
-.phone-edit-card .ed-direct { width: 120px; }
-.ed-remove-btn {
-  margin-left: auto; background: none; border: none; color: #c0392b; cursor: pointer; font-size: 0.9rem;
-}
 @media (max-width: 700px) {
   .phone-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -172,6 +142,7 @@ body {
   <a href="tools.html">행정업무 간소화 도구</a>
   <a href="time_table.html">시간표</a>
   <a href="https://docs.google.com/spreadsheets/d/1Xl5z5sOtqcozlUhuai1Od26rPkPXsLZgUrrxEcIRTbI/edit#gid=0" target="_blank" rel="noopener">출입문 비번</a>
+  <a href="admin.html">관리자</a>
   <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
 </nav>
 
@@ -181,20 +152,15 @@ body {
 </div>
 
 <div class="filter-wrap">
+  <div class="current-sem-banner">🗓 <span id="currentSemLabel">불러오는 중...</span></div>
   <input id="searchBox" class="search-box" type="text" placeholder="이름, 담당, 내선번호로 검색">
   <div id="chips" class="chips"></div>
   <div class="howto-card">
     📞 <b>돌려주기</b> ["돌려주기"+내선번호+#] &nbsp;&nbsp; 🔁 <b>착신</b> ["수신전환"+전화번호+"확인"] &nbsp;&nbsp; ⛔ <b>해지</b> ["수신전환"]
   </div>
 
-  <div class="edit-mode-card">
-    <button id="editModeToggleBtn" class="edit-mode-btn" onclick="enterEditMode()">✏️ 수정모드</button>
-    <div id="editModeBar" style="display:none">
-      <button class="edit-mode-add-btn" onclick="addEditRow()">➕ 행 추가</button>
-      <button class="edit-mode-save-btn" onclick="savePhoneEdits()">✅ 수정 완료</button>
-      <button class="edit-mode-cancel-btn" onclick="exitEditMode()">취소</button>
-    </div>
-    <span id="editStatusMsg" class="edit-status-msg"></span>
+  <div class="toolbar-card">
+    <a class="admin-edit-link" href="admin.html">✏️ 관리자 페이지에서 수정</a>
   </div>
 </div>
 
@@ -206,36 +172,39 @@ body {
   📞 직통번호: 인터폰에 표시된 번호 그대로 사용 &nbsp;&nbsp; 📠 팩스번호: 031-768-3104
 </div>
 
-<script>
-function callApi(action, params, opts) {
-  params = params || {}; opts = opts || {};
-  return new Promise((resolve, reject) => {
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
-      const mapper = opts.actionMap && opts.actionMap[action];
-      if (mapper) { mapper(runner, params); }
-      else { reject(new Error(`callApi: action "${action}"에 대한 actionMap 항목이 없습니다.`)); }
-      return;
-    }
-    const url = new URL(opts.scriptUrl);
-    url.searchParams.set('action', action);
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    fetch(url.toString()).then(r => r.json())
-      .then(data => { if (data && data.error) reject(new Error(data.error)); else resolve(data); })
-      .catch(reject);
-  });
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// gwangsu-on Firebase 프로젝트 — 교사정보(내선번호 포함)는 admin.html이 유일한 쓰기 창구다.
+// 이 페이지는 읽기 전용으로 /config/current가 가리키는 연도·학기의 데이터를 불러온다.
+//   /years/{year}/teachers/{id} = { name, subjectBySem, deptsBySem: {[sem]:{[deptId]:true}},
+//                                    homeroom: {grade, ban}, duty, isDeptHead, ext4, ext11, email }
+//   /years/{year}/departments/{sem}/{deptId} = { label, order }
+const firebaseConfig = {
+  apiKey: "AIzaSyB_D2Wi944YQL-1rCdgeNU-tD8lpMek_wM",
+  authDomain: "gwangsu-on.firebaseapp.com",
+  databaseURL: "https://gwangsu-on-default-rtdb.firebaseio.com",
+  projectId: "gwangsu-on",
+  storageBucket: "gwangsu-on.firebasestorage.app",
+  messagingSenderId: "684885628658",
+  appId: "1:684885628658:web:b471726b604754a82b626b",
+  measurementId: "G-6X5DH4EP5N"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 function detectInAppBrowser() {
   const ua = navigator.userAgent || '';
   return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua);
 }
-function openInExternalBrowser() {
+window.openInExternalBrowser = function() {
   const url = window.location.href;
   const ua = navigator.userAgent || '';
   if (/KAKAOTALK/i.test(ua)) window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
   else if (/NAVER/i.test(ua)) window.location.href = 'naversearchapp://inappbrowser?app=naversearchapp&url=' + encodeURIComponent(url);
   else window.location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
-}
+};
 function showExternalBrowserBannerIfNeeded(bannerId) {
   if (detectInAppBrowser()) { const el = document.getElementById(bannerId); if (el) el.style.display = 'block'; }
 }
@@ -243,7 +212,6 @@ function esc(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-function escAttr(str) { return esc(str).replace(/"/g, '&quot;'); }
 function fuzzySearch(items, query, fields) {
   const q = String(query || '').trim().toLowerCase();
   if (!q) return items;
@@ -253,65 +221,72 @@ function fuzzySearch(items, query, fields) {
     return v.includes(q) || v.replace(/\s/g, '').includes(qNorm);
   }));
 }
-
 function fmtExt(ext) {
   const s = String(ext || '').trim();
   if (!s) return s;
   return /^\d+$/.test(s) && s.length < 4 ? s.padStart(4, '0') : s;
 }
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
-const ACTION_MAP = { getPhoneDirectory: (runner) => runner.getPhoneDirectory() };
-// 새로 추가되는 분류는 자유 텍스트라 미리 정해둔 예쁜 표시명이 없을 수 있다 — 기존 4개만 표시명을
-// 따로 두고, 그 외(새로 추가한 분류)는 입력한 이름을 그대로 보여준다.
-const CAT_LABEL_OVERRIDES = { '관리자행정': '관리자/행정' };
-function catLabel(cat) { return CAT_LABEL_OVERRIDES[cat] || cat; }
+// 부서 이름은 admin.html에서 자유롭게 추가하므로 미리 정해둔 CSS 클래스로 색을 매길 수 없다 —
+// 카테고리 등장 순서에 따라 팔레트를 순환 적용한다.
+const CAT_COLORS = ['#6c93cf','#d7c36a','#7fb26b','#c98aa8','#9b7fd4','#e0895f','#5fb3b3','#c97f7f','#8fa8d6','#b8a15a'];
 
+let currentYear = null;
+let currentSem = 1;
 let directory = [];
 let categories = [];
 let activeCat = '';
-let editMode = false;
 
-function loadDirectory() {
-  return callApi('getPhoneDirectory', {}, { scriptUrl: APPS_SCRIPT_URL, actionMap: ACTION_MAP })
-    .then(data => {
-      directory = (data.entries || []).map(d => ({ ...d, _searchText: [d.role, d.name, d.ext, d.direct].join(' ') }));
-      categories = data.categories || [];
-      renderAll();
-    });
+async function loadCurrentConfig() {
+  const snap = await get(ref(db, 'config/current'));
+  if (snap.exists()) return snap.val();
+  return { year: new Date().getFullYear(), sem: 1 };
 }
 
-async function addCategory() {
-  const name = (prompt('추가할 분류 이름을 입력하세요 (예: 행정실, 4학년부)') || '').trim();
-  if (!name) return;
-  if (categories.includes(name)) { alert('이미 있는 분류입니다.'); return; }
-  try {
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'addPhoneCategory', name }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    categories = data.categories || categories;
-    renderAll();
-  } catch (err) {
-    alert('분류 추가 실패: ' + (err.message || String(err)));
-  }
+async function loadData(year, sem) {
+  const [teachersSnap, deptsSnap] = await Promise.all([
+    get(ref(db, `years/${year}/teachers`)),
+    get(ref(db, `years/${year}/departments/${sem}`)),
+  ]);
+  const teachers = teachersSnap.exists() ? teachersSnap.val() : {};
+  const deptList = deptsSnap.exists()
+    ? Object.entries(deptsSnap.val()).map(([id, v]) => ({ id, label: v.label, order: v.order || 0 })).sort((a, b) => a.order - b.order)
+    : [];
+  const deptLabelById = {};
+  deptList.forEach(d => { deptLabelById[d.id] = d.label; });
+
+  directory = Object.entries(teachers).map(([id, t]) => {
+    const deptIds = Object.keys((t.deptsBySem || {})[String(sem)] || {});
+    const deptLabels = deptIds.map(did => deptLabelById[did]).filter(Boolean);
+    const homeroomLabel = (t.homeroom && t.homeroom.grade && t.homeroom.ban) ? `${t.homeroom.grade}-${t.homeroom.ban} 담임` : '';
+    const role = (t.duty && t.duty.trim()) || deptLabels.join(', ') || homeroomLabel || '';
+    const category = deptLabels[0] || (t.homeroom && t.homeroom.grade ? `${t.homeroom.grade}학년` : '기타');
+    const ext4 = fmtExt(t.ext4);
+    const direct = t.ext11 || '';
+    return { id, name: t.name || '', role, category, ext4, direct, _searchText: [t.name, role, ext4, direct].join(' ') };
+  }).filter(d => d.name);
+
+  directory.sort((a, b) => (a.ext4 || '9999').localeCompare(b.ext4 || '9999', undefined, { numeric: true }));
+
+  const deptOrder = deptList.map(d => d.label);
+  const preferred = [...deptOrder, '1학년', '2학년', '3학년'];
+  const present = new Set(directory.map(d => d.category));
+  const ordered = preferred.filter(c => present.has(c));
+  [...present].sort((a, b) => a.localeCompare(b, 'ko')).forEach(c => { if (!ordered.includes(c)) ordered.push(c); });
+  categories = ordered;
+}
+
+function catColor(cat) {
+  const idx = categories.indexOf(cat);
+  return CAT_COLORS[idx >= 0 ? idx % CAT_COLORS.length : 0];
 }
 
 function renderAll() {
   renderChips();
-  if (editMode) renderEditList(); else renderResults();
-}
-
-function allCategoryKeys() {
-  const fromEntries = directory.map(d => d.cat).filter(Boolean);
-  return [...new Set([...categories, ...fromEntries])];
+  renderResults();
 }
 
 function renderChips() {
-  const cats = allCategoryKeys();
   const wrap = document.getElementById('chips');
   wrap.innerHTML = '';
   const allChip = document.createElement('button');
@@ -319,23 +294,18 @@ function renderChips() {
   allChip.textContent = '전체';
   allChip.onclick = () => { activeCat = ''; renderAll(); };
   wrap.appendChild(allChip);
-  cats.forEach(c => {
+  categories.forEach(c => {
     const chip = document.createElement('button');
     chip.className = 'chip' + (activeCat === c ? ' active' : '');
-    chip.textContent = catLabel(c);
+    chip.textContent = c;
     chip.onclick = () => { activeCat = c; renderAll(); };
     wrap.appendChild(chip);
   });
-  const addChip = document.createElement('button');
-  addChip.className = 'chip';
-  addChip.textContent = '+ 분류 추가';
-  addChip.onclick = addCategory;
-  wrap.appendChild(addChip);
 }
 
 function renderResults() {
   const q = document.getElementById('searchBox').value;
-  let results = activeCat ? directory.filter(d => d.cat === activeCat) : directory;
+  let results = activeCat ? directory.filter(d => d.category === activeCat) : directory;
   results = fuzzySearch(results, q, ['_searchText']);
 
   const wrap = document.getElementById('listWrap');
@@ -347,13 +317,13 @@ function renderResults() {
   let html = `<div class="result-count">${results.length}건</div>`;
   html += '<div class="phone-grid">';
   html += results.map(d => `
-    <div class="phone-card cat-${esc(d.cat)}">
+    <div class="phone-card" style="border-left-color:${catColor(d.category)}">
       <div class="info">
         <div class="role">${esc(d.role)}</div>
         <div class="name">${esc(d.name)}</div>
       </div>
       <div class="nums">
-        <div class="ext">☎ ${esc(fmtExt(d.ext))}</div>
+        <div class="ext">☎ ${esc(d.ext4)}</div>
         <div class="direct">${esc(d.direct)}</div>
       </div>
     </div>
@@ -362,76 +332,13 @@ function renderResults() {
   wrap.innerHTML = html;
 }
 
-// ── 수정모드 ──────────────────────────────
-function renderEditList() {
-  const wrap = document.getElementById('listWrap');
-  wrap.innerHTML = directory.map((d, i) => editRowHtml(d, i)).join('');
-}
-
-function editRowHtml(d, i) {
-  const cats = allCategoryKeys();
-  return `<div class="phone-edit-card" data-idx="${i}">
-    <select class="ed-cat">
-      ${cats.map(c => `<option value="${esc(c)}"${c === d.cat ? ' selected' : ''}>${esc(catLabel(c))}</option>`).join('')}
-    </select>
-    <input class="ed-role" value="${escAttr(d.role)}" placeholder="담당">
-    <input class="ed-name" value="${escAttr(d.name)}" placeholder="이름">
-    <input class="ed-ext" value="${escAttr(d.ext)}" placeholder="내선번호">
-    <input class="ed-direct" value="${escAttr(d.direct)}" placeholder="직통번호">
-    <button class="ed-remove-btn" onclick="removeEditRow(${i})">✕ 삭제</button>
-  </div>`;
-}
-
-function addEditRow() {
-  directory.push({ cat: allCategoryKeys()[0] || '', role: '', name: '', ext: '', direct: '' });
-  renderEditList();
-}
-
-function removeEditRow(i) {
-  directory.splice(i, 1);
-  renderEditList();
-}
-
-function enterEditMode() {
-  editMode = true;
-  document.getElementById('editModeToggleBtn').style.display = 'none';
-  document.getElementById('editModeBar').style.display = 'flex';
-  document.getElementById('editStatusMsg').textContent = '';
-  renderEditList();
-}
-
-function exitEditMode(skipReload) {
-  editMode = false;
-  document.getElementById('editModeToggleBtn').style.display = 'inline-block';
-  document.getElementById('editModeBar').style.display = 'none';
-  document.getElementById('editStatusMsg').textContent = '';
-  if (!skipReload) loadDirectory(); else renderAll();
-}
-
-async function savePhoneEdits() {
-  const entries = [...document.querySelectorAll('.phone-edit-card')].map(card => ({
-    cat: card.querySelector('.ed-cat').value,
-    role: card.querySelector('.ed-role').value.trim(),
-    name: card.querySelector('.ed-name').value.trim(),
-    ext: card.querySelector('.ed-ext').value.trim(),
-    direct: card.querySelector('.ed-direct').value.trim(),
-  }));
-
-  const statusEl = document.getElementById('editStatusMsg');
-  statusEl.textContent = '저장 중...';
-  try {
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'savePhoneDirectory', entries }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    statusEl.textContent = `${data.count}건 저장되었습니다.`;
-    exitEditMode(false);
-  } catch (err) {
-    statusEl.textContent = '저장 실패: ' + (err.message || String(err));
-  }
+async function reloadDirectory() {
+  const cfg = await loadCurrentConfig();
+  currentYear = cfg.year;
+  currentSem = cfg.sem;
+  document.getElementById('currentSemLabel').textContent = `${currentYear}학년도 ${currentSem}학기 기준`;
+  await loadData(currentYear, currentSem);
+  renderAll();
 }
 
 let debounceTimer = null;
@@ -440,13 +347,14 @@ document.getElementById('searchBox').addEventListener('input', () => {
   debounceTimer = setTimeout(renderResults, 150);
 });
 
-window.onload = function() {
+window.addEventListener('DOMContentLoaded', function() {
   showExternalBrowserBannerIfNeeded('inappBanner');
-  loadDirectory().catch(err => {
+  reloadDirectory().catch(err => {
+    document.getElementById('currentSemLabel').textContent = '불러오기 실패';
     document.getElementById('listWrap').innerHTML =
       `<div class="empty-state">불러오기 실패: ${esc(err.message || String(err))}</div>`;
   });
-};
+});
 </script>
 </body>
 </html>
