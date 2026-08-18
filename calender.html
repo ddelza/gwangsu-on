@@ -825,6 +825,30 @@ function hideTooltip() {
   document.getElementById('hoverTooltip').style.display = 'none';
 }
 
+// admin.html에서 설정한 "현재 학기"를 초기 화면 기준으로 사용한다 (학사일정 데이터 자체는
+// 계속 구글시트에서 읽지만, 처음 열었을 때 어느 학기 탭을 보여줄지만 여기서 맞춘다).
+async function getConfiguredSem() {
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getDatabase, ref, get } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+    const firebaseConfig = {
+      apiKey: "AIzaSyB_D2Wi944YQL-1rCdgeNU-tD8lpMek_wM",
+      authDomain: "gwangsu-on.firebaseapp.com",
+      databaseURL: "https://gwangsu-on-default-rtdb.firebaseio.com",
+      projectId: "gwangsu-on",
+      storageBucket: "gwangsu-on.firebasestorage.app",
+      messagingSenderId: "684885628658",
+      appId: "1:684885628658:web:b471726b604754a82b626b",
+      measurementId: "G-6X5DH4EP5N"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const snap = await get(ref(db, 'config/current'));
+    if (snap.exists() && (snap.val().sem === 1 || snap.val().sem === 2)) return snap.val().sem;
+  } catch (e) {}
+  return 1;
+}
+
 let currentSem = 1;
 function switchSem(sem) {
   currentSem = sem;
@@ -882,7 +906,7 @@ window.onload = function() {
     if (e.target.id === 'editModal') closeEditModal();
   });
 
-  loadAndRender(1);
+  getConfiguredSem().then(sem => switchSem(sem));
 };
 </script>
 </body>
