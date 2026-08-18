@@ -213,9 +213,9 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
 .seat-cell.occupied { background:var(--accent-soft); border:2px solid var(--accent); color:var(--text); }
 .seat-cell.empty-desk { background:var(--bg); border:2px dashed var(--border); color:var(--text-muted); font-weight:400; font-size:0.76rem; }
 .seat-cell.no-desk { background:transparent; border:none; }
-.gender-mark { position:absolute; width:9px; height:9px; }
-.gender-mark.male { top:4px; left:4px; background:#3b82f6; border-radius:2px; }
-.gender-mark.female { top:4px; right:4px; background:#f472b6; border-radius:50%; }
+.gender-mark { position:absolute; top:4px; left:4px; width:9px; height:9px; }
+.gender-mark.male { background:#3b82f6; border-radius:2px; }
+.gender-mark.female { background:#f472b6; border-radius:50%; }
 
 /* 교사/학생 보기 모드 — 칠판 위치를 위아래로 뒤집기 위해 flex 순서를 이용한다 */
 #seatingGridWrap { display:inline-flex; flex-direction:column; }
@@ -1234,9 +1234,9 @@ table{border-collapse:collapse;margin:0 auto}
 td{width:64px;height:52px;border:1px solid #999;text-align:center;vertical-align:middle;font-size:10pt;font-weight:600;position:relative;padding:4px}
 td.p-empty{border:none}
 td.p-vacant{color:#999;font-weight:400;font-size:8pt}
-.p-mark{position:absolute;width:8px;height:8px}
-.p-male{top:3px;left:3px;background:#3b82f6;border-radius:2px}
-.p-female{top:3px;right:3px;background:#f472b6;border-radius:50%}
+.p-mark{position:absolute;top:3px;left:3px;width:8px;height:8px}
+.p-male{background:#3b82f6;border-radius:2px}
+.p-female{background:#f472b6;border-radius:50%}
 @media print { @page { size: A4 landscape; margin: 10mm; } }
 </style>
 </head><body>
