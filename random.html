@@ -262,7 +262,17 @@ body { font-family:var(--font-body); background:var(--bg); color:var(--text); }
 </div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqEOYSrqY8FxiNc88lCml7Ym1w1imonHjgO4qqo0fzIB_8rdXs-PVoIMdBQA8t8L75wg/exec';
+// 학생 명단은 admin.html이 관리하는 Firebase(gwangsu-on)를 /config/current의 연도 기준으로 읽는다.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyB_D2Wi944YQL-1rCdgeNU-tD8lpMek_wM",
+  authDomain: "gwangsu-on.firebaseapp.com",
+  databaseURL: "https://gwangsu-on-default-rtdb.firebaseio.com",
+  projectId: "gwangsu-on",
+  storageBucket: "gwangsu-on.firebasestorage.app",
+  messagingSenderId: "684885628658",
+  appId: "1:684885628658:web:b471726b604754a82b626b",
+  measurementId: "G-6X5DH4EP5N"
+};
 const ITEM_H = 64;
 
 let students = [];
@@ -295,26 +305,21 @@ function removeName(name) {
   render();
 }
 
-// ── 시트에서 불러오기
+// ── Firebase(admin.html)에서 불러오기
 async function getRoster() {
   if (rosterCache) return rosterCache;
-  const url = `${APPS_SCRIPT_URL}?action=getStudentRoster`;
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    rosterCache = data; return data;
-  } catch(e) {
-    return new Promise((resolve, reject) => {
-      const cb = '__rc_' + Date.now();
-      const to = setTimeout(() => { delete window[cb]; reject(new Error('응답 시간 초과')); }, 8000);
-      window[cb] = d => { clearTimeout(to); delete window[cb]; if(d.error) reject(new Error(d.error)); else { rosterCache=d; resolve(d); } };
-      const sc = document.createElement('script');
-      sc.src = url + '&callback=' + cb;
-      sc.onerror = () => { clearTimeout(to); delete window[cb]; reject(new Error('네트워크 오류')); };
-      document.body.appendChild(sc);
-    });
-  }
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  const { getDatabase, ref, get } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db = getDatabase(app);
+  const cfgSnap = await get(ref(db, 'config/current'));
+  const cfg = cfgSnap.exists() ? cfgSnap.val() : { year: new Date().getFullYear(), sem: 1 };
+  const studentsSnap = await get(ref(db, `years/${cfg.year}/students`));
+  const students = studentsSnap.exists()
+    ? Object.values(studentsSnap.val()).map(s => ({ grade: s.grade, ban: s.ban, num: s.num, name: s.name, gender: s.gender || '' }))
+    : [];
+  rosterCache = { students };
+  return rosterCache;
 }
 async function importFromSheet() {
   const grade = document.getElementById('impGrade').value;
