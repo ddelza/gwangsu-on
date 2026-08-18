@@ -242,6 +242,16 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
 .constraint-panel[open] > summary::after { transform:rotate(90deg); }
 .cpanel-body { padding:0 16px 16px; border-top:1px solid var(--border); }
 .cpanel-badge { background:var(--accent); color:var(--on-accent,#fff); border-radius:999px; padding:2px 8px; font-size:0.75rem; font-weight:700; }
+.cpanel-hide-btn {
+  margin-left:auto; padding:2px 8px; border:1px solid var(--border); border-radius:999px;
+  background:var(--surface); color:var(--text-muted); font-size:0.72rem; cursor:pointer;
+}
+.cpanel-hide-btn:hover { border-color:var(--accent); color:var(--accent); }
+.cpanel-mini-btn {
+  width:22px; height:14px; padding:0; margin-bottom:16px; border:1px solid var(--border); border-radius:4px;
+  background:var(--surface); color:var(--text-muted); font-size:0.6rem; line-height:1; cursor:pointer;
+}
+.cpanel-mini-btn:hover { border-color:var(--accent); color:var(--accent); }
 .copt-details { border-top:1px solid var(--border); }
 .copt-details:first-of-type { border-top:none; }
 .copt-details > summary { padding:10px 2px; cursor:pointer; font-size:0.9rem; font-weight:600; list-style:none; display:flex; align-items:center; gap:6px; user-select:none; }
@@ -391,8 +401,11 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
     <section id="step3" class="step-section">
       <div class="step-title">자리 랜덤배치</div>
 
-      <details class="constraint-panel" id="cpanel">
-        <summary>⚙️ 배치 옵션 설정 <span class="cpanel-badge" id="cpBadge" style="display:none"></span></summary>
+      <button class="cpanel-mini-btn" id="cpanelShowBtn" style="display:none" onclick="showCpanel()" title="배치 옵션 설정 펼치기">▽</button>
+      <details class="constraint-panel" id="cpanel" ontoggle="onCpanelToggle()">
+        <summary>⚙️ 배치 옵션 설정 <span class="cpanel-badge" id="cpBadge" style="display:none"></span>
+          <button type="button" class="cpanel-hide-btn" id="cpanelHideBtn" style="display:none" onclick="onCpanelHideClick(event)" title="숨기기">✕ 숨기기</button>
+        </summary>
         <div class="cpanel-body">
 
           <details class="copt-details" id="fixDetails" ontoggle="updateBadge()">
@@ -622,7 +635,7 @@ async function importFromSheet() {
     const matched = (data.students || []).filter(s => String(s.grade) === grade && String(s.ban) === ban);
     if (!matched.length) { msg.textContent = `${grade}학년 ${ban}반 학생을 찾지 못했습니다.`; return; }
     matched.sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
-    students = matched.map(s => ({ name: s.name, gender: s.gender || '미기재' }));
+    students = matched.map(s => ({ name: s.name, gender: s.gender || '미기재', num: s.num || '' }));
     populateTable();
     msg.textContent = `${grade}학년 ${ban}반 ${students.length}명 불러옴`;
   } catch (err) { msg.textContent = '실패: ' + (err.message || String(err)); }
@@ -634,15 +647,17 @@ function populateTable() {
   document.getElementById('tableWrap').style.display = '';
   document.getElementById('stuRows').innerHTML = '';
   rowCounter = 0;
-  students.forEach(s => addRow(s.name, s.gender));
+  students.forEach(s => addRow(s.name, s.gender, s.num));
   syncStudents();
 }
 
-function addRow(name = '', gender = '남') {
+// attendNum: 학년·반 불러오기로 채워졌을 때만 있는 출석번호 — 자리표에 "이름(번호)"로 표시하는 데 쓴다.
+function addRow(name = '', gender = '남', attendNum = '') {
   const id = 'sr' + (rowCounter++);
   const tbody = document.getElementById('stuRows');
   const tr = document.createElement('tr');
   tr.id = id;
+  tr.dataset.num = attendNum || '';
   const num = tbody.children.length + 1;
   tr.innerHTML =
     `<td class="num-col">${num}</td>` +
@@ -674,7 +689,8 @@ function syncStudents() {
   document.querySelectorAll('#stuRows tr').forEach(tr => {
     const name   = (tr.querySelector('input')?.value || '').trim();
     const gender = tr.querySelector('select')?.value || '미기재';
-    if (name) students.push({ name, gender });
+    const num    = tr.dataset.num || '';
+    if (name) students.push({ name, gender, num });
   });
   try { localStorage.setItem('seat_students', JSON.stringify(students)); } catch(e) {}
   updateStep1Footer();
@@ -731,6 +747,7 @@ function initSelects() {
 }
 initSelects();
 initDesk();
+onCpanelToggle();
 
 function resizeGrid() {
   gridRows = +document.getElementById('rowSel').value;
@@ -901,6 +918,24 @@ function updateBadge() {
     .filter(id => document.getElementById(id)?.open).length;
   const el = document.getElementById('cpBadge');
   el.textContent = n + '개 활성'; el.style.display = n ? '' : 'none';
+}
+
+// ── 배치 옵션 설정 패널 숨기기 ──────────────────────────────
+// 접힌(닫힌) 상태에서만 "숨기기" 버튼이 나타나고, 누르면 패널 전체(요약줄 포함)가 사라지고
+// 아주 작은 역삼각형 버튼 하나만 남는다. 그 버튼을 누르면 다시 접힌 상태로 돌아온다.
+function onCpanelToggle() {
+  const cpanel = document.getElementById('cpanel');
+  document.getElementById('cpanelHideBtn').style.display = cpanel.open ? 'none' : '';
+}
+function onCpanelHideClick(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  document.getElementById('cpanel').style.display = 'none';
+  document.getElementById('cpanelShowBtn').style.display = '';
+}
+function showCpanel() {
+  document.getElementById('cpanel').style.display = '';
+  document.getElementById('cpanelShowBtn').style.display = 'none';
 }
 
 function makeStuSel(id) {
@@ -1136,13 +1171,19 @@ function genderMarkHtml(g) {
   return '';
 }
 
+// 학년·반 불러오기로 입력한 학생만 출석번호를 알 수 있다 — 있으면 "이름(번호)"로 표시한다.
+function formatStudentLabel(name) {
+  const s = students.find(st => st.name === name);
+  return (s && s.num) ? `${name}(${s.num})` : name;
+}
+
 function renderSeating(seatingMap, overflow) {
   lastSeatingMap = seatingMap;
   lastOverflow = overflow;
   renderSeatingScreen();
 
   const box=document.getElementById('overflowBox'), tags=document.getElementById('overflowTags');
-  if (overflow.length) { box.style.display=''; tags.innerHTML=overflow.map(n=>`<span class="overflow-tag">${esc(n)}</span>`).join(''); }
+  if (overflow.length) { box.style.display=''; tags.innerHTML=overflow.map(n=>`<span class="overflow-tag">${esc(formatStudentLabel(n))}</span>`).join(''); }
   else box.style.display='none';
   document.getElementById('seatingWrap').style.display='';
   document.getElementById('reshuffleBtn').style.display='';
@@ -1185,7 +1226,7 @@ function renderSeatingScreen() {
       else {
         const name = lastSeatingMap[`${r},${c}`];
         cell.className = name ? 'seat-cell occupied' : 'seat-cell empty-desk';
-        if (name) cell.innerHTML = genderMarkHtml(genderByName.get(name)) + `<span>${esc(name)}</span>`;
+        if (name) cell.innerHTML = genderMarkHtml(genderByName.get(name)) + `<span>${esc(formatStudentLabel(name))}</span>`;
         else cell.textContent = '빈자리';
       }
       grid.appendChild(cell);
@@ -1212,7 +1253,7 @@ function printSeating(view) {
       const g = genderByName.get(name);
       const markHtml = g === '남' ? '<span class="p-mark p-male"></span>'
                       : g === '여' ? '<span class="p-mark p-female"></span>' : '';
-      bodyHtml += `<td class="p-desk">${markHtml}<span class="p-name">${esc(name)}</span></td>`;
+      bodyHtml += `<td class="p-desk">${markHtml}<span class="p-name">${esc(formatStudentLabel(name))}</span></td>`;
     });
     bodyHtml += '</tr>';
   });
