@@ -96,6 +96,8 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
 .feedback-msg { font-size: 0.85rem; margin-top: 8px; min-height: 1.2em; }
 .feedback-msg.ok { color: #1a7c4a; }
 .feedback-msg.err { color: #c0392b; }
+.cap-info { font-size: 0.8rem; color: var(--accent); margin-top: 6px; font-weight: 600; }
+.cap-info.full { color: #c0392b; }
 .roster-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; }
 .roster-list { display: flex; flex-direction: column; gap: 6px; }
 .roster-item {
@@ -190,13 +192,20 @@ table.class-table tr:last-child td { border-bottom: none; }
   <div id="quickModeWrap">
     <div class="card">
       <h2>간편 배정</h2>
-      <div class="field-row">
-        <label>학년</label>
-        <select id="gradeSelect"><option value="">학년 선택</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+      <div class="field-row" style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label>학년</label>
+          <select id="gradeSelect"><option value="">학년 선택</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+        </div>
+        <div style="flex:1">
+          <label>반</label>
+          <select id="banSelect" disabled><option value="">학년을 먼저 선택하세요</option></select>
+        </div>
       </div>
       <div class="field-row">
         <label>활동명</label>
-        <select id="activitySelect" disabled><option value="">학년을 먼저 선택하세요</option></select>
+        <select id="activitySelect" disabled><option value="">반을 먼저 선택하세요</option></select>
+        <div class="cap-info" id="capInfoMsg" style="display:none"></div>
       </div>
       <div class="field-row" style="margin-bottom:4px">
         <label>학생 이름</label>
@@ -497,6 +506,7 @@ window.refreshDataClass = async function() {
 };
 
 function selectedGrade() { return document.getElementById('gradeSelect').value; }
+function selectedBan() { return document.getElementById('banSelect').value; }
 function selectedActivity() {
   const v = document.getElementById('activitySelect').value;
   if (!v) return null;
@@ -506,31 +516,64 @@ function selectedActivity() {
 
 window.onGradeChange = function() {
   const grade = selectedGrade();
-  const activitySelect = document.getElementById('activitySelect');
-  const nameInput = document.getElementById('nameInput');
-  const addBtn = document.getElementById('addBtn');
+  const banSelect = document.getElementById('banSelect');
   document.getElementById('feedbackMsg').textContent = '';
 
   if (!grade) {
-    activitySelect.innerHTML = '<option value="">학년을 먼저 선택하세요</option>';
-    activitySelect.disabled = true;
-    nameInput.disabled = true; addBtn.disabled = true;
-    renderRoster();
+    banSelect.innerHTML = '<option value="">학년을 먼저 선택하세요</option>';
+    banSelect.disabled = true;
+    resetActivitySelect('반을 먼저 선택하세요');
     return;
   }
+
+  const bans = [...new Set(students.filter(s => String(s.grade) === grade).map(s => String(s.ban)))]
+    .sort((a, b) => Number(a) - Number(b));
+  banSelect.innerHTML = bans.length
+    ? '<option value="">반 선택</option>' + bans.map(b => `<option value="${esc(b)}">${esc(b)}반</option>`).join('')
+    : '<option value="">반 없음</option>';
+  banSelect.disabled = !bans.length;
+  resetActivitySelect('반을 먼저 선택하세요');
+};
+
+function resetActivitySelect(msg) {
+  const activitySelect = document.getElementById('activitySelect');
+  const nameInput = document.getElementById('nameInput');
+  const addBtn = document.getElementById('addBtn');
+  activitySelect.innerHTML = `<option value="">${esc(msg)}</option>`;
+  activitySelect.disabled = true;
+  nameInput.disabled = true; addBtn.disabled = true;
+  document.getElementById('capInfoMsg').style.display = 'none';
+  renderRoster();
+}
+
+window.onBanChange = function() {
+  const grade = selectedGrade();
+  const ban = selectedBan();
+  const activitySelect = document.getElementById('activitySelect');
+  document.getElementById('feedbackMsg').textContent = '';
+
+  if (!grade || !ban) { resetActivitySelect('반을 먼저 선택하세요'); return; }
 
   const gradeSlots = slots[grade][currentConfigSem] || [];
   const options = [];
   gradeSlots.forEach(slot => {
-    (groupOptions[slot.id] || []).forEach(groupName => {
-      options.push({ value: `${slot.id}::${groupName}`, text: `${slot.label}: ${groupName}` });
+    const { list, capMap } = allowedOptionsForBan(slot.id, grade, ban);
+    list.forEach(groupName => {
+      let text = `${slot.label}: ${groupName}`;
+      if (capMap && capMap[groupName] !== undefined) {
+        const count = countAssignedInBan(slot.id, groupName, grade, ban, null);
+        text += ` (${count}/${capMap[groupName]})`;
+      }
+      options.push({ value: `${slot.id}::${groupName}`, text });
     });
   });
 
   if (!options.length) {
-    activitySelect.innerHTML = '<option value="">이 학년·학기에는 반/그룹 이름이 아직 없습니다 (관리자 페이지에서 먼저 등록해주세요)</option>';
+    activitySelect.innerHTML = '<option value="">이 반이 고를 수 있는 활동이 없습니다 (관리자 페이지에서 등록해주세요)</option>';
     activitySelect.disabled = true;
-    nameInput.disabled = true; addBtn.disabled = true;
+    document.getElementById('nameInput').disabled = true;
+    document.getElementById('addBtn').disabled = true;
+    document.getElementById('capInfoMsg').style.display = 'none';
     renderRoster();
     return;
   }
@@ -538,9 +581,31 @@ window.onGradeChange = function() {
   activitySelect.innerHTML = '<option value="">활동명 선택</option>' +
     options.map(o => `<option value="${o.value}">${esc(o.text)}</option>`).join('');
   activitySelect.disabled = false;
-  nameInput.disabled = true; addBtn.disabled = true;
+  document.getElementById('nameInput').disabled = true;
+  document.getElementById('addBtn').disabled = true;
+  document.getElementById('capInfoMsg').style.display = 'none';
   renderRoster();
 };
+
+function refreshCapInfo() {
+  const grade = selectedGrade();
+  const ban = selectedBan();
+  const activity = selectedActivity();
+  const capInfo = document.getElementById('capInfoMsg');
+  if (!activity) { capInfo.style.display = 'none'; return; }
+  const { capMap } = allowedOptionsForBan(activity.slotId, grade, ban);
+  if (capMap && capMap[activity.groupName] !== undefined) {
+    const max = capMap[activity.groupName];
+    const count = countAssignedInBan(activity.slotId, activity.groupName, grade, ban, null);
+    capInfo.textContent = `📐 ${grade}학년 ${ban}반 배정 인원: ${count} / ${max}명`;
+    capInfo.className = 'cap-info' + (count >= max ? ' full' : '');
+    capInfo.style.display = '';
+  } else {
+    capInfo.textContent = '📐 이 그룹은 인원 제한이 없습니다.';
+    capInfo.className = 'cap-info';
+    capInfo.style.display = '';
+  }
+}
 
 window.onActivityChange = function() {
   const activity = selectedActivity();
@@ -549,7 +614,12 @@ window.onActivityChange = function() {
   document.getElementById('feedbackMsg').textContent = '';
   nameInput.disabled = !activity;
   addBtn.disabled = !activity;
-  if (activity) { nameInput.value = ''; nameInput.focus(); }
+  refreshCapInfo();
+
+  if (activity) {
+    nameInput.value = '';
+    nameInput.focus();
+  }
   renderRoster();
 };
 
@@ -620,6 +690,7 @@ function stagePending(student, activity, action) {
   };
   renderPending();
   renderRoster();
+  refreshCapInfo();
 }
 
 window.stageRemoval = function(studentId) {
@@ -637,14 +708,15 @@ function showFeedback(msg, ok) {
 
 window.submitName = function() {
   const grade = selectedGrade();
+  const ban = selectedBan();
   const activity = selectedActivity();
   const nameInput = document.getElementById('nameInput');
   const name = nameInput.value.trim();
-  if (!grade || !activity || !name) return;
+  if (!grade || !ban || !activity || !name) return;
 
-  const candidates = students.filter(s => String(s.grade) === grade && s.name === name);
+  const candidates = students.filter(s => String(s.grade) === grade && String(s.ban) === ban && s.name === name);
   if (!candidates.length) {
-    showFeedback(`"${name}" 학생을 ${grade}학년에서 찾을 수 없습니다.`, false);
+    showFeedback(`"${name}" 학생을 ${grade}학년 ${ban}반에서 찾을 수 없습니다.`, false);
     return;
   }
   if (candidates.length === 1) {
@@ -771,11 +843,13 @@ window.refreshData = async function() {
   statusEl.className = 'feedback-msg';
   await loadAll(currentYear);
   renderRoster();
+  refreshCapInfo();
   statusEl.textContent = '새로고침 완료 (대기 중인 변경사항은 그대로 유지됩니다)';
   statusEl.className = 'feedback-msg ok';
 };
 
 document.getElementById('gradeSelect').addEventListener('change', onGradeChange);
+document.getElementById('banSelect').addEventListener('change', onBanChange);
 document.getElementById('activitySelect').addEventListener('change', onActivityChange);
 document.getElementById('classGradeSelect').addEventListener('change', onClassGradeChange);
 document.getElementById('classBanSelect').addEventListener('change', onClassBanChange);
