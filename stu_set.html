@@ -147,6 +147,22 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
   width: 100%; padding: 10px; border: none; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
   font-size: 0.88rem; font-weight: 600; cursor: pointer; margin-top: 4px;
 }
+
+.mode-toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+.mode-btn {
+  padding: 8px 16px; border: none; border-radius: 10px; background: var(--accent); color: var(--on-accent, #fff);
+  font-size: 0.85rem; font-weight: 700; cursor: pointer;
+}
+.class-table-wrap { overflow-x: auto; }
+table.class-table { border-collapse: collapse; width: 100%; font-size: 0.85rem; background: var(--surface); }
+table.class-table th, table.class-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; text-align: left; }
+table.class-table th { background: var(--accent); color: var(--on-accent, #fff); font-size: 0.78rem; }
+table.class-table tr:last-child td { border-bottom: none; }
+.class-sel {
+  padding: 5px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);
+  font-size: 0.82rem; max-width: 140px;
+}
+.class-sel.dirty { border-color: #1a7c4a; background: #eafaf1; }
 </style>
 </head>
 <body>
@@ -166,24 +182,67 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
 <div class="wrap">
   <div class="current-sem-banner">🗓 <span id="currentSemLabel">불러오는 중...</span></div>
 
-  <div class="card">
-    <h2>간편 배정</h2>
-    <div class="field-row">
-      <label>학년</label>
-      <select id="gradeSelect"><option value="">학년 선택</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+  <div class="mode-toolbar">
+    <button class="mode-btn" id="modeToggleBtn" onclick="toggleMode()">📊 반별 배정하기</button>
+  </div>
+
+  <!-- 간편 배정 모드 -->
+  <div id="quickModeWrap">
+    <div class="card">
+      <h2>간편 배정</h2>
+      <div class="field-row">
+        <label>학년</label>
+        <select id="gradeSelect"><option value="">학년 선택</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+      </div>
+      <div class="field-row">
+        <label>활동명</label>
+        <select id="activitySelect" disabled><option value="">학년을 먼저 선택하세요</option></select>
+      </div>
+      <div class="field-row" style="margin-bottom:4px">
+        <label>학생 이름</label>
+        <div class="name-input-row">
+          <input type="text" id="nameInput" placeholder="이름 입력 후 Enter" disabled>
+          <button class="add-btn" id="addBtn" disabled onclick="submitName()">추가</button>
+        </div>
+      </div>
+      <div class="feedback-msg" id="feedbackMsg"></div>
     </div>
-    <div class="field-row">
-      <label>활동명</label>
-      <select id="activitySelect" disabled><option value="">학년을 먼저 선택하세요</option></select>
+
+    <div class="card">
+      <div class="pending-head">
+        <div class="roster-title" id="rosterTitle" style="margin:0">활동명을 선택하면 배정된 학생 목록이 여기 보입니다.</div>
+        <button class="refresh-btn" onclick="refreshData()">↻ 새로고침</button>
+      </div>
+      <div class="roster-list" id="rosterList"></div>
     </div>
-    <div class="field-row" style="margin-bottom:4px">
-      <label>학생 이름</label>
-      <div class="name-input-row">
-        <input type="text" id="nameInput" placeholder="이름 입력 후 Enter" disabled>
-        <button class="add-btn" id="addBtn" disabled onclick="submitName()">추가</button>
+  </div>
+
+  <!-- 반별 배정 모드 -->
+  <div id="classModeWrap" style="display:none">
+    <div class="card">
+      <h2>반별 배정</h2>
+      <div class="field-row" style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label>학년</label>
+          <select id="classGradeSelect">
+            <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label>반</label>
+          <select id="classBanSelect"></select>
+        </div>
       </div>
     </div>
-    <div class="feedback-msg" id="feedbackMsg"></div>
+
+    <div class="card">
+      <div class="pending-head">
+        <div class="roster-title" style="margin:0">반별 배정표</div>
+        <button class="refresh-btn" onclick="refreshDataClass()">↻ 새로고침</button>
+      </div>
+      <div class="section-hint">스프레드시트에서 배정하던 방식과 같습니다. 각 학생의 슬롯 칸에서 값을 바꾸면 아래 "저장 대기 중" 목록에 쌓이고, "변경사항 저장"을 눌러야 실제로 반영됩니다.</div>
+      <div class="class-table-wrap" id="classTableWrap"><div class="empty-hint">학년과 반을 선택하세요.</div></div>
+    </div>
   </div>
 
   <div class="card">
@@ -191,17 +250,9 @@ body { margin: 0; font-family: var(--font-body, -apple-system, "Apple SD Gothic 
       <div class="roster-title" id="pendingTitle" style="margin:0">저장 대기 중 (0건)</div>
       <button class="save-btn" id="saveBtn" onclick="saveAll()" disabled>변경사항 저장</button>
     </div>
-    <div class="section-hint">여러 선생님이 동시에 쓸 수 있어서, 이름을 입력해도 바로 저장되지 않고 여기 대기 목록에 먼저 쌓입니다. 확인 후 "변경사항 저장"을 눌러야 실제로 반영됩니다.</div>
+    <div class="section-hint">여러 선생님이 동시에 쓸 수 있어서, 값을 바꿔도 바로 저장되지 않고 여기 대기 목록에 먼저 쌓입니다. 확인 후 "변경사항 저장"을 눌러야 실제로 반영됩니다.</div>
     <div class="roster-list" id="pendingList"></div>
     <div class="feedback-msg" id="saveStatusMsg"></div>
-  </div>
-
-  <div class="card">
-    <div class="pending-head">
-      <div class="roster-title" id="rosterTitle" style="margin:0">활동명을 선택하면 배정된 학생 목록이 여기 보입니다.</div>
-      <button class="refresh-btn" onclick="refreshData()">↻ 새로고침</button>
-    </div>
-    <div class="roster-list" id="rosterList"></div>
   </div>
 </div>
 
@@ -283,7 +334,7 @@ async function loadAll(year) {
     get(ref(db, `years/${year}/groupOptions`)),
   ]);
   students = studentsSnap.exists()
-    ? Object.entries(studentsSnap.val()).map(([id, s]) => ({ id, grade: s.grade, ban: s.ban, num: s.num, name: s.name, assignments: s.assignments || {} }))
+    ? Object.entries(studentsSnap.val()).map(([id, s]) => ({ id, grade: s.grade, ban: s.ban, num: s.num, name: s.name, gender: s.gender || '', email: s.email || '', assignments: s.assignments || {} }))
     : [];
   const rawSlots = slotsSnap.exists() ? slotsSnap.val() : {};
   slots = {};
@@ -304,7 +355,93 @@ async function init() {
   document.getElementById('currentSemLabel').textContent = `${currentYear}학년도 ${currentConfigSem}학기 기준으로 배정합니다`;
   await loadAll(currentYear);
   renderPending();
+  onClassGradeChange();
 }
+
+// ── 모드 전환 (간편 배정 ↔ 반별 배정) ──────────────────────────
+let currentMode = 'quick';
+window.toggleMode = function() {
+  switchMode(currentMode === 'quick' ? 'class' : 'quick');
+};
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('quickModeWrap').style.display = mode === 'quick' ? '' : 'none';
+  document.getElementById('classModeWrap').style.display = mode === 'class' ? '' : 'none';
+  document.getElementById('modeToggleBtn').textContent = mode === 'quick' ? '📊 반별 배정하기' : '✏️ 간편 배정하기';
+  if (mode === 'class') renderClassTable();
+}
+
+// ── 반별 배정 (스프레드시트 스타일) ──────────────────────────
+window.onClassGradeChange = function() {
+  const grade = document.getElementById('classGradeSelect').value;
+  const banSelect = document.getElementById('classBanSelect');
+  const bans = [...new Set(students.filter(s => String(s.grade) === grade).map(s => String(s.ban)))]
+    .sort((a, b) => Number(a) - Number(b));
+  banSelect.innerHTML = bans.length
+    ? bans.map(b => `<option value="${esc(b)}">${esc(b)}반</option>`).join('')
+    : '<option value="">반 없음</option>';
+  renderClassTable();
+};
+window.onClassBanChange = function() { renderClassTable(); };
+
+function renderClassTable() {
+  const wrap = document.getElementById('classTableWrap');
+  const grade = document.getElementById('classGradeSelect').value;
+  const ban = document.getElementById('classBanSelect').value;
+  if (!grade || !ban) { wrap.innerHTML = '<div class="empty-hint">학년과 반을 선택하세요.</div>'; return; }
+
+  const rows = students.filter(s => String(s.grade) === grade && String(s.ban) === ban)
+    .sort((a, b) => Number(a.num) - Number(b.num));
+  const slotList = (slots[grade] && slots[grade][currentConfigSem]) || [];
+
+  if (!rows.length) { wrap.innerHTML = '<div class="empty-hint">해당 반에 학생이 없습니다.</div>'; return; }
+  if (!slotList.length) { wrap.innerHTML = '<div class="empty-hint">이 학년·학기에는 배정 항목이 아직 없습니다 (관리자 페이지에서 먼저 등록해주세요).</div>'; return; }
+
+  let html = '<table class="class-table"><thead><tr><th>번호</th><th>학번</th><th>성명</th><th>성별</th><th>구글계정</th>';
+  slotList.forEach(sl => { html += `<th>${esc(sl.label)}</th>`; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(s => {
+    html += `<tr><td>${esc(s.num)}</td><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(s.gender || '-')}</td><td>${esc(s.email || '-')}</td>`;
+    slotList.forEach(sl => {
+      const key = pendingKey(s.id, sl.id);
+      const pendingVal = pending[key];
+      const current = pendingVal ? pendingVal.groupName : (s.assignments[sl.id] || '');
+      const opts = groupOptions[sl.id] || [];
+      const withCurrent = current && !opts.includes(current) ? [...opts, current] : opts;
+      html += `<td><select class="class-sel${pendingVal ? ' dirty' : ''}" onchange="onClassCellChange('${esc(s.id)}','${esc(sl.id)}', this.value, this)">
+        <option value=""${!current ? ' selected' : ''}>미배정</option>
+        ${withCurrent.map(o => `<option value="${esc(o)}"${o === current ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+      </select></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+window.onClassCellChange = function(studentId, slotId, value, selectEl) {
+  const s = students.find(x => x.id === studentId);
+  if (!s) return;
+  const key = pendingKey(studentId, slotId);
+  const original = s.assignments[slotId] || '';
+  if (value === original) {
+    delete pending[key];
+  } else {
+    const slotLabel = ((slots[s.grade] && slots[s.grade][currentConfigSem]) || []).find(x => x.id === slotId);
+    pending[key] = {
+      studentId, slotId, groupName: value, action: value ? 'add' : 'remove',
+      name: s.name, grade: s.grade, ban: s.ban, num: s.num,
+      label: value || (slotLabel ? slotLabel.label : ''),
+    };
+  }
+  if (selectEl) selectEl.classList.toggle('dirty', !!pending[key]);
+  renderPending();
+};
+
+window.refreshDataClass = async function() {
+  await loadAll(currentYear);
+  onClassGradeChange();
+};
 
 function selectedGrade() { return document.getElementById('gradeSelect').value; }
 function selectedActivity() {
@@ -417,6 +554,7 @@ window.cancelPending = function(key) {
   delete pending[key];
   renderPending();
   renderRoster();
+  if (currentMode === 'class') renderClassTable();
 };
 
 function stagePending(student, activity, action) {
@@ -533,6 +671,7 @@ async function commitSave(keys) {
   });
   renderPending();
   renderRoster();
+  if (currentMode === 'class') renderClassTable();
   statusEl.textContent = `저장 완료 (${keys.length}건)`;
   statusEl.className = 'feedback-msg ok';
 }
@@ -580,6 +719,8 @@ window.refreshData = async function() {
 
 document.getElementById('gradeSelect').addEventListener('change', onGradeChange);
 document.getElementById('activitySelect').addEventListener('change', onActivityChange);
+document.getElementById('classGradeSelect').addEventListener('change', onClassGradeChange);
+document.getElementById('classBanSelect').addEventListener('change', onClassBanChange);
 document.getElementById('nameInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); submitName(); }
 });

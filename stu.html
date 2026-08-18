@@ -308,7 +308,7 @@ function slotsFor(grade, sem) {
   return (slotsByGradeSem[String(grade)] && slotsByGradeSem[String(grade)][String(sem)]) || [];
 }
 function allSlotsForGrade(grade) {
-  return [1, 2].flatMap(sem => slotsFor(grade, sem).map(s => ({ ...s, sem })));
+  return slotsFor(grade, currentSem).map(s => ({ ...s, sem: currentSem }));
 }
 
 function studentSearchText(s) {
