@@ -323,6 +323,9 @@ let currentConfigSem = 1;
 let students = []; // 전체 학년 (이름 검색용), { id, grade, ban, num, name, assignments }
 let slots = {};     // { [grade]: { [sem]: [{id,label,order}] } }
 let groupOptions = {}; // { [slotId]: [names...] }
+// 반별 정원 — admin.html ①에서 설정. { [slotId]: { [ban]: { [groupName]: maxCount } } }
+// 반이 여기 없으면 제한 없음(그룹 전체를 무제한으로 사용).
+let classCapacity = {};
 
 async function loadCurrentConfig() {
   const snap = await get(ref(db, 'config/current'));
@@ -331,10 +334,11 @@ async function loadCurrentConfig() {
 }
 
 async function loadAll(year) {
-  const [studentsSnap, slotsSnap, groupOptSnap] = await Promise.all([
+  const [studentsSnap, slotsSnap, groupOptSnap, capSnap] = await Promise.all([
     get(ref(db, `years/${year}/students`)),
     get(ref(db, `years/${year}/slots`)),
     get(ref(db, `years/${year}/groupOptions`)),
+    get(ref(db, `years/${year}/classCapacity`)),
   ]);
   students = studentsSnap.exists()
     ? Object.entries(studentsSnap.val()).map(([id, s]) => ({ id, grade: s.grade, ban: s.ban, num: s.num, name: s.name, gender: s.gender || '', email: s.email || '', assignments: s.assignments || {} }))
@@ -349,6 +353,40 @@ async function loadAll(year) {
     });
   });
   groupOptions = groupOptSnap.exists() ? groupOptSnap.val() : {};
+  classCapacity = capSnap.exists() ? capSnap.val() : {};
+}
+
+// ── 반별 정원 헬퍼 ──────────────────────────────
+// capMap이 null이면 이 반에는 제한이 없음(그룹 전체 무제한). capMap이 있으면 그 안에 있는
+// 그룹만 고를 수 있고, 각 그룹의 값이 정원이다.
+function allowedOptionsForBan(slotId, grade, ban) {
+  const capForSlot = classCapacity[slotId];
+  const banCap = capForSlot && capForSlot[String(ban)];
+  if (!banCap) return { list: groupOptions[slotId] || [], capMap: null };
+  return { list: Object.keys(banCap), capMap: banCap };
+}
+
+// pending(대기 중인 미저장 변경)까지 반영한 "지금 화면상 이 학생의 배정값" — 반별 배정표에서
+// 같은 자리에 앉아 있는 동안 여러 명을 연달아 바꿀 때도 정원 카운트가 실시간으로 맞도록 한다.
+function effectiveAssignment(studentId, slotId, fallbackValue) {
+  const key = pendingKey(studentId, slotId);
+  return pending[key] ? pending[key].groupName : fallbackValue;
+}
+function countAssignedInBan(slotId, groupName, grade, ban, excludeStudentId) {
+  return students.filter(s => String(s.grade) === String(grade) && String(s.ban) === String(ban) && s.id !== excludeStudentId)
+    .filter(s => effectiveAssignment(s.id, slotId, s.assignments[slotId] || '') === groupName).length;
+}
+// 간편 배정(이름 입력) 모드에서 저장 대기에 추가하기 전 검증 — 실제 DB에는 정원을 강제하는
+// 서버측 규칙이 없으므로 여기서 걸러내는 게 사실상 유일한 방어선이다(동시에 여러 선생님이
+// 딱 맞춰 채우는 극단적인 경우까지 완벽히 막지는 못한다).
+function checkCapacityForAdd(student, activity) {
+  const { capMap } = allowedOptionsForBan(activity.slotId, student.grade, student.ban);
+  if (!capMap) return { ok: true };
+  const max = capMap[activity.groupName];
+  if (max === undefined) return { ok: false, msg: `${student.grade}학년 ${student.ban}반은 "${activity.groupName}"을(를) 선택할 수 없습니다.` };
+  const count = countAssignedInBan(activity.slotId, activity.groupName, student.grade, student.ban, student.id);
+  if (count >= max) return { ok: false, msg: `"${activity.groupName}" 정원이 찼습니다. (${count}/${max})` };
+  return { ok: true };
 }
 
 async function init() {
@@ -409,11 +447,22 @@ function renderClassTable() {
       const key = pendingKey(s.id, sl.id);
       const pendingVal = pending[key];
       const current = pendingVal ? pendingVal.groupName : (s.assignments[sl.id] || '');
-      const opts = groupOptions[sl.id] || [];
-      const withCurrent = current && !opts.includes(current) ? [...opts, current] : opts;
+      const { list: baseOpts, capMap } = allowedOptionsForBan(sl.id, grade, ban);
+      const withCurrent = current && !baseOpts.includes(current) ? [...baseOpts, current] : baseOpts;
+      const optHtml = withCurrent.map(o => {
+        let label = esc(o);
+        let disabledAttr = '';
+        if (capMap && capMap[o] !== undefined) {
+          const max = capMap[o];
+          const count = countAssignedInBan(sl.id, o, grade, ban, s.id);
+          label += ` (${count}/${max})`;
+          if (count >= max && o !== current) disabledAttr = ' disabled';
+        }
+        return `<option value="${esc(o)}"${o === current ? ' selected' : ''}${disabledAttr}>${label}</option>`;
+      }).join('');
       html += `<td><select class="class-sel${pendingVal ? ' dirty' : ''}" onchange="onClassCellChange('${esc(s.id)}','${esc(sl.id)}', this.value, this)">
         <option value=""${!current ? ' selected' : ''}>미배정</option>
-        ${withCurrent.map(o => `<option value="${esc(o)}"${o === current ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+        ${optHtml}
       </select></td>`;
     });
     html += '</tr>';
@@ -437,8 +486,9 @@ window.onClassCellChange = function(studentId, slotId, value, selectEl) {
       label: value || (slotLabel ? slotLabel.label : ''),
     };
   }
-  if (selectEl) selectEl.classList.toggle('dirty', !!pending[key]);
   renderPending();
+  // 정원 카운트가 다른 학생 행의 선택지에도 영향을 주므로(같은 반 같은 그룹) 표 전체를 다시 그린다.
+  renderClassTable();
 };
 
 window.refreshDataClass = async function() {
@@ -598,6 +648,8 @@ window.submitName = function() {
     return;
   }
   if (candidates.length === 1) {
+    const check = checkCapacityForAdd(candidates[0], activity);
+    if (!check.ok) { showFeedback(check.msg, false); return; }
     stagePending(candidates[0], activity, 'add');
     showFeedback(`${name} 학생을 저장 대기 목록에 추가했습니다. (아직 저장 전)`, true);
     nameInput.value = '';
@@ -621,6 +673,8 @@ function openDupModal(name, candidates, activity) {
 window.closeDupModal = function() { document.getElementById('dupModal').style.display = 'none'; };
 window.pickDup = function(studentId, name) {
   const s = students.find(x => x.id === studentId);
+  const check = checkCapacityForAdd(s, window._dupActivity);
+  if (!check.ok) { closeDupModal(); showFeedback(check.msg, false); return; }
   stagePending(s, window._dupActivity, 'add');
   closeDupModal();
   showFeedback(`${name} 학생을 저장 대기 목록에 추가했습니다. (아직 저장 전)`, true);

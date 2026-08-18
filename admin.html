@@ -117,6 +117,15 @@ table.edit-table td.cell-na { text-align: center; color: var(--text-muted); back
 .chip-input, .slot-name-input { flex: 1; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.82rem; background: var(--surface); color: var(--text); }
 .empty-hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
 
+.cap-details { margin-top: 4px; border-top: 1px dashed var(--border); padding-top: 6px; }
+.cap-details > summary { cursor: pointer; font-size: 0.8rem; color: var(--accent); font-weight: 600; list-style: none; }
+.cap-details > summary::-webkit-details-marker { display: none; }
+.cap-details > summary::before { content: '▸ '; }
+.cap-details[open] > summary::before { content: '▾ '; }
+.cap-inner { margin-top: 8px; }
+.cap-hint { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+table.cap-table input[type=number] { min-width: 44px; text-align: center; }
+
 .table-scroll { overflow-x: auto; }
 table.edit-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 table.edit-table th, table.edit-table td { border: 1px solid var(--border); padding: 4px 6px; white-space: nowrap; }
@@ -301,6 +310,9 @@ let currentYear = null;
 let allYears = [];
 let slots = {};        // { [grade]: { [sem]: { [slotId]: {label, order} } } }
 let groupOptions = {}; // { [slotId]: [names...] }
+// 반별 정원 — 같은 학년이라도 반마다 고를 수 있는 그룹과 그룹당 정원이 다를 수 있어서 별도로 관리한다.
+// { [slotId]: { [ban]: { [groupName]: maxCount } } } — 반이 이 안에 없으면 제한 없음(전체 groupOptions 사용, 정원 무제한).
+let classCapacity = {};
 let studentsByGrade = { '1': {}, '2': {}, '3': {} }; // { [grade]: { [studentId]: {ban,num,name,gender,email,assignments} } }
 let teachers = {};     // { [teacherId]: {...} }
 let subjects = { '1': {}, '2': {} }; // { [sem]: { [subjectId]: {label, order} } } — 교과 목록, 학기별
@@ -369,6 +381,7 @@ window.createNewYear = async function() {
   const patch = {};
   patch[`years/${year}/slots`] = copyFrom ? slots : { '1': {}, '2': {}, '3': {} };
   patch[`years/${year}/groupOptions`] = copyFrom ? groupOptions : {};
+  patch[`years/${year}/classCapacity`] = copyFrom ? classCapacity : {};
   patch[`years/${year}/subjects`] = copyFrom ? subjects : { '1': {}, '2': {} };
   patch[`years/${year}/departments`] = copyFrom ? departments : { '1': {}, '2': {} };
   patch[`config/knownYears/${year}`] = true;
@@ -382,9 +395,10 @@ document.getElementById('yearSelect').addEventListener('change', (e) => loadYear
 async function loadYear(year) {
   if (!year) return;
   currentYear = year;
-  const [slotsSnap, groupOptSnap, studentsSnap, teachersSnap, subjectsSnap, deptsSnap] = await Promise.all([
+  const [slotsSnap, groupOptSnap, capSnap, studentsSnap, teachersSnap, subjectsSnap, deptsSnap] = await Promise.all([
     get(ref(db, `years/${year}/slots`)),
     get(ref(db, `years/${year}/groupOptions`)),
+    get(ref(db, `years/${year}/classCapacity`)),
     get(ref(db, `years/${year}/students`)),
     get(ref(db, `years/${year}/teachers`)),
     get(ref(db, `years/${year}/subjects`)),
@@ -393,6 +407,7 @@ async function loadYear(year) {
   slots = slotsSnap.exists() ? slotsSnap.val() : {};
   GRADES.forEach(g => { if (!slots[g]) slots[g] = {}; ['1','2'].forEach(s => { if (!slots[g][s]) slots[g][s] = {}; }); });
   groupOptions = groupOptSnap.exists() ? groupOptSnap.val() : {};
+  classCapacity = capSnap.exists() ? capSnap.val() : {};
 
   studentsByGrade = { '1': {}, '2': {}, '3': {} };
   if (studentsSnap.exists()) {
@@ -487,8 +502,55 @@ function slotCardHtml(grade, sem, slot) {
     <div class="add-chip-row">
       <input type="text" class="chip-input" placeholder="반/그룹 이름 입력 후 Enter" onkeydown="if(event.key==='Enter'){addGroupOption('${slot.id}', this); event.preventDefault();}">
     </div>
+    <details class="cap-details">
+      <summary>📐 반별 정원 설정${hasCapacity(slot.id) ? ' <span class="cpanel-badge">설정됨</span>' : ''}</summary>
+      <div class="cap-inner">${capacityTableHtml(grade, slot)}</div>
+    </details>
   </div>`;
 }
+
+// 반별 정원 — 반이 이 표에 없으면 제한 없음(그룹 전체를 무제한으로 사용). 칸을 비워두면 그 반은
+// 해당 그룹을 아예 고를 수 없다(0으로 입력하는 것과 같은 효과이며, 빈 칸이 "선택 불가"를 뜻한다).
+function bansForGrade(grade) {
+  return [...new Set(Object.values(studentsByGrade[grade] || {}).map(s => String(s.ban || '').trim()).filter(Boolean))]
+    .sort((a, b) => Number(a) - Number(b));
+}
+function hasCapacity(slotId) {
+  return !!(classCapacity[slotId] && Object.keys(classCapacity[slotId]).length);
+}
+function capacityTableHtml(grade, slot) {
+  const opts = groupOptions[slot.id] || [];
+  if (!opts.length) return '<div class="cap-hint">반별 정원을 설정하려면 먼저 위에서 반/그룹 이름을 추가하세요.</div>';
+  const bans = bansForGrade(grade);
+  if (!bans.length) return '<div class="cap-hint">②에서 이 학년 학생 명단을 먼저 등록해야 반 목록을 알 수 있습니다.</div>';
+  const capForSlot = classCapacity[slot.id] || {};
+  let html = '<div class="cap-hint">칸을 비워두면 그 반은 이 그룹을 선택할 수 없습니다. 반이 표에 아예 없으면(학생이 없으면) 제한이 적용되지 않습니다.</div>';
+  html += '<div class="table-scroll"><table class="edit-table cap-table"><thead><tr><th>반</th>';
+  html += opts.map(o => `<th>${esc(o)}</th>`).join('');
+  html += '</tr></thead><tbody>';
+  bans.forEach(ban => {
+    const banMap = capForSlot[ban] || {};
+    html += `<tr><td>${esc(ban)}반</td>`;
+    html += opts.map(o => {
+      const v = banMap[o];
+      return `<td><input type="number" min="0" value="${v === undefined ? '' : v}" placeholder="-" onchange="onCapacityChange('${slot.id}','${ban}','${escAttr(o)}', this.value)"></td>`;
+    }).join('');
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+window.onCapacityChange = function(slotId, ban, groupName, value) {
+  const n = value === '' ? null : Math.max(0, parseInt(value, 10) || 0);
+  if (!classCapacity[slotId]) classCapacity[slotId] = {};
+  if (!classCapacity[slotId][ban]) classCapacity[slotId][ban] = {};
+  if (n === null) delete classCapacity[slotId][ban][groupName];
+  else classCapacity[slotId][ban][groupName] = n;
+  if (!Object.keys(classCapacity[slotId][ban]).length) delete classCapacity[slotId][ban];
+  if (!Object.keys(classCapacity[slotId]).length) delete classCapacity[slotId];
+  markSlotsDirty();
+};
 
 // 슬롯/반 이름 편집도 ②③과 동일하게 화면에서만 바뀌고, "변경사항 저장"을 눌러야 실제 저장된다.
 // (예전엔 클릭 즉시 저장돼서 반/그룹 이름 칩을 실수로 지우면 되돌릴 방법이 없었다.)
@@ -531,6 +593,7 @@ window.deleteSlot = function(grade, sem, slotId) {
   if (!confirm('이 슬롯을 삭제할까요? (저장을 눌러야 실제로 반영됩니다) 이미 배정된 학생 데이터는 남아있지만(고아 데이터) 더 이상 화면에 표시되지 않습니다.')) return;
   delete slots[grade][sem][slotId];
   delete groupOptions[slotId];
+  delete classCapacity[slotId];
   markSlotsDirty();
   renderSlotsSection();
   renderStudentTable();
@@ -551,8 +614,12 @@ window.addGroupOption = function(slotId, inputEl) {
 
 window.removeGroupOption = function(slotId, idx) {
   const list = groupOptions[slotId] || [];
+  const removed = list[idx];
   list.splice(idx, 1);
   groupOptions[slotId] = list.length ? list : [];
+  if (classCapacity[slotId]) {
+    Object.values(classCapacity[slotId]).forEach(banMap => { delete banMap[removed]; });
+  }
   markSlotsDirty();
   renderSlotsSection();
   renderStudentTable();
@@ -567,6 +634,7 @@ window.saveSlots = async function() {
   await update(ref(db), {
     [`years/${currentYear}/slots`]: slots,
     [`years/${currentYear}/groupOptions`]: cleanOptions,
+    [`years/${currentYear}/classCapacity`]: classCapacity,
   });
   slotsDirty = false;
   statusEl.textContent = '저장 완료';
