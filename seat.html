@@ -204,6 +204,7 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
   border-radius:12px 12px 0 0; border-bottom:none;
 }
 .seat-cell {
+  position:relative;
   width:72px; min-height:52px; border-radius:7px;
   display:flex; align-items:center; justify-content:center;
   font-size:0.8rem; font-weight:600; text-align:center;
@@ -212,6 +213,18 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
 .seat-cell.occupied { background:var(--accent-soft); border:2px solid var(--accent); color:var(--text); }
 .seat-cell.empty-desk { background:var(--bg); border:2px dashed var(--border); color:var(--text-muted); font-weight:400; font-size:0.76rem; }
 .seat-cell.no-desk { background:transparent; border:none; }
+.gender-mark { position:absolute; width:9px; height:9px; }
+.gender-mark.male { top:4px; left:4px; background:#3b82f6; border-radius:2px; }
+.gender-mark.female { top:4px; right:4px; background:#f472b6; border-radius:50%; }
+
+/* 교사/학생 보기 모드 — 칠판 위치를 위아래로 뒤집기 위해 flex 순서를 이용한다 */
+#seatingGridWrap { display:inline-flex; flex-direction:column; }
+#seatingGridWrap #seatingGrid { order:1; border-radius:12px 12px 0 0; border-bottom:none; }
+#seatingGridWrap .blackboard { order:2; border-radius:0 0 10px 10px; }
+#seatingGridWrap.mode-student #seatingGrid { order:2; border-radius:0 0 10px 10px; border-top:none; border-bottom:1px solid var(--border); }
+#seatingGridWrap.mode-student .blackboard { order:1; border-radius:10px 10px 0 0; }
+.view-mode-toggle { display:inline-flex; gap:6px; }
+.view-mode-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 
 .overflow-box {
   display:inline-block; margin-top:18px; max-width:640px;
@@ -427,12 +440,18 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
       <div class="step3-toolbar">
         <button class="btn-primary" onclick="doAssign()">🔀 랜덤 배치</button>
         <button class="btn-secondary" id="reshuffleBtn" style="display:none" onclick="doAssign()">↺ 다시 섞기</button>
+        <div class="view-mode-toggle">
+          <button class="btn-secondary view-mode-btn active" id="viewModeTeacherBtn" onclick="setViewMode('teacher')">🧑‍🏫 교사모드</button>
+          <button class="btn-secondary view-mode-btn" id="viewModeStudentBtn" onclick="setViewMode('student')">🧑‍🎓 학생모드</button>
+        </div>
+        <button class="btn-secondary" id="printTeacherBtn" style="display:none" onclick="printSeating('teacher')">🖨️ 자리표 인쇄 (교사용)</button>
+        <button class="btn-secondary" id="printStudentBtn" style="display:none" onclick="printSeating('student')">🖨️ 자리표 인쇄 (학생용)</button>
       </div>
 
       <div id="constraintWarn" class="constraint-warn"></div>
 
       <div id="seatingWrap" style="display:none;">
-        <div class="desk-grid-wrap">
+        <div class="desk-grid-wrap" id="seatingGridWrap">
           <div id="seatingGrid" class="seating-grid"></div>
           <div class="blackboard">칠판</div>
         </div>
@@ -468,6 +487,10 @@ let deskActive = [];        // deskActive[r][c] = boolean
 let step1Done  = false;
 let step2Done  = false;
 let rowCounter = 0;
+const LS_LAYOUT_KEY = 'seat_layout';
+let lastSeatingMap = null;  // 마지막으로 배치된 결과 — 인쇄/화면모드 전환 시 재사용
+let lastOverflow = [];
+let viewMode = 'teacher';   // 'teacher' | 'student' — 화면에서 칠판 위치를 위/아래로 뒤집는 미리보기
 
 // ── HELPERS ───────────────────────────────────────────────────
 function esc(s) {
@@ -786,6 +809,76 @@ function hasConstraints() {
 }
 function doAssign() {
   hasConstraints() ? doConstrainedAssign() : doRandomAssign();
+  saveLayout();
+}
+
+// ── 배치 옵션 저장/복원 (localStorage) ──────────────────────────
+// 학생 명단은 기존 seat_students 키에 저장되고, 여기서는 책상배치·배치 옵션까지 저장해서
+// 다음 방문 시 명단만 다시 불러온 뒤 바로 "자리 랜덤배치" 단계로 진입할 수 있게 한다.
+function saveLayout() {
+  try {
+    const layout = {
+      gridRows, gridCols, deskActive,
+      constraints: collectConstraints(),
+      openPanels: {
+        fixDetails: !!document.getElementById('fixDetails')?.open,
+        apartDetails: !!document.getElementById('apartDetails')?.open,
+        togetherDetails: !!document.getElementById('togetherDetails')?.open,
+        sameDetails: !!document.getElementById('sameDetails')?.open,
+        diffDetails: !!document.getElementById('diffDetails')?.open,
+      },
+    };
+    localStorage.setItem(LS_LAYOUT_KEY, JSON.stringify(layout));
+  } catch (e) {}
+}
+
+function restoreLayoutIfSaved() {
+  try {
+    const raw = localStorage.getItem(LS_LAYOUT_KEY);
+    if (!raw) return false;
+    const layout = JSON.parse(raw);
+    if (!layout || !Array.isArray(layout.deskActive)) return false;
+
+    gridRows = layout.gridRows; gridCols = layout.gridCols;
+    document.getElementById('rowSel').value = gridRows;
+    document.getElementById('colSel').value = gridCols;
+    deskActive = layout.deskActive;
+    renderDeskGrid();
+
+    const c = layout.constraints || {};
+    (c.fixed || []).forEach(f => {
+      addFixRow();
+      const rows = document.querySelectorAll('#fixList .copt-row');
+      const row = rows[rows.length - 1];
+      document.getElementById(row.id + '_s').value = f.studentName;
+      document.getElementById(row.id + '_t').value = f.fixType;
+      toggleFixSel(row.id);
+      document.getElementById(row.id + (f.fixType === 'row' ? '_r' : '_c')).value = f.value;
+    });
+    (c.apart || []).forEach(p => {
+      addApartRow();
+      const rows = document.querySelectorAll('#apartList .copt-row');
+      const row = rows[rows.length - 1];
+      document.getElementById(row.id + '_a').value = p.a;
+      document.getElementById(row.id + '_b').value = p.b;
+    });
+    (c.together || []).forEach(p => {
+      addTogetherRow();
+      const rows = document.querySelectorAll('#togetherList .copt-row');
+      const row = rows[rows.length - 1];
+      document.getElementById(row.id + '_a').value = p.a;
+      document.getElementById(row.id + '_b').value = p.b;
+    });
+    genderMode = c.genderPairing || null;
+
+    const op = layout.openPanels || {};
+    ['fixDetails', 'apartDetails', 'togetherDetails', 'sameDetails', 'diffDetails'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.open = !!op[id];
+    });
+    updateBadge();
+    return true;
+  } catch (e) { return false; }
 }
 
 // ── 옵션 UI ──────────────────────────────────────────────────
@@ -1037,42 +1130,148 @@ function calcViol(asgn, con, hPairs, areAdj, nameIdx) {
 }
 
 // ── 공통 렌더링 ───────────────────────────────────────────────
+function genderMarkHtml(g) {
+  if (g === '남') return '<span class="gender-mark male"></span>';
+  if (g === '여') return '<span class="gender-mark female"></span>';
+  return '';
+}
+
 function renderSeating(seatingMap, overflow) {
-  const grid = document.getElementById('seatingGrid');
-  grid.style.gridTemplateColumns = `28px repeat(${gridCols}, 72px)`;
-  grid.innerHTML = '';
-  // 헤더 행
-  grid.appendChild(Object.assign(document.createElement('div'), {className:'gl-corner'}));
-  for (let c=0; c<gridCols; c++)
-    grid.appendChild(Object.assign(document.createElement('div'), {className:'sl-col', textContent:(c+1)+'열'}));
-  for (let r=0; r<gridRows; r++) {
-    grid.appendChild(Object.assign(document.createElement('div'), {className:'sl-row', textContent:(r+1)+'행'}));
-    for (let c=0; c<gridCols; c++) {
-      const cell = document.createElement('div');
-      if (!deskActive[r][c]) { cell.className='seat-cell no-desk'; }
-      else {
-        const name = seatingMap[`${r},${c}`];
-        cell.className = name ? 'seat-cell occupied' : 'seat-cell empty-desk';
-        cell.textContent = name || '빈자리';
-      }
-      grid.appendChild(cell);
-    }
-  }
+  lastSeatingMap = seatingMap;
+  lastOverflow = overflow;
+  renderSeatingScreen();
+
   const box=document.getElementById('overflowBox'), tags=document.getElementById('overflowTags');
   if (overflow.length) { box.style.display=''; tags.innerHTML=overflow.map(n=>`<span class="overflow-tag">${esc(n)}</span>`).join(''); }
   else box.style.display='none';
   document.getElementById('seatingWrap').style.display='';
   document.getElementById('reshuffleBtn').style.display='';
+  document.getElementById('printTeacherBtn').style.display='';
+  document.getElementById('printStudentBtn').style.display='';
 }
 
-// ── 저장된 학생 명단 자동 복원 ──────────────────────────────────
+// ── 자리 보기 모드 (교사모드/학생모드) ─────────────────────────
+// 학생모드는 칠판이 화면 위쪽에 오도록 행·열 순서를 뒤집어서 다시 그린다(180도 회전과 동일 효과).
+// 좌표에 붙은 "N행/N열" 라벨은 원래 좌표를 그대로 표시해 어느 자리인지 헷갈리지 않게 한다.
+function setViewMode(mode) {
+  viewMode = mode;
+  document.getElementById('viewModeTeacherBtn').classList.toggle('active', mode === 'teacher');
+  document.getElementById('viewModeStudentBtn').classList.toggle('active', mode === 'student');
+  if (lastSeatingMap) renderSeatingScreen();
+}
+
+function renderSeatingScreen() {
+  const grid = document.getElementById('seatingGrid');
+  const wrap = document.getElementById('seatingGridWrap');
+  const rotate = viewMode === 'student';
+  wrap.classList.toggle('mode-student', rotate);
+  wrap.classList.toggle('mode-teacher', !rotate);
+
+  const rowOrder = rotate ? [...Array(gridRows).keys()].reverse() : [...Array(gridRows).keys()];
+  const colOrder = rotate ? [...Array(gridCols).keys()].reverse() : [...Array(gridCols).keys()];
+  const genderByName = new Map(students.map(s => [s.name, s.gender]));
+
+  grid.style.gridTemplateColumns = `28px repeat(${gridCols}, 72px)`;
+  grid.innerHTML = '';
+  grid.appendChild(Object.assign(document.createElement('div'), {className:'gl-corner'}));
+  colOrder.forEach(c => {
+    grid.appendChild(Object.assign(document.createElement('div'), {className:'sl-col', textContent:(c+1)+'열'}));
+  });
+  rowOrder.forEach(r => {
+    grid.appendChild(Object.assign(document.createElement('div'), {className:'sl-row', textContent:(r+1)+'행'}));
+    colOrder.forEach(c => {
+      const cell = document.createElement('div');
+      if (!deskActive[r][c]) { cell.className='seat-cell no-desk'; }
+      else {
+        const name = lastSeatingMap[`${r},${c}`];
+        cell.className = name ? 'seat-cell occupied' : 'seat-cell empty-desk';
+        if (name) cell.innerHTML = genderMarkHtml(genderByName.get(name)) + `<span>${esc(name)}</span>`;
+        else cell.textContent = '빈자리';
+      }
+      grid.appendChild(cell);
+    });
+  });
+}
+
+// ── 자리표 인쇄 (교사용/학생용) ──────────────────────────────
+// view: 'teacher'(현재 화면과 동일, 칠판 아래) | 'student'(180도 회전, 칠판 위)
+function printSeating(view) {
+  if (!lastSeatingMap) { alert('먼저 자리를 배치해주세요.'); return; }
+  const rotate = view === 'student';
+  const rowOrder = rotate ? [...Array(gridRows).keys()].reverse() : [...Array(gridRows).keys()];
+  const colOrder = rotate ? [...Array(gridCols).keys()].reverse() : [...Array(gridCols).keys()];
+  const genderByName = new Map(students.map(s => [s.name, s.gender]));
+
+  let bodyHtml = '';
+  rowOrder.forEach(r => {
+    bodyHtml += '<tr>';
+    colOrder.forEach(c => {
+      if (!deskActive[r][c]) { bodyHtml += '<td class="p-empty"></td>'; return; }
+      const name = lastSeatingMap[`${r},${c}`];
+      if (!name) { bodyHtml += '<td class="p-desk p-vacant">빈자리</td>'; return; }
+      const g = genderByName.get(name);
+      const markHtml = g === '남' ? '<span class="p-mark p-male"></span>'
+                      : g === '여' ? '<span class="p-mark p-female"></span>' : '';
+      bodyHtml += `<td class="p-desk">${markHtml}<span class="p-name">${esc(name)}</span></td>`;
+    });
+    bodyHtml += '</tr>';
+  });
+
+  const title = view === 'teacher' ? '자리표 (교사용)' : '자리표 (학생용)';
+  const boardHtml = `<div class="p-board">칠판</div>`;
+  const today = new Date().toLocaleDateString('ko-KR');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>${esc(title)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#fff;color:#000;padding:16px;text-align:center}
+h1{font-size:16pt;margin-bottom:4px}
+.p-meta{font-size:9pt;color:#666;margin-bottom:14px}
+.p-board{background:#2d5a27;color:#a8e09c;padding:8px;font-weight:700;letter-spacing:3px;border-radius:8px;margin:10px auto;max-width:480px}
+table{border-collapse:collapse;margin:0 auto}
+td{width:64px;height:52px;border:1px solid #999;text-align:center;vertical-align:middle;font-size:10pt;font-weight:600;position:relative;padding:4px}
+td.p-empty{border:none}
+td.p-vacant{color:#999;font-weight:400;font-size:8pt}
+.p-mark{position:absolute;width:8px;height:8px}
+.p-male{top:3px;left:3px;background:#3b82f6;border-radius:2px}
+.p-female{top:3px;right:3px;background:#f472b6;border-radius:50%}
+@media print { @page { size: A4 landscape; margin: 10mm; } }
+</style>
+</head><body>
+<h1>${esc(title)}</h1>
+<div class="p-meta">${today} 출력</div>
+${view === 'student' ? boardHtml : ''}
+<table><tbody>${bodyHtml}</tbody></table>
+${view === 'teacher' ? boardHtml : ''}
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+// ── 저장된 학생 명단·배치 옵션 자동 복원 ──────────────────────
+function showRestoreBanner(text) {
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--on-accent,#fff);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:9999;text-align:center;';
+  banner.textContent = text;
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 4000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  if (loadSavedStudents()) {
-    const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--on-accent,#fff);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:9999;';
-    banner.textContent = `💾 저장된 학생 명단 ${students.length}명을 불러왔습니다`;
-    document.body.appendChild(banner);
-    setTimeout(() => banner.remove(), 3000);
+  const hasStudents = loadSavedStudents();
+  if (!hasStudents) return;
+
+  const restored = restoreLayoutIfSaved();
+  if (restored) {
+    step1Done = true; step2Done = true;
+    const btn2 = document.getElementById('btn2'); btn2.classList.remove('locked'); btn2.classList.add('done');
+    const btn3 = document.getElementById('btn3'); btn3.classList.remove('locked'); btn3.classList.add('done');
+    goStep(3);
+    showRestoreBanner('💾 저장된 배치 설정을 불러왔습니다. "🔀 랜덤 배치"를 눌러 바로 시작하세요.');
+  } else {
+    showRestoreBanner(`💾 저장된 학생 명단 ${students.length}명을 불러왔습니다`);
   }
 });
 </script>
