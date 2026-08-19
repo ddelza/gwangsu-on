@@ -195,6 +195,15 @@ table.stu-table td.activity-cell { white-space: normal; min-width: 180px; font-s
     <label style="font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
       <input type="checkbox" id="includeEmailChk"> 이메일 포함
     </label>
+    <label style="font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
+      <input type="checkbox" id="showSportsChk"> 활동 표시(스포츠)
+    </label>
+    <label style="font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
+      <input type="checkbox" id="showClubChk"> 활동 표시(동아리)
+    </label>
+    <label style="font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
+      <input type="checkbox" id="showElectiveChk"> 활동 표시(주제선택)
+    </label>
     <button class="print-btn" onclick="printRoster()">🖨️ 명렬표 출력</button>
     <button class="print-btn" onclick="downloadExcel()">📥 엑셀 다운로드</button>
     <button class="print-btn" onclick="openIdLookup()">🔍 학번 조회</button>
@@ -348,12 +357,18 @@ function renderGradeChips() {
     const chip = document.createElement('button');
     chip.className = 'chip' + (activeGrade === g ? ' active' : '');
     chip.textContent = g + '학년';
-    chip.onclick = () => { activeGrade = g; activeBan = ''; clearActivityFilterSelects(); activityFilter = null; renderAll(); };
+    chip.onclick = () => {
+      activeGrade = g; activeBan = '';
+      // 활동 필터는 특정 학년에 종속되므로, 그 학년을 벗어나면 같이 해제한다.
+      // 같은 학년 안에서 반만 바꿀 때는(반 칩 클릭) 활동 필터를 그대로 유지해 두 필터를 함께 쓸 수 있다.
+      if (activityFilter && activityFilter.grade !== g) { clearActivityFilterSelects(); activityFilter = null; }
+      renderAll();
+    };
     wrap.appendChild(chip);
   });
 
   const banRow = document.getElementById('banRow');
-  if (activeGrade && !activityFilter) {
+  if (activeGrade) {
     banRow.style.display = 'block';
     const banWrap = document.getElementById('banChips');
     banWrap.innerHTML = '';
@@ -397,22 +412,23 @@ function clearActivityFilterSelects() {
 window.onActivitySelect = function(selectEl) {
   const value = selectEl.value;
   if (!value) { activityFilter = null; renderAll(); return; }
+  const grade = selectEl.dataset.grade;
   activityFilter = {
-    grade: selectEl.dataset.grade,
+    grade,
     sem: Number(selectEl.dataset.sem),
     slotId: selectEl.dataset.slotId,
     label: selectEl.dataset.label,
     value,
   };
-  activeGrade = selectEl.dataset.grade;
-  activeBan = '';
+  // 활동이 속한 학년과 지금 보고 있는 학년이 다를 때만 반 선택을 초기화한다 —
+  // 같은 학년이면 이미 골라둔 반 필터를 그대로 살려서 "학년/반 + 활동"을 함께 적용한다.
+  if (activeGrade !== grade) { activeGrade = grade; activeBan = ''; }
   document.querySelectorAll('.activity-select').forEach(sel => { if (sel !== selectEl) sel.value = ''; });
   renderAll();
 };
 
 window.resetActivityFilter = function() {
   activityFilter = null;
-  activeBan = '';
   clearActivityFilterSelects();
   renderAll();
 };
@@ -427,8 +443,9 @@ function renderAll() {
 function renderActiveFilterBanner() {
   const banner = document.getElementById('activeFilterBanner');
   if (!activityFilter) { banner.style.display = 'none'; return; }
+  const banText = activeBan ? ` ${activeBan}반` : '';
   document.getElementById('activeFilterText').textContent =
-    `${activityFilter.grade}학년 ${activityFilter.sem}학기 ${activityFilter.label} "${activityFilter.value}" 그룹만 표시 중`;
+    `${activityFilter.grade}학년${banText} ${activityFilter.sem}학기 ${activityFilter.label} "${activityFilter.value}" 그룹만 표시 중`;
   banner.style.display = 'flex';
 }
 
@@ -451,12 +468,10 @@ function studentMatchesActivity(s) {
 function filteredSortedResults() {
   const q = document.getElementById('searchBox').value;
   let results = allStudents;
-  if (activityFilter) {
-    results = results.filter(studentMatchesActivity);
-  } else {
-    if (activeGrade) results = results.filter(s => String(s.grade) === activeGrade);
-    if (activeBan) results = results.filter(s => String(s.ban) === activeBan);
-  }
+  // 학년/반 필터와 활동 필터는 이제 서로 배타적이지 않고 함께(AND) 적용된다.
+  if (activeGrade) results = results.filter(s => String(s.grade) === activeGrade);
+  if (activeBan) results = results.filter(s => String(s.ban) === activeBan);
+  if (activityFilter) results = results.filter(studentMatchesActivity);
   results = fuzzySearch(results, q, ['_searchText']);
   return results.slice().sort((a, b) => {
     if (a.grade !== b.grade) return a.grade - b.grade;
@@ -497,13 +512,28 @@ function renderResults() {
   wrap.innerHTML = html;
 }
 
+// 슬롯 라벨에 키워드(스포츠/동아리/주제선택)가 포함된 슬롯만 골라, 그 학생이 배정된 값을
+// "N학기 라벨: 값" 형태로 모아 보여준다 — 학기 구분 없이 한 열에 모두 담는다.
+function activityValueForKeyword(s, keyword) {
+  const parts = [];
+  [1, 2].forEach(sem => {
+    slotsFor(s.grade, sem).forEach(slot => {
+      if (!slot.label.includes(keyword)) return;
+      const v = (s.assignments || {})[slot.id] || '';
+      if (v) parts.push(`${sem}학기 ${slot.label}: ${v}`);
+    });
+  });
+  return parts.join(' / ');
+}
+
 function printRoster() {
   const results = filteredSortedResults();
   if (!results.length) { alert('출력할 학생이 없습니다.'); return; }
 
   const groupMap = new Map();
   if (activityFilter) {
-    const title = `${activityFilter.grade}학년 ${activityFilter.value}`;
+    const banText = activeBan ? ` ${activeBan}반` : '';
+    const title = `${activityFilter.grade}학년${banText} ${activityFilter.value}`;
     groupMap.set(title, results);
   } else {
     results.forEach(s => {
@@ -515,28 +545,41 @@ function printRoster() {
 
   const today = new Date().toLocaleDateString('ko-KR');
   const withEmail = document.getElementById('includeEmailChk').checked;
+  const showSports = document.getElementById('showSportsChk').checked;
+  const showClub = document.getElementById('showClubChk').checked;
+  const showElective = document.getElementById('showElectiveChk').checked;
+  const showExtra = withEmail || showSports || showClub || showElective;
+
+  const extraCols = [];
+  if (withEmail) extraCols.push({ label: '이메일', cls: 'c-email', get: s => s.email || '' });
+  if (showSports) extraCols.push({ label: '스포츠클럽', cls: 'c-activity', get: s => activityValueForKeyword(s, '스포츠') });
+  if (showClub) extraCols.push({ label: '동아리', cls: 'c-activity', get: s => activityValueForKeyword(s, '동아리') });
+  if (showElective) extraCols.push({ label: '주제선택', cls: 'c-activity', get: s => activityValueForKeyword(s, '주제선택') });
 
   const pages = [...groupMap.entries()].map(([className, students], pi) => {
-    const PER_COL = withEmail ? students.length : 30;
-    const COLS = withEmail ? 1 : Math.ceil(students.length / PER_COL);
-    const rows = withEmail ? students.length : PER_COL;
+    const PER_COL = showExtra ? students.length : 30;
+    const COLS = showExtra ? 1 : Math.ceil(students.length / PER_COL);
+    const rows = showExtra ? students.length : PER_COL;
 
     const colData = Array.from({length: COLS}, (_, c) =>
       Array.from({length: rows}, (_, r) => students[c * rows + r] || null)
     );
 
     const headerRow = Array.from({length: COLS}, (_, i) => {
-      const emailCol = withEmail ? '<th class="c-email">이메일</th>' : '';
-      return `<th class="c-id">학번</th><th class="c-gender">성별</th><th class="c-name">이름</th>${emailCol}<th class="c-sign">비고</th>${i < COLS-1 ? '<th class="c-sep"></th>' : ''}`;
+      const extraTh = extraCols.map(c => `<th class="${c.cls}">${esc(c.label)}</th>`).join('');
+      return `<th class="c-id">학번</th><th class="c-gender">성별</th><th class="c-name">이름</th>${extraTh}<th class="c-sign">비고</th>${i < COLS-1 ? '<th class="c-sep"></th>' : ''}`;
     }).join('');
 
     const finalBodyRows = Array.from({length: rows}, (_, r) =>
       `<tr>${Array.from({length: COLS}, (_, c) => {
         const s = colData[c][r];
         const sep = c < COLS - 1 ? '<td class="c-sep"></td>' : '';
-        if (!s) return `<td class="c-id"></td><td class="c-gender"></td><td class="c-name"></td>${withEmail ? '<td class="c-email"></td>' : ''}<td class="c-sign"></td>${sep}`;
-        const emailCell = withEmail ? `<td class="c-email">${s.email||''}</td>` : '';
-        return `<td class="c-id">${s.id}</td><td class="c-gender">${s.gender||''}</td><td class="c-name">${s.name}</td>${emailCell}<td class="c-sign"></td>${sep}`;
+        if (!s) {
+          const emptyExtra = extraCols.map(col => `<td class="${col.cls}"></td>`).join('');
+          return `<td class="c-id"></td><td class="c-gender"></td><td class="c-name"></td>${emptyExtra}<td class="c-sign"></td>${sep}`;
+        }
+        const extraTds = extraCols.map(col => `<td class="${col.cls}">${esc(col.get(s))}</td>`).join('');
+        return `<td class="c-id">${s.id}</td><td class="c-gender">${s.gender||''}</td><td class="c-name">${s.name}</td>${extraTds}<td class="c-sign"></td>${sep}`;
       }).join('')}</tr>`
     ).join('');
 
@@ -572,6 +615,7 @@ td{font-size:9.5pt}
 .c-gender{width:24px}
 .c-name{width:58px;text-align:left;padding-left:5px}
 .c-email{font-size:7.5pt;text-align:left;padding-left:4px}
+.c-activity{font-size:7.5pt;text-align:left;padding-left:4px;white-space:normal}
 .c-sign{width:46px}
 .c-sep{width:6px;border:none;background:#fff}
 @page{size:A4 portrait;margin:5mm}
