@@ -513,17 +513,16 @@ function renderResults() {
 }
 
 // 슬롯 라벨에 키워드(스포츠/동아리/주제선택)가 포함된 슬롯만 골라, 그 학생이 배정된 값을
-// "N학기 라벨: 값" 형태로 모아 보여준다 — 학기 구분 없이 한 열에 모두 담는다.
+// 모아 보여준다 — 상단 배너와 같은 "현재 학기"(currentSem) 기준만 본다.
 function activityValueForKeyword(s, keyword) {
-  const parts = [];
-  [1, 2].forEach(sem => {
-    slotsFor(s.grade, sem).forEach(slot => {
-      if (!slot.label.includes(keyword)) return;
-      const v = (s.assignments || {})[slot.id] || '';
-      if (v) parts.push(`${sem}학기 ${slot.label}: ${v}`);
-    });
-  });
-  return parts.join(' / ');
+  const matches = slotsFor(s.grade, currentSem)
+    .filter(slot => slot.label.includes(keyword))
+    .map(slot => ({ label: slot.label, value: (s.assignments || {})[slot.id] || '' }))
+    .filter(m => m.value);
+  if (!matches.length) return '';
+  return matches.length > 1
+    ? matches.map(m => `${m.label}: ${m.value}`).join(' / ')
+    : matches[0].value;
 }
 
 function printRoster() {
