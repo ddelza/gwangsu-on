@@ -75,8 +75,9 @@ body {
 .topnav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; margin-right: 16px; white-space: nowrap; }
 .topnav .brand { display: inline-flex; align-items: center; gap: 8px; }
 .brand-logo { height: 28px; width: auto; display: block; }
-.edit-menu-link { font-size: 0.8rem; opacity: 0.85; margin-left: auto; }
+.edit-menu-link { font-size: 0.8rem; opacity: 0.85; }
 .gen1-link { font-size: 0.8rem; opacity: 0.85; }
+.visitor-count { margin-left: auto; font-size: 0.8rem; color: var(--nav-text); opacity: 0.9; white-space: nowrap; padding: 0 4px; }
 .topnav a { color: var(--nav-text); text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
 .topnav a:hover, .topnav a.active { background: rgba(255,255,255,0.15); color: #fff; }
 #inappBanner {
@@ -129,6 +130,7 @@ body {
   <a href="tools.html">행정업무 간소화 도구</a>
   <a href="time_table.html">시간표</a>
   <a href="https://docs.google.com/spreadsheets/d/1Xl5z5sOtqcozlUhuai1Od26rPkPXsLZgUrrxEcIRTbI/edit#gid=0" target="_blank" rel="noopener">출입문 비번</a>
+  <span class="visitor-count" id="visitorCount"></span>
   <a href="https://docs.google.com/spreadsheets/d/10oIqF4rHjm8UaxulhDB114PWa_B4FwuK64We8jGbtpo/edit?gid=0#gid=0" target="_blank" rel="noopener" class="edit-menu-link">✏️ 메뉴 수정</a>
   <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
 </nav>
@@ -280,9 +282,17 @@ const LOCAL_ITEMS = [
 let allItems = [];
 let activeCategory = '';
 
+// Apps Script 웹앱은 콜드스타트 시 응답이 느리거나 간헐적으로 실패할 수 있어서, 한 번 실패해도
+// 바로 포기하지 않고 짧은 대기 후 한 번 더 시도한다 — 실패한 요청을 캐시에 남기지 않으므로
+// (cachedFetchJSON은 성공한 응답만 저장) 재시도 로직만 추가하면 된다.
+function loadIndexOnce() {
+  return callApi('getIndex', {}, { scriptUrl: APPS_SCRIPT_URL, actionMap: ACTION_MAP });
+}
 function loadIndex() {
   return cachedFetchJSON('gwangsu_index_v1', () =>
-    callApi('getIndex', {}, { scriptUrl: APPS_SCRIPT_URL, actionMap: ACTION_MAP }), 5 * 60 * 1000);
+    loadIndexOnce().catch(() => new Promise((resolve, reject) => {
+      setTimeout(() => loadIndexOnce().then(resolve).catch(reject), 1200);
+    })), 5 * 60 * 1000);
 }
 
 function renderChips(items) {
@@ -424,6 +434,57 @@ window.onload = function() {
     renderResults();
   });
 };
+</script>
+
+<script type="module">
+// ── 오늘 방문자 수 ──────────────────────────────
+// gwangsu-on Firebase에 /stats/dailyVisitors/{YYYYMMDD}/{visitorId} = timestamp 로 기록한다.
+// visitorId는 브라우저별로 한 번만 생성해 localStorage에 저장 — 같은 사람이 하루에 여러 번
+// 새로고침해도 같은 키에 덮어쓰기만 되므로 중복 집계되지 않는다("방문 횟수"가 아니라 "방문자 수").
+// ⚠️ /stats 경로는 RTDB 보안 규칙에 아직 안 열려있을 수 있다 — admin.html의 /years, /config처럼
+// 아래 규칙을 Firebase 콘솔 > Realtime Database > 규칙에 추가해야 정상 동작한다:
+//   "stats": { ".read": true, ".write": true }
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB_D2Wi944YQL-1rCdgeNU-tD8lpMek_wM",
+  authDomain: "gwangsu-on.firebaseapp.com",
+  databaseURL: "https://gwangsu-on-default-rtdb.firebaseio.com",
+  projectId: "gwangsu-on",
+  storageBucket: "gwangsu-on.firebasestorage.app",
+  messagingSenderId: "684885628658",
+  appId: "1:684885628658:web:b471726b604754a82b626b",
+  measurementId: "G-6X5DH4EP5N"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+function getVisitorId() {
+  try {
+    let id = localStorage.getItem('gwangsu_visitor_id');
+    if (!id) { id = 'v' + Date.now() + Math.random().toString(36).slice(2); localStorage.setItem('gwangsu_visitor_id', id); }
+    return id;
+  } catch (e) { return 'v' + Math.random().toString(36).slice(2); }
+}
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+}
+
+async function trackAndShowVisitors() {
+  const el = document.getElementById('visitorCount');
+  try {
+    const key = todayKey();
+    await set(ref(db, `stats/dailyVisitors/${key}/${getVisitorId()}`), Date.now());
+    const snap = await get(ref(db, `stats/dailyVisitors/${key}`));
+    const count = snap.exists() ? Object.keys(snap.val()).length : 1;
+    el.textContent = `👀 오늘 방문자 ${count}명`;
+  } catch (e) {
+    el.textContent = ''; // 규칙이 아직 안 열려있거나 오류 시 조용히 숨김 (메인 페이지 이용에 지장 없도록)
+  }
+}
+trackAndShowVisitors();
 </script>
 </body>
 </html>
