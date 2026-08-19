@@ -388,13 +388,15 @@ function countAssignedInBan(slotId, groupName, grade, ban, excludeStudentId) {
 // 간편 배정(이름 입력) 모드에서 저장 대기에 추가하기 전 검증 — 실제 DB에는 정원을 강제하는
 // 서버측 규칙이 없으므로 여기서 걸러내는 게 사실상 유일한 방어선이다(동시에 여러 선생님이
 // 딱 맞춰 채우는 극단적인 경우까지 완벽히 막지는 못한다).
+// blocked: 이 반이 애초에 고를 수 없는 그룹 — 무조건 막는다.
+// overCapacity: 정원은 찼지만 그 반이 고를 수 있는 그룹은 맞음 — confirm()으로 강제 추가를 허용한다.
 function checkCapacityForAdd(student, activity) {
   const { capMap } = allowedOptionsForBan(activity.slotId, student.grade, student.ban);
   if (!capMap) return { ok: true };
   const max = capMap[activity.groupName];
-  if (max === undefined) return { ok: false, msg: `${student.grade}학년 ${student.ban}반은 "${activity.groupName}"을(를) 선택할 수 없습니다.` };
+  if (max === undefined) return { ok: false, blocked: true, msg: `${student.grade}학년 ${student.ban}반은 "${activity.groupName}"을(를) 선택할 수 없습니다.` };
   const count = countAssignedInBan(activity.slotId, activity.groupName, student.grade, student.ban, student.id);
-  if (count >= max) return { ok: false, msg: `"${activity.groupName}" 정원이 찼습니다. (${count}/${max})` };
+  if (count >= max) return { ok: false, overCapacity: true, msg: `"${activity.groupName}" 정원이 찼습니다. (${count}/${max}) 그래도 추가할까요?` };
   return { ok: true };
 }
 
@@ -460,14 +462,12 @@ function renderClassTable() {
       const withCurrent = current && !baseOpts.includes(current) ? [...baseOpts, current] : baseOpts;
       const optHtml = withCurrent.map(o => {
         let label = esc(o);
-        let disabledAttr = '';
         if (capMap && capMap[o] !== undefined) {
           const max = capMap[o];
           const count = countAssignedInBan(sl.id, o, grade, ban, s.id);
           label += ` (${count}/${max})`;
-          if (count >= max && o !== current) disabledAttr = ' disabled';
         }
-        return `<option value="${esc(o)}"${o === current ? ' selected' : ''}${disabledAttr}>${label}</option>`;
+        return `<option value="${esc(o)}"${o === current ? ' selected' : ''}>${label}</option>`;
       }).join('');
       html += `<td><select class="class-sel${pendingVal ? ' dirty' : ''}" onchange="onClassCellChange('${esc(s.id)}','${esc(sl.id)}', this.value, this)">
         <option value=""${!current ? ' selected' : ''}>미배정</option>
@@ -485,6 +485,19 @@ window.onClassCellChange = function(studentId, slotId, value, selectEl) {
   if (!s) return;
   const key = pendingKey(studentId, slotId);
   const original = s.assignments[slotId] || '';
+
+  if (value && value !== original) {
+    const { capMap } = allowedOptionsForBan(slotId, s.grade, s.ban);
+    if (capMap && capMap[value] !== undefined) {
+      const max = capMap[value];
+      const count = countAssignedInBan(slotId, value, s.grade, s.ban, s.id);
+      if (count >= max && !confirm(`"${value}" 정원이 찼습니다. (${count}/${max}) 그래도 배정할까요?`)) {
+        selectEl.value = original;
+        return;
+      }
+    }
+  }
+
   if (value === original) {
     delete pending[key];
   } else {
@@ -721,7 +734,10 @@ window.submitName = function() {
   }
   if (candidates.length === 1) {
     const check = checkCapacityForAdd(candidates[0], activity);
-    if (!check.ok) { showFeedback(check.msg, false); return; }
+    if (!check.ok) {
+      if (check.blocked) { showFeedback(check.msg, false); return; }
+      if (!confirm(check.msg)) { showFeedback('추가를 취소했습니다.', false); return; }
+    }
     stagePending(candidates[0], activity, 'add');
     showFeedback(`${name} 학생을 저장 대기 목록에 추가했습니다. (아직 저장 전)`, true);
     nameInput.value = '';
@@ -746,7 +762,10 @@ window.closeDupModal = function() { document.getElementById('dupModal').style.di
 window.pickDup = function(studentId, name) {
   const s = students.find(x => x.id === studentId);
   const check = checkCapacityForAdd(s, window._dupActivity);
-  if (!check.ok) { closeDupModal(); showFeedback(check.msg, false); return; }
+  if (!check.ok) {
+    if (check.blocked) { closeDupModal(); showFeedback(check.msg, false); return; }
+    if (!confirm(check.msg)) { closeDupModal(); showFeedback('추가를 취소했습니다.', false); return; }
+  }
   stagePending(s, window._dupActivity, 'add');
   closeDupModal();
   showFeedback(`${name} 학생을 저장 대기 목록에 추가했습니다. (아직 저장 전)`, true);
