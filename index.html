@@ -280,7 +280,6 @@ const LOCAL_ITEMS = [
   { title: '내선번호', category: '교사메뉴', url: 'phone.html', keywords: '내선번호 전화 연락처 교무실', description: '교내 내선번호 목록 조회 및 편집', thumb: T.phone },
   { title: '무선망(WiFi) 안내', category: '정보기기', url: 'wifi.html', keywords: 'wifi 와이파이 무선망 네트워크 인터넷 크롬북 iot 사물인터넷', description: '교내 WiFi SSID·아이디·비밀번호 및 크롬북 연결 안내', thumb: T.wifi },
   { title: '교직원 IP 조회', category: '정보기기', url: 'ip.html', keywords: 'ip 아이피 구글계정 교직원 컴퓨터 네트워크', description: '이름 검색으로 구글계정·IP 주소 확인 (연도별)', thumb: T.ip },
-  { title: '고등학교 진학 희망 조사', category: '학생정보', url: 'hs-survey.html', keywords: '고등학교 진학 희망 조사 고교 배정 신청 hs survey 관내 관외', description: '학생이 학번+이름 확인 후 희망 고등학교를 제출하는 페이지 (로그인 불필요, 학생용 링크로 공유). 관리자 페이지는 하단 링크로 이동', thumb: T.hsSurvey },
 ];
 
 let allItems = [];
@@ -358,6 +357,7 @@ function autoThumb(item) {
   if (tl.includes('프린트') || tl.includes('프린터') || tl.includes('드라이버')) return T.slides_print;
   if (tl.includes('와이파이') || tl.includes('wifi') || tl.includes('무선망')) return T.wifi;
   if (tl.includes('ip') && tl.includes('조회')) return T.ip;
+  if (tl.includes('진학') || (tl.includes('고등학교') && tl.includes('조사'))) return T.hsSurvey;
 
   // ── 카테고리별 커스텀 SVG ────────────────────────────
 
