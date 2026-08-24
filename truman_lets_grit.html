@@ -81,6 +81,7 @@ body { font-family:var(--font-body); background:var(--bg); color:var(--text); }
 .msg { font-size:0.82rem; color:var(--text-muted); min-height:1.2em; text-align:center; }
 .msg.ok { color:var(--accent); font-weight:600; }
 </style>
+<style>body{visibility:hidden}</style>
 </head>
 <body>
 <nav class="topnav">
@@ -340,5 +341,6 @@ function resetAll() {
 
 updateProgress();
 </script>
+<script type="module" src="auth-gate.js"></script>
 </body>
 </html>

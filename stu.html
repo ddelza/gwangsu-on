@@ -167,6 +167,7 @@ table.stu-table td.activity-cell { white-space: normal; min-width: 180px; font-s
   table.stu-table { font-size: 0.78rem; }
 }
 </style>
+<style>body{visibility:hidden}</style>
 </head>
 <body>
 
@@ -622,6 +623,7 @@ td{font-size:9.5pt}
 </head><body>
 ${pages}
 <script>window.onload=function(){window.print();}<\/script>
+<script type="module" src="auth-gate.js"></script>
 </body></html>`);
   win.document.close();
 }

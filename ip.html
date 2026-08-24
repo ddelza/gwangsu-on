@@ -133,6 +133,7 @@ body { margin:0; font-family:var(--font-body,-apple-system,"Apple SD Gothic Neo"
   .guide-btn { justify-content: center; }
 }
 </style>
+<style>body{visibility:hidden}</style>
 </head>
 <body>
 
@@ -267,5 +268,6 @@ loadData().catch(err => {
     `<div class="empty-state">데이터를 불러오지 못했습니다.<br><small>${esc(err.message)}</small></div>`;
 });
 </script>
+<script type="module" src="auth-gate.js"></script>
 </body>
 </html>

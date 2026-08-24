@@ -282,6 +282,7 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
   .seat-cell { width:56px; min-height:44px; font-size:0.72rem; }
 }
 </style>
+<style>body{visibility:hidden}</style>
 </head>
 <body>
 
@@ -1322,6 +1323,7 @@ ${view === 'student' ? boardHtml : ''}
 <table><tbody>${bodyHtml}</tbody></table>
 ${view === 'teacher' ? boardHtml : ''}
 <script>window.onload=function(){window.print();}<\/script>
+<script type="module" src="auth-gate.js"></script>
 </body></html>`);
   win.document.close();
 }
