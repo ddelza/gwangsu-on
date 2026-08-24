@@ -41,6 +41,9 @@ body { margin: 0; font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Got
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { padding: 5px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.8rem; cursor: pointer; border: none; }
 .chip.active { background: var(--accent); color: #fff; }
+.filter-block { margin-bottom: 10px; }
+.filter-label { font-size: 0.76rem; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+.school-select { padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.85rem; background: var(--surface); color: var(--text); max-width: 100%; }
 
 .table-wrap { background: var(--surface); border-radius: 12px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 table { width: 100%; border-collapse: collapse; font-size: 0.83rem; white-space: nowrap; }
@@ -51,7 +54,15 @@ tr:last-child td { border-bottom: none; }
 .badge.custom { background: #fff3e0; color: #e65100; }
 .badge.list { background: var(--accent-soft); color: var(--accent); }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
-.not-submitted-note { font-size: 0.78rem; color: var(--text-muted); margin: 10px 2px; }
+
+.not-submitted-section { background: var(--surface); border-radius: 12px; padding: 14px 16px; margin-top: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.not-submitted-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; }
+.not-submitted-head h3 { margin: 0; font-size: 0.92rem; color: var(--accent); }
+.notsub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+.notsub-group { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+.notsub-group h4 { margin: 0 0 6px; font-size: 0.82rem; color: var(--text); }
+table.notsub-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: normal; }
+table.notsub-table td { padding: 2px 4px; border-bottom: 1px solid #f2f2f2; color: var(--text); background: transparent; }
 </style>
 </head>
 <body>
@@ -68,31 +79,50 @@ tr:last-child td { border-bottom: none; }
 
 <div class="wrap" id="mainWrap" style="display:none">
   <div class="header-row">
-    <h1>고등학교 진학 희망 조사 — 제출 현황</h1>
+    <h1>고등학교 진학 희망 조사 — 3학년 제출 현황</h1>
     <a href="hs-survey.html">← 학생 제출 페이지</a>
   </div>
 
   <div class="stat-row" id="statRow"></div>
 
   <div class="toolbar">
-    <input type="text" class="search-box" id="searchBox" placeholder="이름, 학번, 학교명, 학과로 검색">
+    <input type="text" class="search-box" id="searchBox" placeholder="이름/학번 검색 시 그 학생의 모든 제출 이력을 보여줍니다 (학교명·학과 검색도 가능)">
     <button class="btn" onclick="downloadCsv()">📥 CSV 다운로드</button>
     <button class="btn" onclick="reload()">🔄 새로고침</button>
   </div>
-  <div class="chips" id="gradeChips" style="margin-bottom:12px"></div>
+
+  <div class="filter-block">
+    <div class="filter-label">반</div>
+    <div class="chips" id="banChips"></div>
+  </div>
+  <div class="filter-block">
+    <div class="filter-label">학교 분류</div>
+    <div class="chips" id="schoolTypeChips"></div>
+  </div>
+  <div class="filter-block">
+    <div class="filter-label">희망 학교</div>
+    <select class="school-select" id="schoolNameSelect" onchange="onSchoolNameChange()"></select>
+  </div>
 
   <div class="table-wrap">
     <table id="resultTable">
       <thead>
         <tr>
-          <th>학년</th><th>반</th><th>번호</th><th>학번</th><th>이름</th>
-          <th>지역</th><th>학교유형</th><th>희망학교</th><th>학과</th><th>제출시각</th>
+          <th>반</th><th>번호</th><th>학번</th><th>이름</th>
+          <th>지역</th><th>학교유형</th><th>희망학교</th><th>학과</th><th>차수</th><th>제출시각</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
   </div>
-  <div class="not-submitted-note" id="notSubmittedNote"></div>
+
+  <div class="not-submitted-section">
+    <div class="not-submitted-head" onclick="toggleNotSubmitted()">
+      <h3>미제출 학생 (<span id="notSubmittedCount">0</span>명)</h3>
+      <button class="btn" id="notSubmittedToggleBtn" onclick="event.stopPropagation(); toggleNotSubmitted()">펼치기 ▾</button>
+    </div>
+    <div id="notSubmittedBody" style="display:none"></div>
+  </div>
 </div>
 
 <script>
@@ -128,9 +158,15 @@ function unlock() {
   try { if (sessionStorage.getItem(SESSION_KEY) === '1') unlock(); } catch (e) {}
 })();
 
-let students = {}; // { id: {grade,ban,num,name,...} }
+const TARGET_GRADE = 3;
+const SCHOOL_TYPE_ORDER = ['일반고', '특성화고', '마이스터고', '과학고', '예술고', '체육고', '그외'];
+
+let students = {}; // { id: {grade,ban,num,name,...} } — TARGET_GRADE만 남긴다
 let submissions = {}; // { id: {...} }
-let activeGrade = '';
+let activeBan = '';
+let activeSchoolType = '';
+let activeSchoolName = '';
+let notSubmittedExpanded = false;
 
 async function reload() {
   document.getElementById('tableBody').innerHTML = '<tr><td colspan="10" class="empty-state">불러오는 중...</td></tr>';
@@ -138,17 +174,22 @@ async function reload() {
     fetch(`${DB_URL}/years/${YEAR}/students.json`),
     fetch(`${DB_URL}/years/${YEAR}/hsSurvey.json`),
   ]);
-  students = (await sRes.json()) || {};
+  const allStudents = (await sRes.json()) || {};
+  students = Object.fromEntries(Object.entries(allStudents).filter(([, s]) => Number(s.grade) === TARGET_GRADE));
   submissions = (await vRes.json()) || {};
   renderStats();
-  renderGradeChips();
-  renderTable();
+  renderBanChips();
+  renderSchoolTypeChips();
+  renderSchoolNameSelect();
+  renderAll();
 }
+
+function hasSubmission(id) { return !!(submissions[id] && submissions[id].latest); }
 
 function renderStats() {
   const totalStudents = Object.keys(students).length;
-  const totalSubmitted = Object.keys(submissions).filter(id => students[id]).length;
-  const custom = Object.values(submissions).filter(s => s.isCustomSchool).length;
+  const totalSubmitted = Object.keys(submissions).filter(id => students[id] && hasSubmission(id)).length;
+  const custom = Object.entries(submissions).filter(([id, rec]) => students[id] && rec.latest && rec.latest.isCustomSchool).length;
   document.getElementById('statRow').innerHTML = `
     <div class="stat-card"><div class="num">${totalSubmitted} / ${totalStudents}</div><div class="label">제출 인원</div></div>
     <div class="stat-card"><div class="num">${totalStudents - totalSubmitted}</div><div class="label">미제출 인원</div></div>
@@ -156,45 +197,110 @@ function renderStats() {
   `;
 }
 
-function gradesAvailable() {
-  return [...new Set(Object.values(students).map(s => String(s.grade)))].sort();
+function bansAvailable() {
+  return [...new Set(Object.values(students).map(s => String(s.ban)))].sort((a, b) => Number(a) - Number(b));
 }
-function renderGradeChips() {
-  const grades = gradesAvailable();
-  const wrap = document.getElementById('gradeChips');
+function renderBanChips() {
+  const bans = bansAvailable();
+  const wrap = document.getElementById('banChips');
   wrap.innerHTML = '';
   const allChip = document.createElement('button');
-  allChip.className = 'chip' + (activeGrade === '' ? ' active' : '');
+  allChip.className = 'chip' + (activeBan === '' ? ' active' : '');
   allChip.textContent = '전체';
-  allChip.onclick = () => { activeGrade = ''; renderGradeChips(); renderTable(); };
+  allChip.onclick = () => { activeBan = ''; renderBanChips(); renderAll(); };
   wrap.appendChild(allChip);
-  grades.forEach(g => {
+  bans.forEach(b => {
     const chip = document.createElement('button');
-    chip.className = 'chip' + (activeGrade === g ? ' active' : '');
-    chip.textContent = g + '학년';
-    chip.onclick = () => { activeGrade = g; renderGradeChips(); renderTable(); };
+    chip.className = 'chip' + (activeBan === b ? ' active' : '');
+    chip.textContent = b + '반';
+    chip.onclick = () => { activeBan = b; renderBanChips(); renderAll(); };
     wrap.appendChild(chip);
   });
 }
 
-function joinedRows() {
+function schoolTypesAvailable() {
+  const present = new Set(Object.entries(submissions).filter(([id]) => students[id] && hasSubmission(id)).map(([, rec]) => rec.latest.schoolType));
+  return SCHOOL_TYPE_ORDER.filter(t => present.has(t));
+}
+function renderSchoolTypeChips() {
+  const types = schoolTypesAvailable();
+  const wrap = document.getElementById('schoolTypeChips');
+  wrap.innerHTML = '';
+  const allChip = document.createElement('button');
+  allChip.className = 'chip' + (activeSchoolType === '' ? ' active' : '');
+  allChip.textContent = '전체';
+  allChip.onclick = () => { activeSchoolType = ''; renderSchoolTypeChips(); renderTable(); };
+  wrap.appendChild(allChip);
+  types.forEach(t => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (activeSchoolType === t ? ' active' : '');
+    chip.textContent = t;
+    chip.onclick = () => { activeSchoolType = t; renderSchoolTypeChips(); renderTable(); };
+    wrap.appendChild(chip);
+  });
+}
+
+function schoolNamesAvailable() {
+  const names = [...new Set(Object.entries(submissions).filter(([id]) => students[id] && hasSubmission(id)).map(([, rec]) => rec.latest.schoolName).filter(Boolean))];
+  return names.sort((a, b) => a.localeCompare(b, 'ko'));
+}
+function renderSchoolNameSelect() {
+  const sel = document.getElementById('schoolNameSelect');
+  const names = schoolNamesAvailable();
+  sel.innerHTML = '<option value="">전체 학교</option>' + names.map(n => `<option value="${escAttr(n)}">${esc(n)}</option>`).join('');
+  sel.value = activeSchoolName;
+}
+window.onSchoolNameChange = function() {
+  activeSchoolName = document.getElementById('schoolNameSelect').value;
+  renderTable();
+};
+
+function escAttr(str) { return esc(str).replace(/"/g, '&quot;'); }
+
+// 학생당 "가장 마지막에 낸 것"(latest) 한 줄씩 — 평소 표/통계/미제출 판정 기준
+function latestRows() {
   return Object.entries(submissions)
-    .filter(([id]) => students[id])
-    .map(([id, sub]) => ({ id, ...students[id], sub }))
-    .sort((a, b) => (Number(a.grade) - Number(b.grade)) || (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)));
+    .filter(([id]) => students[id] && hasSubmission(id))
+    .map(([id, rec]) => ({ id, ...students[id], sub: rec.latest }))
+    .sort((a, b) => (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)));
+}
+
+// 특정 학생의 제출 이력을 전부(1차~n차) 반환 — 검색으로 학생을 찾았을 때만 쓴다
+function historyRowsFor(id) {
+  const rec = submissions[id];
+  if (!rec || !rec.history) return [];
+  const entries = Object.values(rec.history).sort((a, b) => (a.submittedAt || 0) - (b.submittedAt || 0));
+  return entries.map((sub, i) => ({ id, ...students[id], sub, round: i + 1, isLatestRound: i === entries.length - 1 }));
 }
 
 function filteredRows() {
-  let rows = joinedRows();
-  if (activeGrade) rows = rows.filter(r => String(r.grade) === activeGrade);
   const q = document.getElementById('searchBox').value.trim().toLowerCase();
   if (q) {
-    rows = rows.filter(r => {
+    // 이름/학번이 일치하는 학생은 전체 제출 이력을 모두 보여준다 (n차까지 전부 조회)
+    const nameMatchIds = Object.keys(students).filter(id => {
+      const s = students[id];
+      return [s.name, id].join(' ').toLowerCase().includes(q);
+    });
+    if (nameMatchIds.length) {
+      return nameMatchIds.flatMap(id => historyRowsFor(id))
+        .sort((a, b) => (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)) || (a.round - b.round));
+    }
+    // 이름/학번으로 못 찾으면 학교명·학과·학교유형으로 latest 기준 검색
+    return latestRows().filter(r => {
       const hay = [r.name, r.id, r.sub.schoolName, r.sub.department, r.sub.schoolType].join(' ').toLowerCase();
       return hay.includes(q);
     });
   }
+  let rows = latestRows();
+  if (activeBan) rows = rows.filter(r => String(r.ban) === activeBan);
+  if (activeSchoolType) rows = rows.filter(r => r.sub.schoolType === activeSchoolType);
+  if (activeSchoolName) rows = rows.filter(r => r.sub.schoolName === activeSchoolName);
   return rows;
+}
+
+function renderAll() {
+  renderTable();
+  renderNotSubmitted();
 }
 
 function renderTable() {
@@ -208,37 +314,66 @@ function renderTable() {
       const areaLabel = s.area === '관내' ? '관내' : '관외';
       const badge = s.isCustomSchool ? '<span class="badge custom">직접입력</span>' : '<span class="badge list">목록</span>';
       const time = s.submittedAt ? new Date(s.submittedAt).toLocaleString('ko-KR') : '';
+      const roundLabel = r.round ? `${r.round}차${r.isLatestRound ? ' (최신)' : ''}` : '최신';
       return `<tr>
-        <td>${esc(r.grade)}</td><td>${esc(r.ban)}</td><td>${esc(r.num)}</td><td>${esc(r.id)}</td><td>${esc(r.name)}</td>
+        <td>${esc(r.ban)}</td><td>${esc(r.num)}</td><td>${esc(r.id)}</td><td>${esc(r.name)}</td>
         <td>${esc(areaLabel)}</td><td>${esc(s.schoolType)}</td>
         <td>${esc(s.schoolName)} ${badge}</td>
         <td>${esc(s.department || '')}</td>
+        <td style="font-size:0.75rem;color:var(--text-muted)">${esc(roundLabel)}</td>
         <td style="font-size:0.75rem;color:var(--text-muted)">${esc(time)}</td>
       </tr>`;
     }).join('');
   }
-
-  const notSubmitted = Object.keys(students)
-    .filter(id => !submissions[id])
-    .filter(id => !activeGrade || String(students[id].grade) === activeGrade)
-    .map(id => students[id])
-    .sort((a, b) => (Number(a.grade) - Number(b.grade)) || (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)));
-  document.getElementById('notSubmittedNote').textContent = notSubmitted.length
-    ? `미제출(${notSubmitted.length}명): ${notSubmitted.map(s => `${s.grade}-${s.ban}-${s.num} ${s.name}`).join(', ')}`
-    : '';
 }
+
+function renderNotSubmitted() {
+  let list = Object.keys(students).filter(id => !hasSubmission(id)).map(id => students[id]);
+  if (activeBan) list = list.filter(s => String(s.ban) === activeBan);
+  document.getElementById('notSubmittedCount').textContent = list.length;
+
+  const body = document.getElementById('notSubmittedBody');
+  if (!list.length) {
+    body.innerHTML = '<div class="empty-state" style="padding:16px 0">미제출 학생이 없습니다.</div>';
+    return;
+  }
+
+  const byBan = {};
+  list.forEach(s => {
+    const key = String(s.ban);
+    (byBan[key] = byBan[key] || []).push(s);
+  });
+  const bans = Object.keys(byBan).sort((a, b) => Number(a) - Number(b));
+
+  body.innerHTML = `<div class="notsub-grid">` + bans.map(ban => {
+    const arr = byBan[ban].sort((a, b) => Number(a.num) - Number(b.num));
+    return `<div class="notsub-group">
+      <h4>${TARGET_GRADE}학년 ${esc(ban)}반 (${arr.length}명)</h4>
+      <table class="notsub-table"><tbody>
+        ${arr.map(s => `<tr><td>${esc(s.num)}번</td><td>${esc(s.name)}</td></tr>`).join('')}
+      </tbody></table>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+window.toggleNotSubmitted = function() {
+  notSubmittedExpanded = !notSubmittedExpanded;
+  document.getElementById('notSubmittedBody').style.display = notSubmittedExpanded ? 'block' : 'none';
+  document.getElementById('notSubmittedToggleBtn').textContent = notSubmittedExpanded ? '접기 ▴' : '펼치기 ▾';
+};
 
 function downloadCsv() {
   const rows = filteredRows();
   if (!rows.length) { alert('다운로드할 데이터가 없습니다.'); return; }
   const q2 = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-  const headers = ['학년', '반', '번호', '학번', '이름', '지역', '학교유형', '희망학교', '직접입력여부', '학과', '제출시각'];
+  const headers = ['반', '번호', '학번', '이름', '지역', '학교유형', '희망학교', '직접입력여부', '학과', '차수', '제출시각'];
   const lines = rows.map(r => {
     const s = r.sub;
     return [
-      r.grade, r.ban, r.num, r.id, r.name,
+      r.ban, r.num, r.id, r.name,
       s.area === '관내' ? '관내' : '관외', s.schoolType, s.schoolName,
       s.isCustomSchool ? 'Y' : 'N', s.department || '',
+      r.round ? `${r.round}차${r.isLatestRound ? '(최신)' : ''}` : '최신',
       s.submittedAt ? new Date(s.submittedAt).toLocaleString('ko-KR') : '',
     ].map(q2).join(',');
   });
@@ -247,7 +382,7 @@ function downloadCsv() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   const dateStr = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
-  a.download = `고교진학희망조사_${dateStr}.csv`;
+  a.download = `고교진학희망조사_3학년_${dateStr}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

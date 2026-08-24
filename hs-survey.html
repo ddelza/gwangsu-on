@@ -80,14 +80,14 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   <div class="header">
     <img src="logo.png" alt="" onerror="this.style.display='none'">
     <h1>고등학교 진학 희망 조사</h1>
-    <p id="semLabel">2026학년도 2학기 · 광수중학교</p>
+    <p id="semLabel">2026학년도 2학기 · 광수중학교 (3학년 대상)</p>
   </div>
 
   <!-- STEP 1: 학번/이름 확인 -->
   <div class="step active" id="step-verify">
     <div class="card">
       <h2>학생 확인</h2>
-      <p class="hint">학번(4자리)과 이름을 입력해주세요. 예) 3학년 1반 15번 → 3115</p>
+      <p class="hint">3학년만 참여할 수 있습니다. 학번(4자리)과 이름을 입력해주세요. 예) 3학년 1반 15번 → 3115</p>
       <label class="field-label" for="inputId">학번 (4자리)</label>
       <input type="tel" id="inputId" maxlength="4" inputmode="numeric" placeholder="3115">
       <label class="field-label" for="inputName">이름</label>
@@ -223,6 +223,10 @@ window.onVerify = async function() {
       setVerifyError('학번 또는 이름이 일치하지 않습니다. 다시 확인해주세요.');
       return;
     }
+    if (Number(rec.grade) !== 3) {
+      setVerifyError('이 조사는 3학년만 참여할 수 있습니다.');
+      return;
+    }
     verified = { id, name: rec.name, grade: rec.grade, ban: rec.ban, num: rec.num };
     document.getElementById('verifiedLabel').textContent =
       `✓ ${rec.grade}학년 ${rec.ban}반 ${rec.num}번 ${rec.name}`;
@@ -252,13 +256,17 @@ window.resetVerify = function() {
 };
 
 async function loadExistingSubmission() {
-  const res = await fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${verified.id}.json`);
-  const data = res.ok ? await res.json() : null;
-  existingSubmission = data || null;
+  const [latestRes, historyRes] = await Promise.all([
+    fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${verified.id}/latest.json`),
+    fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${verified.id}/history.json?shallow=true`),
+  ]);
+  existingSubmission = latestRes.ok ? await latestRes.json() : null;
+  const historyKeys = historyRes.ok ? await historyRes.json() : null;
+  const submitCount = historyKeys ? Object.keys(historyKeys).length : 0;
   const note = document.getElementById('existingNote');
   if (existingSubmission) {
     note.style.display = 'block';
-    note.textContent = `이미 제출한 내용이 있습니다 (${new Date(existingSubmission.submittedAt).toLocaleString('ko-KR')} 제출). 내용을 수정하면 다시 제출됩니다.`;
+    note.textContent = `이미 ${submitCount}번 제출했습니다 (마지막: ${new Date(existingSubmission.submittedAt).toLocaleString('ko-KR')}). 내용을 수정하면 새로 제출됩니다.`;
     areaValue = existingSubmission.area || '';
     typeValue = existingSubmission.schoolType || '';
     isCustomSchool = !!existingSubmission.isCustomSchool;
@@ -386,19 +394,27 @@ window.onSubmit = async function() {
     id: verified.id, name: verified.name, grade: verified.grade, ban: verified.ban, num: verified.num,
     area: areaValue, schoolType: typeValue, schoolName: finalSchool, isCustomSchool: !!isCustomSchool,
     department: document.getElementById('deptInput').value.trim(),
-    submittedAt: existingSubmission ? existingSubmission.submittedAt : Date.now(),
-    updatedAt: Date.now(),
+    submittedAt: Date.now(),
   };
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = '제출 중...';
   try {
-    const res = await fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${verified.id}.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error('제출에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    // 제출할 때마다 history에 새 항목을 남기고(이력 조회용), latest는 이번 제출로 덮어써
+    // "가장 마지막에 낸 것"만 평소 화면/통계 기준으로 쓴다.
+    const [historyRes, latestRes] = await Promise.all([
+      fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${verified.id}/history.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+      fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${verified.id}/latest.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    ]);
+    if (!historyRes.ok || !latestRes.ok) throw new Error('제출에 실패했습니다. 잠시 후 다시 시도해주세요.');
     renderSummary(payload);
     showStep('step-done');
   } catch (e) {
