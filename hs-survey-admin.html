@@ -63,6 +63,20 @@ tr:last-child td { border-bottom: none; }
 .notsub-group h4 { margin: 0 0 6px; font-size: 0.82rem; color: var(--text); }
 table.notsub-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: normal; }
 table.notsub-table td { padding: 2px 4px; border-bottom: 1px solid #f2f2f2; color: var(--text); background: transparent; }
+
+.edit-btn { background: none; border: none; cursor: pointer; font-size: 0.95rem; padding: 2px 6px; border-radius: 6px; }
+.edit-btn:hover { background: var(--accent-soft); }
+
+.edit-modal-overlay { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; padding: 16px; }
+.edit-modal-box { background: var(--surface); border-radius: 16px; padding: 24px; max-width: 380px; width: 100%; position: relative; }
+.edit-modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--text-muted); }
+.edit-modal-box h3 { margin: 0 0 4px; font-size: 1rem; color: var(--accent); padding-right: 20px; }
+.edit-modal-sub { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 14px; }
+.edit-modal-box .field-label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text); margin: 10px 0 5px; }
+.edit-modal-box .field-label:first-of-type { margin-top: 0; }
+.edit-modal-error { font-size: 0.8rem; color: var(--danger); margin-top: 8px; min-height: 1em; }
+.edit-modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.edit-modal-actions .btn { flex: 1; text-align: center; }
 </style>
 </head>
 <body>
@@ -109,7 +123,7 @@ table.notsub-table td { padding: 2px 4px; border-bottom: 1px solid #f2f2f2; colo
       <thead>
         <tr>
           <th>반</th><th>번호</th><th>학번</th><th>이름</th>
-          <th>지역</th><th>학교유형</th><th>희망학교</th><th>학과</th><th>차수</th><th>제출시각</th>
+          <th>지역</th><th>학교유형</th><th>희망학교</th><th>학과</th><th>차수</th><th>제출시각</th><th></th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -122,6 +136,44 @@ table.notsub-table td { padding: 2px 4px; border-bottom: 1px solid #f2f2f2; colo
       <button class="btn" id="notSubmittedToggleBtn" onclick="event.stopPropagation(); toggleNotSubmitted()">펼치기 ▾</button>
     </div>
     <div id="notSubmittedBody" style="display:none"></div>
+  </div>
+</div>
+
+<div class="edit-modal-overlay" id="editModalOverlay" style="display:none">
+  <div class="edit-modal-box">
+    <button class="edit-modal-close" onclick="closeEditModal()">✕</button>
+    <h3>제출 내용 수정</h3>
+    <p class="edit-modal-sub" id="editModalStudentLabel"></p>
+
+    <label class="field-label">지역</label>
+    <select class="school-select" id="editArea" style="width:100%">
+      <option value="관내">광주하남(관내)</option>
+      <option value="관외">그외(관외)</option>
+    </select>
+
+    <label class="field-label">학교 분류</label>
+    <select class="school-select" id="editSchoolType" style="width:100%">
+      <option value="일반고">일반고</option>
+      <option value="특성화고">특성화고</option>
+      <option value="마이스터고">마이스터고</option>
+      <option value="과학고">과학고</option>
+      <option value="예술고">예술고</option>
+      <option value="체육고">체육고</option>
+      <option value="그외">그외</option>
+    </select>
+
+    <label class="field-label">희망 학교</label>
+    <input type="text" class="school-select" id="editSchoolName" style="width:100%" list="editSchoolDatalist" placeholder="학교명">
+    <datalist id="editSchoolDatalist"></datalist>
+
+    <label class="field-label">학과</label>
+    <input type="text" class="school-select" id="editDept" style="width:100%" placeholder="없으면 비워두기">
+
+    <div class="edit-modal-error" id="editModalError"></div>
+    <div class="edit-modal-actions">
+      <button class="btn" onclick="closeEditModal()">취소</button>
+      <button class="btn primary" onclick="saveEdit()">저장</button>
+    </div>
   </div>
 </div>
 
@@ -161,6 +213,24 @@ function unlock() {
 const TARGET_GRADE = 3;
 const SCHOOL_TYPE_ORDER = ['일반고', '특성화고', '마이스터고', '과학고', '예술고', '체육고', '그외'];
 
+// hs-survey.html의 SCHOOLS와 동일 — 편집 모달의 학교명 자동완성/"목록·직접입력" 배지 판정용
+const SCHOOLS = {
+  '일반고': {
+    '광주시': ['경화여자고등학교', '곤지암고등학교', '광남고등학교', '광주고등학교', '광주중앙고등학교', '오포고등학교', '초월고등학교', '태전고등학교'],
+    '하남시': ['감일고등학교', '남한고등학교', '미사강변고등학교', '미사고등학교', '신장고등학교', '위례고등학교', '풍산고등학교', '하남고등학교'],
+  },
+  '특성화고': {
+    '광주시': ['경화EB고등학교', '곤지암고등학교', '광주중앙고등학교'],
+    '하남시': ['하남경영고등학교', '한국애니고등학교'],
+  },
+};
+function isSchoolInList(area, schoolType, name) {
+  if (area !== '관내') return false;
+  const groups = SCHOOLS[schoolType];
+  if (!groups) return false;
+  return Object.values(groups).some(list => list.includes(name));
+}
+
 let students = {}; // { id: {grade,ban,num,name,...} } — TARGET_GRADE만 남긴다
 let submissions = {}; // { id: {...} }
 let activeBan = '';
@@ -169,7 +239,7 @@ let activeSchoolName = '';
 let notSubmittedExpanded = false;
 
 async function reload() {
-  document.getElementById('tableBody').innerHTML = '<tr><td colspan="10" class="empty-state">불러오는 중...</td></tr>';
+  document.getElementById('tableBody').innerHTML = '<tr><td colspan="11" class="empty-state">불러오는 중...</td></tr>';
   const [sRes, vRes] = await Promise.all([
     fetch(`${DB_URL}/years/${YEAR}/students.json`),
     fetch(`${DB_URL}/years/${YEAR}/hsSurvey.json`),
@@ -307,7 +377,7 @@ function renderTable() {
   const rows = filteredRows();
   const body = document.getElementById('tableBody');
   if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="10" class="empty-state">표시할 제출 내역이 없습니다.</td></tr>';
+    body.innerHTML = '<tr><td colspan="11" class="empty-state">표시할 제출 내역이 없습니다.</td></tr>';
   } else {
     body.innerHTML = rows.map(r => {
       const s = r.sub;
@@ -315,6 +385,9 @@ function renderTable() {
       const badge = s.isCustomSchool ? '<span class="badge custom">직접입력</span>' : '<span class="badge list">목록</span>';
       const time = s.submittedAt ? new Date(s.submittedAt).toLocaleString('ko-KR') : '';
       const roundLabel = r.round ? `${r.round}차${r.isLatestRound ? ' (최신)' : ''}` : '최신';
+      // history 조회로 보여준 과거 회차(최신이 아닌)는 로그라서 수정 버튼을 달지 않는다 — latest만 수정 가능
+      const editable = !r.round || r.isLatestRound;
+      const editCell = editable ? `<td><button class="edit-btn" onclick="openEditModal('${escAttr(r.id)}')" title="수정">✏️</button></td>` : '<td></td>';
       return `<tr>
         <td>${esc(r.ban)}</td><td>${esc(r.num)}</td><td>${esc(r.id)}</td><td>${esc(r.name)}</td>
         <td>${esc(areaLabel)}</td><td>${esc(s.schoolType)}</td>
@@ -322,6 +395,7 @@ function renderTable() {
         <td>${esc(s.department || '')}</td>
         <td style="font-size:0.75rem;color:var(--text-muted)">${esc(roundLabel)}</td>
         <td style="font-size:0.75rem;color:var(--text-muted)">${esc(time)}</td>
+        ${editCell}
       </tr>`;
     }).join('');
   }
@@ -360,6 +434,78 @@ window.toggleNotSubmitted = function() {
   notSubmittedExpanded = !notSubmittedExpanded;
   document.getElementById('notSubmittedBody').style.display = notSubmittedExpanded ? 'block' : 'none';
   document.getElementById('notSubmittedToggleBtn').textContent = notSubmittedExpanded ? '접기 ▴' : '펼치기 ▾';
+};
+
+// ── 제출 내용 수정(관리자) ──────────────────────────────
+let editingId = null;
+
+function populateSchoolDatalist(schoolType) {
+  const dl = document.getElementById('editSchoolDatalist');
+  const groups = SCHOOLS[schoolType];
+  const names = groups ? Object.values(groups).flat() : [];
+  dl.innerHTML = names.map(n => `<option value="${escAttr(n)}">`).join('');
+}
+
+window.openEditModal = function(id) {
+  const rec = submissions[id];
+  const sub = rec && rec.latest;
+  const s = students[id];
+  if (!sub || !s) return;
+  editingId = id;
+  document.getElementById('editModalStudentLabel').textContent = `${TARGET_GRADE}학년 ${s.ban}반 ${s.num}번 ${s.name} (학번 ${id})`;
+  document.getElementById('editArea').value = sub.area;
+  document.getElementById('editSchoolType').value = sub.schoolType;
+  populateSchoolDatalist(sub.schoolType);
+  document.getElementById('editSchoolName').value = sub.schoolName || '';
+  document.getElementById('editDept').value = sub.department || '';
+  document.getElementById('editModalError').textContent = '';
+  document.getElementById('editModalOverlay').style.display = 'flex';
+};
+
+window.closeEditModal = function() {
+  document.getElementById('editModalOverlay').style.display = 'none';
+  editingId = null;
+};
+
+document.getElementById('editSchoolType').addEventListener('change', (e) => populateSchoolDatalist(e.target.value));
+
+document.getElementById('editModalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'editModalOverlay') closeEditModal();
+});
+
+window.saveEdit = async function() {
+  if (!editingId) return;
+  const area = document.getElementById('editArea').value;
+  const schoolType = document.getElementById('editSchoolType').value;
+  const schoolName = document.getElementById('editSchoolName').value.trim();
+  const department = document.getElementById('editDept').value.trim();
+  const errEl = document.getElementById('editModalError');
+  if (!schoolName) { errEl.textContent = '희망 학교를 입력해주세요.'; return; }
+
+  const prevSub = submissions[editingId].latest;
+  const payload = {
+    ...prevSub, area, schoolType, schoolName, department,
+    isCustomSchool: !isSchoolInList(area, schoolType, schoolName),
+    editedByAdmin: true, editedAt: Date.now(),
+  };
+
+  errEl.textContent = '저장 중...';
+  try {
+    const res = await fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${editingId}/latest.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error();
+    submissions[editingId].latest = payload;
+    closeEditModal();
+    renderStats();
+    renderSchoolTypeChips();
+    renderSchoolNameSelect();
+    renderAll();
+  } catch (e) {
+    errEl.textContent = '저장에 실패했습니다. 잠시 후 다시 시도해주세요.';
+  }
 };
 
 function downloadCsv() {
