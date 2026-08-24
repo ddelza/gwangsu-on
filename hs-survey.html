@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고등학교 진학 희망 조사 — 광수중학교</title>
+<style>
+* { box-sizing: border-box; }
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --accent: #1a3d7c; --accent-soft: #e6ebf5; --danger: #c0392b; --danger-soft: #fdecea;
+}
+body {
+  margin: 0; font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: var(--bg); color: var(--text);
+}
+.wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 60px; }
+.header { text-align: center; margin-bottom: 20px; }
+.header img { height: 44px; margin-bottom: 10px; }
+.header h1 { font-size: 1.15rem; margin: 0 0 4px; color: var(--accent); }
+.header p { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+
+.card { background: var(--surface); border-radius: 14px; padding: 20px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.card h2 { font-size: 0.98rem; margin: 0 0 4px; color: var(--text); }
+.card .hint { font-size: 0.78rem; color: var(--text-muted); margin: 0 0 12px; line-height: 1.5; }
+
+label.field-label { display: block; font-size: 0.82rem; font-weight: 700; color: var(--text); margin: 12px 0 6px; }
+label.field-label:first-child { margin-top: 0; }
+input[type=text], input[type=tel], select, textarea {
+  width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: 0.95rem; font-family: inherit; background: var(--surface); color: var(--text); outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+.chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-opt {
+  flex: 1 1 auto; min-width: 90px; text-align: center; padding: 10px 12px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+  font-size: 0.88rem; cursor: pointer; user-select: none; font-weight: 600;
+}
+.chip-opt.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.btn {
+  width: 100%; padding: 13px; border: none; border-radius: 10px; background: var(--accent); color: #fff;
+  font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 16px;
+}
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn.secondary { background: var(--accent-soft); color: var(--accent); }
+
+.error-msg { font-size: 0.82rem; color: var(--danger); background: var(--danger-soft); border-radius: 8px; padding: 8px 10px; margin-top: 10px; display: none; }
+.error-msg.show { display: block; }
+
+.verified-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--accent-soft); color: var(--accent); border-radius: 10px; padding: 10px 14px;
+  font-size: 0.85rem; font-weight: 600; margin-bottom: 14px;
+}
+.verified-banner button { background: none; border: none; color: var(--accent); font-size: 0.78rem; cursor: pointer; text-decoration: underline; font-weight: 400; }
+
+.existing-note { font-size: 0.78rem; color: var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 8px 10px; margin-bottom: 4px; }
+
+.summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+.summary-row:last-child { border-bottom: none; }
+.summary-row .k { color: var(--text-muted); }
+.summary-row .v { font-weight: 700; text-align: right; }
+
+.loading-state { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.9rem; }
+
+.admin-link-row { text-align: center; margin-top: 24px; }
+.admin-link-row a { font-size: 0.78rem; color: var(--text-muted); text-decoration: none; }
+.admin-link-row a:hover { text-decoration: underline; }
+
+.step { display: none; }
+.step.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <img src="logo.png" alt="" onerror="this.style.display='none'">
+    <h1>고등학교 진학 희망 조사</h1>
+    <p id="semLabel">2026학년도 2학기 · 광수중학교</p>
+  </div>
+
+  <!-- STEP 1: 학번/이름 확인 -->
+  <div class="step active" id="step-verify">
+    <div class="card">
+      <h2>학생 확인</h2>
+      <p class="hint">학번(4자리)과 이름을 입력해주세요. 예) 3학년 1반 15번 → 3115</p>
+      <label class="field-label" for="inputId">학번 (4자리)</label>
+      <input type="tel" id="inputId" maxlength="4" inputmode="numeric" placeholder="3115">
+      <label class="field-label" for="inputName">이름</label>
+      <input type="text" id="inputName" placeholder="홍길동">
+      <div class="error-msg" id="verifyError"></div>
+      <button class="btn" id="verifyBtn" onclick="onVerify()">확인</button>
+    </div>
+    <div class="admin-link-row"><a href="hs-survey-admin.html">관리자 페이지 →</a></div>
+  </div>
+
+  <!-- STEP 2: 조사 폼 -->
+  <div class="step" id="step-form">
+    <div class="verified-banner">
+      <span id="verifiedLabel"></span>
+      <button onclick="resetVerify()">다른 학생으로</button>
+    </div>
+    <div class="existing-note" id="existingNote" style="display:none"></div>
+
+    <div class="card">
+      <h2>① 지역</h2>
+      <p class="hint">희망 고등학교가 있는 지역을 선택해주세요.</p>
+      <div class="chip-group" id="areaChips">
+        <div class="chip-opt" data-value="관내">광주하남(관내)</div>
+        <div class="chip-opt" data-value="관외">그외(관외)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>② 학교 유형</h2>
+      <div class="chip-group" id="typeChips">
+        <div class="chip-opt" data-value="일반고">일반고</div>
+        <div class="chip-opt" data-value="특성화고">특성화고</div>
+        <div class="chip-opt" data-value="마이스터고">마이스터고</div>
+        <div class="chip-opt" data-value="과학고">과학고</div>
+        <div class="chip-opt" data-value="예술고">예술고</div>
+        <div class="chip-opt" data-value="체육고">체육고</div>
+        <div class="chip-opt" data-value="그외">그외</div>
+      </div>
+    </div>
+
+    <div class="card" id="schoolCard" style="display:none">
+      <h2>③ 희망 학교</h2>
+      <div id="schoolListWrap">
+        <label class="field-label" for="schoolSelect">목록에서 선택</label>
+        <select id="schoolSelect" onchange="onSchoolSelectChange()"></select>
+      </div>
+      <div id="schoolCustomWrap">
+        <label class="field-label" for="schoolCustomInput">학교명 직접 입력</label>
+        <input type="text" id="schoolCustomInput" placeholder="예) OO고등학교">
+      </div>
+    </div>
+
+    <div class="card" id="deptCard" style="display:none">
+      <h2>④ 학과</h2>
+      <p class="hint">없으면 비워두고, 아직 고민 중이면 "고민중"이라고 적어주세요.</p>
+      <input type="text" id="deptInput" placeholder="예) 조리과, 고민중">
+    </div>
+
+    <div class="error-msg" id="submitError"></div>
+    <button class="btn" id="submitBtn" onclick="onSubmit()" disabled>제출하기</button>
+  </div>
+
+  <!-- STEP 3: 완료 -->
+  <div class="step" id="step-done">
+    <div class="card">
+      <h2>제출 완료</h2>
+      <p class="hint">아래 내용으로 제출되었습니다. 내용을 다시 수정하려면 처음 화면에서 같은 학번으로 다시 확인해주세요.</p>
+      <div id="summaryBox"></div>
+      <button class="btn secondary" onclick="resetVerify()">처음으로</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DB_URL = 'https://gwangsu-on-default-rtdb.firebaseio.com';
+const YEAR = 2026;
+
+// 학교현황.xls(광주하남 관내) 기반 — 일반고/특성화고 목록. 두 유형에 모두 속한 학교(곤지암고,
+// 광주중앙고)는 양쪽 목록에 함께 들어있다.
+const SCHOOLS = {
+  '일반고': {
+    '광주시': ['경화여자고등학교', '곤지암고등학교', '광남고등학교', '광주고등학교', '광주중앙고등학교', '오포고등학교', '초월고등학교', '태전고등학교'],
+    '하남시': ['감일고등학교', '남한고등학교', '미사강변고등학교', '미사고등학교', '신장고등학교', '위례고등학교', '풍산고등학교', '하남고등학교'],
+  },
+  '특성화고': {
+    '광주시': ['경화EB고등학교', '곤지암고등학교', '광주중앙고등학교'],
+    '하남시': ['하남경영고등학교', '한국애니고등학교'],
+  },
+};
+const CUSTOM_VALUE = '__custom__';
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showStep(id) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+let roster = null; // { [id]: {grade, ban, num, name, ...} }
+let verified = null; // { id, name, grade, ban, num }
+let existingSubmission = null;
+
+async function loadRoster() {
+  const res = await fetch(`${DB_URL}/years/${YEAR}/students.json`);
+  if (!res.ok) throw new Error('학생 명단을 불러오지 못했습니다.');
+  roster = await res.json() || {};
+}
+
+function setVerifyError(msg) {
+  const el = document.getElementById('verifyError');
+  if (!msg) { el.classList.remove('show'); el.textContent = ''; return; }
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+window.onVerify = async function() {
+  const id = document.getElementById('inputId').value.trim();
+  const name = document.getElementById('inputName').value.trim();
+  setVerifyError('');
+
+  if (!/^\d{4}$/.test(id)) { setVerifyError('학번은 4자리 숫자로 입력해주세요.'); return; }
+  if (!name) { setVerifyError('이름을 입력해주세요.'); return; }
+
+  const btn = document.getElementById('verifyBtn');
+  btn.disabled = true; btn.textContent = '확인 중...';
+  try {
+    if (!roster) await loadRoster();
+    const rec = roster[id];
+    if (!rec || String(rec.name).trim() !== name) {
+      setVerifyError('학번 또는 이름이 일치하지 않습니다. 다시 확인해주세요.');
+      return;
+    }
+    verified = { id, name: rec.name, grade: rec.grade, ban: rec.ban, num: rec.num };
+    document.getElementById('verifiedLabel').textContent =
+      `✓ ${rec.grade}학년 ${rec.ban}반 ${rec.num}번 ${rec.name}`;
+    await loadExistingSubmission();
+    showStep('step-form');
+  } catch (e) {
+    setVerifyError(e.message || '확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  } finally {
+    btn.disabled = false; btn.textContent = '확인';
+  }
+};
+
+window.resetVerify = function() {
+  verified = null;
+  existingSubmission = null;
+  areaValue = '';
+  typeValue = '';
+  schoolValue = '';
+  isCustomSchool = false;
+  document.getElementById('inputId').value = '';
+  document.getElementById('inputName').value = '';
+  document.getElementById('deptInput').value = '';
+  document.getElementById('schoolCustomInput').value = '';
+  renderAreaChips(); renderTypeChips(); renderSchoolCard(); updateSubmitEnabled();
+  document.getElementById('existingNote').style.display = 'none';
+  showStep('step-verify');
+};
+
+async function loadExistingSubmission() {
+  const res = await fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${verified.id}.json`);
+  const data = res.ok ? await res.json() : null;
+  existingSubmission = data || null;
+  const note = document.getElementById('existingNote');
+  if (existingSubmission) {
+    note.style.display = 'block';
+    note.textContent = `이미 제출한 내용이 있습니다 (${new Date(existingSubmission.submittedAt).toLocaleString('ko-KR')} 제출). 내용을 수정하면 다시 제출됩니다.`;
+    areaValue = existingSubmission.area || '';
+    typeValue = existingSubmission.schoolType || '';
+    isCustomSchool = !!existingSubmission.isCustomSchool;
+    schoolValue = existingSubmission.schoolName || '';
+    document.getElementById('deptInput').value = existingSubmission.department || '';
+  } else {
+    note.style.display = 'none';
+    areaValue = ''; typeValue = ''; schoolValue = ''; isCustomSchool = false;
+    document.getElementById('deptInput').value = '';
+  }
+  renderAreaChips(); renderTypeChips(); renderSchoolCard();
+}
+
+// ── ①②③④ 폼 상태 ──────────────────────────────
+let areaValue = '';
+let typeValue = '';
+let schoolValue = '';
+let isCustomSchool = false;
+
+function renderAreaChips() {
+  document.querySelectorAll('#areaChips .chip-opt').forEach(el => {
+    el.classList.toggle('active', el.dataset.value === areaValue);
+  });
+}
+function renderTypeChips() {
+  document.querySelectorAll('#typeChips .chip-opt').forEach(el => {
+    el.classList.toggle('active', el.dataset.value === typeValue);
+  });
+}
+
+document.getElementById('areaChips').addEventListener('click', (e) => {
+  const opt = e.target.closest('.chip-opt');
+  if (!opt) return;
+  areaValue = opt.dataset.value;
+  schoolValue = ''; isCustomSchool = false;
+  renderAreaChips();
+  renderSchoolCard();
+  updateSubmitEnabled();
+});
+document.getElementById('typeChips').addEventListener('click', (e) => {
+  const opt = e.target.closest('.chip-opt');
+  if (!opt) return;
+  typeValue = opt.dataset.value;
+  schoolValue = ''; isCustomSchool = false;
+  renderTypeChips();
+  renderSchoolCard();
+  updateSubmitEnabled();
+});
+
+function hasSchoolList() {
+  return areaValue === '관내' && (typeValue === '일반고' || typeValue === '특성화고');
+}
+
+function renderSchoolCard() {
+  const card = document.getElementById('schoolCard');
+  const deptCard = document.getElementById('deptCard');
+  if (!areaValue || !typeValue) { card.style.display = 'none'; deptCard.style.display = 'none'; return; }
+  card.style.display = 'block';
+  deptCard.style.display = 'block';
+
+  const listWrap = document.getElementById('schoolListWrap');
+  const customWrap = document.getElementById('schoolCustomWrap');
+
+  if (hasSchoolList()) {
+    listWrap.style.display = 'block';
+    const groups = SCHOOLS[typeValue];
+    const sel = document.getElementById('schoolSelect');
+    let html = '<option value="">선택해주세요</option>';
+    Object.entries(groups).forEach(([region, names]) => {
+      html += `<optgroup label="${esc(region)}">`;
+      names.forEach(n => { html += `<option value="${esc(n)}"${schoolValue === n && !isCustomSchool ? ' selected' : ''}>${esc(n)}</option>`; });
+      html += '</optgroup>';
+    });
+    html += `<option value="${CUSTOM_VALUE}"${isCustomSchool ? ' selected' : ''}>직접 입력...</option>`;
+    sel.innerHTML = html;
+    customWrap.style.display = isCustomSchool ? 'block' : 'none';
+    document.getElementById('schoolCustomInput').value = isCustomSchool ? schoolValue : '';
+  } else {
+    listWrap.style.display = 'none';
+    customWrap.style.display = 'block';
+    isCustomSchool = true;
+    document.getElementById('schoolCustomInput').value = schoolValue;
+  }
+}
+
+window.onSchoolSelectChange = function() {
+  const sel = document.getElementById('schoolSelect');
+  const v = sel.value;
+  const customWrap = document.getElementById('schoolCustomWrap');
+  if (v === CUSTOM_VALUE) {
+    isCustomSchool = true;
+    schoolValue = document.getElementById('schoolCustomInput').value.trim();
+    customWrap.style.display = 'block';
+  } else {
+    isCustomSchool = false;
+    schoolValue = v;
+    customWrap.style.display = 'none';
+  }
+  updateSubmitEnabled();
+};
+
+document.getElementById('schoolCustomInput').addEventListener('input', (e) => {
+  if (isCustomSchool) schoolValue = e.target.value.trim();
+  updateSubmitEnabled();
+});
+
+function updateSubmitEnabled() {
+  const ok = areaValue && typeValue && schoolValue;
+  document.getElementById('submitBtn').disabled = !ok;
+}
+
+function setSubmitError(msg) {
+  const el = document.getElementById('submitError');
+  if (!msg) { el.classList.remove('show'); el.textContent = ''; return; }
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+window.onSubmit = async function() {
+  setSubmitError('');
+  const finalSchool = isCustomSchool ? document.getElementById('schoolCustomInput').value.trim() : schoolValue;
+  if (!areaValue || !typeValue || !finalSchool) { setSubmitError('①~③을 모두 입력해주세요.'); return; }
+
+  const payload = {
+    id: verified.id, name: verified.name, grade: verified.grade, ban: verified.ban, num: verified.num,
+    area: areaValue, schoolType: typeValue, schoolName: finalSchool, isCustomSchool: !!isCustomSchool,
+    department: document.getElementById('deptInput').value.trim(),
+    submittedAt: existingSubmission ? existingSubmission.submittedAt : Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = '제출 중...';
+  try {
+    const res = await fetch(`${DB_URL}/years/${YEAR}/hsSurvey/${verified.id}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('제출에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    renderSummary(payload);
+    showStep('step-done');
+  } catch (e) {
+    setSubmitError(e.message || '제출 중 오류가 발생했습니다.');
+  } finally {
+    btn.disabled = false; btn.textContent = '제출하기';
+  }
+};
+
+function renderSummary(p) {
+  const rows = [
+    ['학생', `${p.grade}학년 ${p.ban}반 ${p.num}번 ${p.name}`],
+    ['지역', p.area === '관내' ? '광주하남(관내)' : '그외(관외)'],
+    ['학교 유형', p.schoolType],
+    ['희망 학교', p.schoolName + (p.isCustomSchool ? ' (직접입력)' : '')],
+    ['학과', p.department || '(없음)'],
+  ];
+  document.getElementById('summaryBox').innerHTML = rows.map(([k, v]) =>
+    `<div class="summary-row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`
+  ).join('');
+}
+
+document.getElementById('inputId').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('inputName').focus(); }
+});
+document.getElementById('inputName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); onVerify(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고등학교 진학 희망 조사 — 관리자</title>
+<style>
+* { box-sizing: border-box; }
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --text: #1a1a1a; --text-muted: #888888;
+  --border: #d0d6e2; --accent: #1a3d7c; --accent-soft: #e6ebf5; --danger: #c0392b; --danger-soft: #fdecea;
+}
+body { margin: 0; font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: var(--bg); color: var(--text); }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.header-row h1 { font-size: 1.15rem; margin: 0; color: var(--accent); }
+.header-row a { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; }
+.header-row a:hover { text-decoration: underline; }
+
+.gate-overlay {
+  position: fixed; inset: 0; z-index: 999; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.gate-box { background: var(--surface); border-radius: 16px; padding: 36px 30px; max-width: 340px; width: 90%; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.gate-box h2 { font-size: 1.05rem; margin: 0 0 6px; color: var(--accent); }
+.gate-box p { font-size: 0.82rem; color: var(--text-muted); margin: 0 0 18px; }
+.gate-box input { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 1rem; text-align: center; letter-spacing: 2px; margin-bottom: 10px; }
+.gate-box button { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--accent); color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; }
+.gate-error { font-size: 0.8rem; color: var(--danger); margin-top: 8px; display: none; }
+.gate-error.show { display: block; }
+
+.stat-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.stat-card { background: var(--surface); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); flex: 1 1 140px; }
+.stat-card .num { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+.stat-card .label { font-size: 0.75rem; color: var(--text-muted); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.search-box { flex: 1 1 220px; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.9rem; }
+.btn { padding: 9px 16px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--accent-soft); color: var(--accent); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 5px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.8rem; cursor: pointer; border: none; }
+.chip.active { background: var(--accent); color: #fff; }
+
+.table-wrap { background: var(--surface); border-radius: 12px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; white-space: nowrap; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: var(--accent); color: #fff; font-size: 0.76rem; position: sticky; top: 0; }
+tr:last-child td { border-bottom: none; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+.badge.custom { background: #fff3e0; color: #e65100; }
+.badge.list { background: var(--accent-soft); color: var(--accent); }
+.empty-state { text-align: center; color: var(--text-muted); padding: 40px 0; }
+.not-submitted-note { font-size: 0.78rem; color: var(--text-muted); margin: 10px 2px; }
+</style>
+</head>
+<body>
+
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-box">
+    <h2>관리자 페이지</h2>
+    <p>비밀번호를 입력해주세요.</p>
+    <input type="password" id="gatePw" inputmode="numeric" placeholder="비밀번호">
+    <button onclick="tryUnlock()">확인</button>
+    <div class="gate-error" id="gateError">비밀번호가 올바르지 않습니다.</div>
+  </div>
+</div>
+
+<div class="wrap" id="mainWrap" style="display:none">
+  <div class="header-row">
+    <h1>고등학교 진학 희망 조사 — 제출 현황</h1>
+    <a href="hs-survey.html">← 학생 제출 페이지</a>
+  </div>
+
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="toolbar">
+    <input type="text" class="search-box" id="searchBox" placeholder="이름, 학번, 학교명, 학과로 검색">
+    <button class="btn" onclick="downloadCsv()">📥 CSV 다운로드</button>
+    <button class="btn" onclick="reload()">🔄 새로고침</button>
+  </div>
+  <div class="chips" id="gradeChips" style="margin-bottom:12px"></div>
+
+  <div class="table-wrap">
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>학년</th><th>반</th><th>번호</th><th>학번</th><th>이름</th>
+          <th>지역</th><th>학교유형</th><th>희망학교</th><th>학과</th><th>제출시각</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="not-submitted-note" id="notSubmittedNote"></div>
+</div>
+
+<script>
+const DB_URL = 'https://gwangsu-on-default-rtdb.firebaseio.com';
+const YEAR = 2026;
+const ADMIN_PASSWORD = '7683101';
+const SESSION_KEY = 'hsSurveyAdminUnlocked';
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+window.tryUnlock = function() {
+  const pw = document.getElementById('gatePw').value;
+  const err = document.getElementById('gateError');
+  if (pw === ADMIN_PASSWORD) {
+    try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+    unlock();
+  } else {
+    err.classList.add('show');
+  }
+};
+document.getElementById('gatePw').addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+function unlock() {
+  document.getElementById('gateOverlay').style.display = 'none';
+  document.getElementById('mainWrap').style.display = 'block';
+  reload();
+}
+
+(function checkSession() {
+  try { if (sessionStorage.getItem(SESSION_KEY) === '1') unlock(); } catch (e) {}
+})();
+
+let students = {}; // { id: {grade,ban,num,name,...} }
+let submissions = {}; // { id: {...} }
+let activeGrade = '';
+
+async function reload() {
+  document.getElementById('tableBody').innerHTML = '<tr><td colspan="10" class="empty-state">불러오는 중...</td></tr>';
+  const [sRes, vRes] = await Promise.all([
+    fetch(`${DB_URL}/years/${YEAR}/students.json`),
+    fetch(`${DB_URL}/years/${YEAR}/hsSurvey.json`),
+  ]);
+  students = (await sRes.json()) || {};
+  submissions = (await vRes.json()) || {};
+  renderStats();
+  renderGradeChips();
+  renderTable();
+}
+
+function renderStats() {
+  const totalStudents = Object.keys(students).length;
+  const totalSubmitted = Object.keys(submissions).filter(id => students[id]).length;
+  const custom = Object.values(submissions).filter(s => s.isCustomSchool).length;
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat-card"><div class="num">${totalSubmitted} / ${totalStudents}</div><div class="label">제출 인원</div></div>
+    <div class="stat-card"><div class="num">${totalStudents - totalSubmitted}</div><div class="label">미제출 인원</div></div>
+    <div class="stat-card"><div class="num">${custom}</div><div class="label">직접입력(목록 외) 건수</div></div>
+  `;
+}
+
+function gradesAvailable() {
+  return [...new Set(Object.values(students).map(s => String(s.grade)))].sort();
+}
+function renderGradeChips() {
+  const grades = gradesAvailable();
+  const wrap = document.getElementById('gradeChips');
+  wrap.innerHTML = '';
+  const allChip = document.createElement('button');
+  allChip.className = 'chip' + (activeGrade === '' ? ' active' : '');
+  allChip.textContent = '전체';
+  allChip.onclick = () => { activeGrade = ''; renderGradeChips(); renderTable(); };
+  wrap.appendChild(allChip);
+  grades.forEach(g => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (activeGrade === g ? ' active' : '');
+    chip.textContent = g + '학년';
+    chip.onclick = () => { activeGrade = g; renderGradeChips(); renderTable(); };
+    wrap.appendChild(chip);
+  });
+}
+
+function joinedRows() {
+  return Object.entries(submissions)
+    .filter(([id]) => students[id])
+    .map(([id, sub]) => ({ id, ...students[id], sub }))
+    .sort((a, b) => (Number(a.grade) - Number(b.grade)) || (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)));
+}
+
+function filteredRows() {
+  let rows = joinedRows();
+  if (activeGrade) rows = rows.filter(r => String(r.grade) === activeGrade);
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  if (q) {
+    rows = rows.filter(r => {
+      const hay = [r.name, r.id, r.sub.schoolName, r.sub.department, r.sub.schoolType].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  return rows;
+}
+
+function renderTable() {
+  const rows = filteredRows();
+  const body = document.getElementById('tableBody');
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="10" class="empty-state">표시할 제출 내역이 없습니다.</td></tr>';
+  } else {
+    body.innerHTML = rows.map(r => {
+      const s = r.sub;
+      const areaLabel = s.area === '관내' ? '관내' : '관외';
+      const badge = s.isCustomSchool ? '<span class="badge custom">직접입력</span>' : '<span class="badge list">목록</span>';
+      const time = s.submittedAt ? new Date(s.submittedAt).toLocaleString('ko-KR') : '';
+      return `<tr>
+        <td>${esc(r.grade)}</td><td>${esc(r.ban)}</td><td>${esc(r.num)}</td><td>${esc(r.id)}</td><td>${esc(r.name)}</td>
+        <td>${esc(areaLabel)}</td><td>${esc(s.schoolType)}</td>
+        <td>${esc(s.schoolName)} ${badge}</td>
+        <td>${esc(s.department || '')}</td>
+        <td style="font-size:0.75rem;color:var(--text-muted)">${esc(time)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const notSubmitted = Object.keys(students)
+    .filter(id => !submissions[id])
+    .filter(id => !activeGrade || String(students[id].grade) === activeGrade)
+    .map(id => students[id])
+    .sort((a, b) => (Number(a.grade) - Number(b.grade)) || (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)));
+  document.getElementById('notSubmittedNote').textContent = notSubmitted.length
+    ? `미제출(${notSubmitted.length}명): ${notSubmitted.map(s => `${s.grade}-${s.ban}-${s.num} ${s.name}`).join(', ')}`
+    : '';
+}
+
+function downloadCsv() {
+  const rows = filteredRows();
+  if (!rows.length) { alert('다운로드할 데이터가 없습니다.'); return; }
+  const q2 = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const headers = ['학년', '반', '번호', '학번', '이름', '지역', '학교유형', '희망학교', '직접입력여부', '학과', '제출시각'];
+  const lines = rows.map(r => {
+    const s = r.sub;
+    return [
+      r.grade, r.ban, r.num, r.id, r.name,
+      s.area === '관내' ? '관내' : '관외', s.schoolType, s.schoolName,
+      s.isCustomSchool ? 'Y' : 'N', s.department || '',
+      s.submittedAt ? new Date(s.submittedAt).toLocaleString('ko-KR') : '',
+    ].map(q2).join(',');
+  });
+  const csv = '﻿' + [headers.map(q2).join(','), ...lines].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const dateStr = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  a.download = `고교진학희망조사_${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+window.downloadCsv = downloadCsv;
+
+let debounceTimer = null;
+document.getElementById('searchBox').addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(renderTable, 150);
+});
+</script>
+</body>
+</html>
