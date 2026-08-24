@@ -1323,7 +1323,6 @@ ${view === 'student' ? boardHtml : ''}
 <table><tbody>${bodyHtml}</tbody></table>
 ${view === 'teacher' ? boardHtml : ''}
 <script>window.onload=function(){window.print();}<\/script>
-<script type="module" src="auth-gate.js"></script>
 </body></html>`);
   win.document.close();
 }
@@ -1353,5 +1352,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<script type="module" src="auth-gate.js"></script>
 </body>
 </html>
