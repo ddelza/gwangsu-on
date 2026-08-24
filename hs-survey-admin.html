@@ -484,29 +484,36 @@ window.toggleNotSubmitted = function() {
 // ── 통계(최종 제출 기준) ──────────────────────────────
 let statsExpanded = false;
 
-function countBy(keyFn) {
-  const counts = {};
+// keyFn(sub) → 그룹 라벨. 라벨별로 학생 목록(반/번호/학번/이름)까지 같이 모아서
+// 그래프에 마우스를 올리면 누가 포함됐는지 볼 수 있게 한다.
+function groupBy(keyFn) {
+  const groups = {};
   latestRows().forEach(r => {
     const key = keyFn(r.sub);
-    counts[key] = (counts[key] || 0) + 1;
+    (groups[key] = groups[key] || []).push(r);
   });
-  return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
 }
 
 function barChartHtml(entries) {
   if (!entries.length) return '<div class="empty-state" style="padding:12px 0">데이터가 없습니다.</div>';
-  const max = Math.max(...entries.map(([, c]) => c));
-  return '<div class="bar-chart">' + entries.map(([label, count]) => `
+  const max = Math.max(...entries.map(([, rows]) => rows.length));
+  return '<div class="bar-chart">' + entries.map(([label, rows]) => {
+    const names = rows
+      .slice().sort((a, b) => (Number(a.ban) - Number(b.ban)) || (Number(a.num) - Number(b.num)))
+      .map(r => `${r.id} ${r.name}`).join('\n');
+    return `
     <div class="bar-row">
       <div class="bar-label" title="${escAttr(label)}">${esc(label)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.round(count / max * 100))}%"></div></div>
-      <div class="bar-count">${count}</div>
-    </div>`).join('') + '</div>';
+      <div class="bar-track" title="${escAttr(names)}"><div class="bar-fill" style="width:${Math.max(4, Math.round(rows.length / max * 100))}%"></div></div>
+      <div class="bar-count" title="${escAttr(names)}">${rows.length}</div>
+    </div>`;
+  }).join('') + '</div>';
 }
 
 function renderStatsCharts() {
-  document.getElementById('schoolTypeChart').innerHTML = barChartHtml(countBy(s => s.schoolType));
-  document.getElementById('schoolNameChart').innerHTML = barChartHtml(countBy(s => schoolStatKey(s.schoolName, s.schoolType)));
+  document.getElementById('schoolTypeChart').innerHTML = barChartHtml(groupBy(s => s.schoolType));
+  document.getElementById('schoolNameChart').innerHTML = barChartHtml(groupBy(s => schoolStatKey(s.schoolName, s.schoolType)));
 }
 
 window.toggleStats = function() {
