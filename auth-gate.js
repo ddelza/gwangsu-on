@@ -108,7 +108,9 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
   overlay.style.display = "none";
-  document.body.style.visibility = "";
+  // 빈 문자열("")로 되돌리면 인라인 스타일이 사라지면서 <head>의 body{visibility:hidden}
+  // 규칙이 다시 적용돼 화면이 흰 채로 남는다 — 반드시 "visible"을 명시해 그 규칙을 덮어써야 한다.
+  document.body.style.visibility = "visible";
 });
 
 // 다른 페이지 스크립트가 필요하면 쓸 수 있도록 최소한만 전역에 노출
