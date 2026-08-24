@@ -65,6 +65,15 @@ tr:last-child td { border-bottom: none; }
 table.notsub-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; white-space: normal; }
 table.notsub-table td { padding: 2px 4px; border-bottom: 1px solid #f2f2f2; color: var(--text); background: transparent; }
 
+.stats-subblock { margin-top: 14px; }
+.stats-subblock:first-child { margin-top: 12px; }
+.bar-chart { display: flex; flex-direction: column; gap: 7px; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 160px) 1fr 30px; align-items: center; gap: 8px; }
+.bar-label { font-size: 0.8rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { background: var(--accent-soft); border-radius: 6px; height: 14px; overflow: hidden; }
+.bar-fill { background: var(--accent); height: 100%; border-radius: 6px; }
+.bar-count { font-size: 0.78rem; color: var(--text-muted); text-align: right; }
+
 .edit-btn { background: none; border: none; cursor: pointer; font-size: 0.95rem; padding: 2px 6px; border-radius: 6px; }
 .edit-btn:hover { background: var(--accent-soft); }
 
@@ -138,6 +147,23 @@ table.notsub-table td { padding: 2px 4px; border-bottom: 1px solid #f2f2f2; colo
       <button class="btn" id="notSubmittedToggleBtn" onclick="event.stopPropagation(); toggleNotSubmitted()">펼치기 ▾</button>
     </div>
     <div id="notSubmittedBody" style="display:none"></div>
+  </div>
+
+  <div class="not-submitted-section">
+    <div class="not-submitted-head" onclick="toggleStats()">
+      <h3>통계 (최종 제출 기준)</h3>
+      <button class="btn" id="statsToggleBtn" onclick="event.stopPropagation(); toggleStats()">펼치기 ▾</button>
+    </div>
+    <div id="statsBody" style="display:none">
+      <div class="stats-subblock">
+        <div class="filter-label">학교 분류별</div>
+        <div id="schoolTypeChart"></div>
+      </div>
+      <div class="stats-subblock">
+        <div class="filter-label">학교별</div>
+        <div id="schoolNameChart"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -233,6 +259,15 @@ function isSchoolInList(area, schoolType, name) {
   return Object.values(groups).some(list => list.includes(name));
 }
 
+// 곤지암고, 광주중앙고처럼 일반고/특성화고 두 갈래를 모두 제공하는 학교 —
+// "학교별" 통계에서 같은 학교라도 유형이 다르면 다른 항목으로 세야 한다.
+const OVERLAP_SCHOOLS = new Set(
+  Object.values(SCHOOLS['일반고']).flat().filter(n => Object.values(SCHOOLS['특성화고']).flat().includes(n))
+);
+function schoolStatKey(schoolName, schoolType) {
+  return OVERLAP_SCHOOLS.has(schoolName) ? `${schoolName}(${schoolType})` : schoolName;
+}
+
 let students = {}; // { id: {grade,ban,num,name,...} } — TARGET_GRADE만 남긴다
 let submissions = {}; // { id: {...} }
 let activeBan = '';
@@ -253,6 +288,7 @@ async function reload() {
   renderBanChips();
   renderSchoolTypeChips();
   renderSchoolNameSelect();
+  renderStatsCharts();
   renderAll();
 }
 
@@ -445,6 +481,40 @@ window.toggleNotSubmitted = function() {
   document.getElementById('notSubmittedToggleBtn').textContent = notSubmittedExpanded ? '접기 ▴' : '펼치기 ▾';
 };
 
+// ── 통계(최종 제출 기준) ──────────────────────────────
+let statsExpanded = false;
+
+function countBy(keyFn) {
+  const counts = {};
+  latestRows().forEach(r => {
+    const key = keyFn(r.sub);
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+}
+
+function barChartHtml(entries) {
+  if (!entries.length) return '<div class="empty-state" style="padding:12px 0">데이터가 없습니다.</div>';
+  const max = Math.max(...entries.map(([, c]) => c));
+  return '<div class="bar-chart">' + entries.map(([label, count]) => `
+    <div class="bar-row">
+      <div class="bar-label" title="${escAttr(label)}">${esc(label)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.round(count / max * 100))}%"></div></div>
+      <div class="bar-count">${count}</div>
+    </div>`).join('') + '</div>';
+}
+
+function renderStatsCharts() {
+  document.getElementById('schoolTypeChart').innerHTML = barChartHtml(countBy(s => s.schoolType));
+  document.getElementById('schoolNameChart').innerHTML = barChartHtml(countBy(s => schoolStatKey(s.schoolName, s.schoolType)));
+}
+
+window.toggleStats = function() {
+  statsExpanded = !statsExpanded;
+  document.getElementById('statsBody').style.display = statsExpanded ? 'block' : 'none';
+  document.getElementById('statsToggleBtn').textContent = statsExpanded ? '접기 ▴' : '펼치기 ▾';
+};
+
 // ── 제출 내용 수정(관리자) ──────────────────────────────
 let editingId = null;
 
@@ -511,6 +581,7 @@ window.saveEdit = async function() {
     renderStats();
     renderSchoolTypeChips();
     renderSchoolNameSelect();
+    renderStatsCharts();
     renderAll();
   } catch (e) {
     errEl.textContent = '저장에 실패했습니다. 잠시 후 다시 시도해주세요.';
