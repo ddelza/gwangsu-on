@@ -105,6 +105,14 @@ body {
   color: var(--text-muted); font-size: 0.8rem; cursor: pointer; white-space: nowrap;
 }
 .notice-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.notice-toggle-wrap { position: relative; }
+.notice-toggle-tip {
+  display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 20;
+  width: 240px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); color: var(--text); font-size: 0.78rem; line-height: 1.5;
+  font-weight: 400; box-shadow: 0 4px 14px rgba(0,0,0,0.12); text-align: left;
+}
+.notice-toggle-tip.show { display: block; }
 .notice-badge {
   display: none; align-items: center; gap: 4px; background: #fdecea; color: #c0392b; border-radius: 999px;
   padding: 2px 9px; font-size: 0.75rem; font-weight: 700; vertical-align: middle; margin-left: 6px;
@@ -127,11 +135,25 @@ body {
 .notice-modal-box h3 { margin: 0 0 14px; font-size: 1.05rem; color: var(--accent); }
 .notice-field { margin-bottom: 12px; }
 .notice-field label { display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 4px; }
-.notice-field input, .notice-field textarea {
+.notice-field input, .notice-field textarea, .notice-body-editable {
   width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
   font-size: 0.88rem; font-family: inherit; box-sizing: border-box;
 }
 .notice-field textarea { resize: vertical; min-height: 80px; }
+.notice-body-toolbar { display: flex; gap: 4px; margin-bottom: 6px; }
+.notice-body-toolbar button {
+  border: 1px solid var(--border); background: var(--surface); border-radius: 6px;
+  width: 28px; height: 28px; cursor: pointer; font-size: 0.85rem; color: var(--text);
+}
+.notice-body-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.notice-body-editable {
+  min-height: 80px; line-height: 1.5; overflow-y: auto; max-height: 240px;
+  color: var(--text); background: var(--surface);
+}
+.notice-body-editable:empty:before {
+  content: attr(data-placeholder); color: var(--text-muted); pointer-events: none;
+}
+.notice-strong { font-weight: 700; font-size: 1.15em; }
 .notice-date-row { display: flex; gap: 8px; align-items: center; }
 .notice-date-row input { flex: 1; }
 .notice-actions { display: flex; gap: 8px; margin-top: 4px; }
@@ -193,7 +215,15 @@ body {
   <div class="notice-head">
     <h2>📢 공지사항<span class="notice-badge" id="noticeBadge"><span class="notice-dot"></span><span id="noticeBadgeCount"></span></span></h2>
     <div style="display:flex;gap:8px">
-      <button class="notice-toggle-btn" id="noticeToggleBtn" onclick="toggleNoticeCollapse()">▾ 접기</button>
+      <div class="notice-toggle-wrap">
+        <button class="notice-toggle-btn" id="noticeToggleBtn" onclick="toggleNoticeCollapse()">▾ 접기</button>
+        <div class="notice-toggle-tip" id="noticeToggleTip">
+          이 버튼으로 공지사항 목록을 접거나 펼칩니다. 접힘/펼침 상태와 "읽음" 여부는
+          이 브라우저에만 저장되어(다른 기기·브라우저에는 영향 없음), 다시 들어와도
+          그대로 유지됩니다. 펼친 상태에서 화면에 보이는 공지는 자동으로 읽음
+          처리되고, 접으면 아직 안 읽은 공지 개수만 빨간 배지로 표시됩니다.
+        </div>
+      </div>
       <button class="notice-add-btn" onclick="openNoticeModal()">＋ 공지사항 추가하기</button>
     </div>
   </div>
@@ -219,7 +249,10 @@ body {
     </div>
     <div class="notice-field">
       <label>내용</label>
-      <textarea id="noticeBodyInput" placeholder="공지 내용을 입력하세요"></textarea>
+      <div class="notice-body-toolbar">
+        <button type="button" id="noticeBoldBtn" title="굵고 크게 (Ctrl+B) — 텍스트를 먼저 선택하세요"><b>B</b></button>
+      </div>
+      <div id="noticeBodyInput" class="notice-body-editable" contenteditable="true" data-placeholder="공지 내용을 입력하세요"></div>
     </div>
     <div class="notice-field">
       <label>노출 기간</label>
@@ -600,6 +633,48 @@ function noticeEsc(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+// 공지 내용에 허용하는 서식은 굵게+확대(<b class="notice-strong">)와 줄바꿈(<br>, <div>)뿐이다.
+// 저장 시/렌더링 시 둘 다 이 함수를 거쳐서, 허용 목록에 없는 태그·속성은 전부 일반 텍스트로
+// 풀어버린다(과거에 저장된 순수 텍스트 공지도 그대로 통과하므로 하위 호환됨).
+function sanitizeNoticeHtml(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html || '';
+  const allowedTags = new Set(['B', 'BR', 'DIV']);
+  function clean(node) {
+    [...node.childNodes].forEach((child) => {
+      if (child.nodeType !== 1) return; // 텍스트 노드는 그대로 둠
+      if (!allowedTags.has(child.tagName)) {
+        child.replaceWith(document.createTextNode(child.textContent));
+        return;
+      }
+      [...child.attributes].forEach((attr) => {
+        const keepClass = child.tagName === 'B' && attr.name === 'class' && attr.value === 'notice-strong';
+        if (!keepClass) child.removeAttribute(attr.name);
+      });
+      clean(child);
+    });
+  }
+  clean(div);
+  return div.innerHTML;
+}
+// 선택한 텍스트를 <b class="notice-strong">로 감싼다(굵게 + 한 치수 크게).
+function applyNoticeBold() {
+  const editor = document.getElementById('noticeBodyInput');
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  if (range.collapsed || !editor.contains(range.commonAncestorContainer)) return;
+  const wrap = document.createElement('b');
+  wrap.className = 'notice-strong';
+  try {
+    range.surroundContents(wrap);
+  } catch (e) {
+    const content = range.extractContents();
+    wrap.appendChild(content);
+    range.insertNode(wrap);
+  }
+  sel.removeAllRanges();
+}
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -659,6 +734,31 @@ window.toggleNoticeCollapse = function() {
 };
 applyCollapseState(); // 데이터 로드 전에도 저장된 접힘 상태를 먼저 반영(깜빡임 방지)
 
+// 공지 내용 편집창 서식 툴바: 버튼 클릭 시 mousedown에서 미리 preventDefault를 해둬야
+// 클릭으로 포커스가 버튼으로 넘어가면서 방금 드래그해둔 선택 영역이 풀리는 걸 막을 수 있다.
+const noticeBoldBtn = document.getElementById('noticeBoldBtn');
+const noticeBodyEditor = document.getElementById('noticeBodyInput');
+noticeBoldBtn.addEventListener('mousedown', (e) => e.preventDefault());
+noticeBoldBtn.addEventListener('click', applyNoticeBold);
+noticeBodyEditor.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+    e.preventDefault();
+    applyNoticeBold();
+  }
+});
+
+// 접기/펼치기 버튼에 커서를 0.5초 이상 올려두면 이 버튼이 뭘 하는지 설명하는 말풍선을 띄운다.
+const noticeToggleBtn = document.getElementById('noticeToggleBtn');
+const noticeToggleTip = document.getElementById('noticeToggleTip');
+let noticeToggleTipTimer = null;
+noticeToggleBtn.addEventListener('mouseenter', () => {
+  noticeToggleTipTimer = setTimeout(() => noticeToggleTip.classList.add('show'), 500);
+});
+noticeToggleBtn.addEventListener('mouseleave', () => {
+  clearTimeout(noticeToggleTipTimer);
+  noticeToggleTip.classList.remove('show');
+});
+
 async function loadNotices() {
   const listEl = document.getElementById('noticeList');
   try {
@@ -692,7 +792,7 @@ function renderNotices(list) {
             <button class="notice-del-btn" onclick="deleteNotice('${n.id}')">삭제</button>
           </div>
         </div>
-        <div class="notice-body">${noticeEsc(n.body)}</div>
+        <div class="notice-body">${sanitizeNoticeHtml(n.body)}</div>
       </div>
     `;
     }).join('');
@@ -712,7 +812,7 @@ window.openNoticeModal = function() {
   document.getElementById('noticeModalTitle').textContent = '공지사항 추가';
   document.getElementById('noticeEditId').value = '';
   document.getElementById('noticeTitleInput').value = '';
-  document.getElementById('noticeBodyInput').value = '';
+  document.getElementById('noticeBodyInput').innerHTML = '';
   document.getElementById('noticeStatusMsg').textContent = '';
   document.getElementById('noticeStartInput').value = todayStr();
   const end = new Date(); end.setDate(end.getDate() + 7);
@@ -727,7 +827,7 @@ window.openEditNoticeModal = function(id) {
   document.getElementById('noticeModalTitle').textContent = '공지사항 수정';
   document.getElementById('noticeEditId').value = id;
   document.getElementById('noticeTitleInput').value = n.title;
-  document.getElementById('noticeBodyInput').value = n.body;
+  document.getElementById('noticeBodyInput').innerHTML = sanitizeNoticeHtml(n.body);
   document.getElementById('noticeStartInput').value = n.startDate;
   document.getElementById('noticeEndInput').value = n.endDate;
   document.getElementById('noticeStatusMsg').textContent = '';
@@ -743,7 +843,7 @@ window.saveNotice = async function() {
   const statusEl = document.getElementById('noticeStatusMsg');
   const editId = document.getElementById('noticeEditId').value;
   const title = document.getElementById('noticeTitleInput').value.trim();
-  const body = document.getElementById('noticeBodyInput').value.trim();
+  const body = sanitizeNoticeHtml(document.getElementById('noticeBodyInput').innerHTML.trim());
   const startDate = document.getElementById('noticeStartInput').value;
   const endDate = document.getElementById('noticeEndInput').value;
   if (!title || !startDate || !endDate) { statusEl.textContent = '제목과 노출 기간을 입력해주세요.'; return; }
