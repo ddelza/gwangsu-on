@@ -89,15 +89,18 @@ body {
   padding: 9px 18px; background: #e65100; color: white; border: none;
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
+/* 스크롤해도 상단에 고정되는 헤더(네비+공지사항) */
+.sticky-header { position: sticky; top: 0; z-index: 500; background: var(--bg); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
 /* 공지사항 */
-.notice-wrap { max-width: 960px; margin: 0 auto; padding: 16px 16px 0; }
+.notice-wrap { max-width: 960px; margin: 0 auto; padding: 16px 16px; }
 .notice-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .notice-head h2 { font-size: 1rem; font-weight: 700; color: var(--accent); margin: 0; }
 .notice-add-btn {
   padding: 7px 14px; border: none; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff);
   font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap;
 }
-.notice-list { display: flex; flex-direction: column; gap: 8px; }
+.notice-list { display: flex; flex-direction: column; gap: 8px; max-height: 30vh; overflow-y: auto; }
 .notice-empty { color: var(--text-muted); font-size: 0.85rem; padding: 10px 2px; }
 .notice-card {
   background: var(--surface); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
@@ -160,6 +163,7 @@ body {
 </head>
 <body>
 
+<div class="sticky-header">
 <nav class="topnav">
   <a href="settings.html" class="brand-logo-link"><img src="logo.png" alt="" class="brand-logo"></a><a href="./" class="brand">광수 Online 교무실 2세대</a>
   <a href="calender.html">캘린더</a>
@@ -173,11 +177,6 @@ body {
   <a href="https://sites.google.com/kwangsu.ms.kr/work" target="_blank" rel="noopener" class="gen1-link">1세대 바로가기 ↗</a>
 </nav>
 
-<div id="inappBanner">
-  <p>⚠️ 카카오톡 등 메신저 안에서 열면 데이터를 불러오지 못할 수 있어요.<br>아래 버튼으로 외부 브라우저(Chrome/Safari)에서 열어주세요.</p>
-  <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
-</div>
-
 <div class="notice-wrap">
   <div class="notice-head">
     <h2>📢 공지사항</h2>
@@ -186,6 +185,12 @@ body {
   <div class="notice-list" id="noticeList">
     <div class="notice-empty">불러오는 중...</div>
   </div>
+</div>
+</div>
+
+<div id="inappBanner">
+  <p>⚠️ 카카오톡 등 메신저 안에서 열면 데이터를 불러오지 못할 수 있어요.<br>아래 버튼으로 외부 브라우저(Chrome/Safari)에서 열어주세요.</p>
+  <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
 </div>
 
 <!-- 공지사항 추가 모달 -->
