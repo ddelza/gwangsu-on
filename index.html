@@ -100,17 +100,29 @@ body {
   padding: 7px 14px; border: none; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff);
   font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap;
 }
+.notice-toggle-btn {
+  padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+  color: var(--text-muted); font-size: 0.8rem; cursor: pointer; white-space: nowrap;
+}
+.notice-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.notice-badge {
+  display: none; align-items: center; gap: 4px; background: #fdecea; color: #c0392b; border-radius: 999px;
+  padding: 2px 9px; font-size: 0.75rem; font-weight: 700; vertical-align: middle; margin-left: 6px;
+}
+.notice-badge .notice-dot { width: 8px; height: 8px; border-radius: 50%; background: #e53935; flex-shrink: 0; }
 .notice-list { display: flex; flex-direction: column; gap: 8px; max-height: 30vh; overflow-y: auto; }
 .notice-empty { color: var(--text-muted); font-size: 0.85rem; padding: 10px 2px; }
 .notice-card {
   background: var(--surface); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap;
   border-left: 4px solid var(--accent);
 }
-.notice-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; }
+.notice-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+.notice-title { font-weight: 700; font-size: 0.92rem; }
+.notice-card-actions { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+.notice-card-actions button { background: none; border: none; cursor: pointer; font-size: 0.75rem; padding: 0; font-weight: 600; }
+.notice-card-actions .notice-edit-btn { color: var(--accent); }
+.notice-card-actions .notice-del-btn { color: #c0392b; }
 .notice-body { font-size: 0.85rem; color: var(--text); line-height: 1.5; white-space: pre-line; }
-.notice-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
-.notice-meta button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 0.75rem; padding: 0; }
 .notice-modal-box { max-width: 420px; text-align: left; }
 .notice-modal-box h3 { margin: 0 0 14px; font-size: 1.05rem; color: var(--accent); }
 .notice-field { margin-bottom: 12px; }
@@ -179,8 +191,11 @@ body {
 
 <div class="notice-wrap">
   <div class="notice-head">
-    <h2>📢 공지사항</h2>
-    <button class="notice-add-btn" onclick="openNoticeModal()">＋ 공지사항 추가하기</button>
+    <h2>📢 공지사항<span class="notice-badge" id="noticeBadge"><span class="notice-dot"></span><span id="noticeBadgeCount"></span></span></h2>
+    <div style="display:flex;gap:8px">
+      <button class="notice-toggle-btn" id="noticeToggleBtn" onclick="toggleNoticeCollapse()">▾ 접기</button>
+      <button class="notice-add-btn" onclick="openNoticeModal()">＋ 공지사항 추가하기</button>
+    </div>
   </div>
   <div class="notice-list" id="noticeList">
     <div class="notice-empty">불러오는 중...</div>
@@ -193,10 +208,11 @@ body {
   <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
 </div>
 
-<!-- 공지사항 추가 모달 -->
+<!-- 공지사항 추가/수정 모달 -->
 <div class="modal-overlay" id="noticeModal">
   <div class="modal-box notice-modal-box">
-    <h3>공지사항 추가</h3>
+    <h3 id="noticeModalTitle">공지사항 추가</h3>
+    <input type="hidden" id="noticeEditId" value="">
     <div class="notice-field">
       <label>제목</label>
       <input type="text" id="noticeTitleInput" placeholder="공지 제목">
@@ -214,7 +230,7 @@ body {
       </div>
     </div>
     <div class="notice-actions">
-      <button class="notice-save-btn" onclick="saveNotice()">등록</button>
+      <button class="notice-save-btn" id="noticeSaveBtn" onclick="saveNotice()">등록</button>
       <button class="notice-cancel-btn" onclick="closeNoticeModal()">취소</button>
     </div>
     <div id="noticeStatusMsg" style="font-size:0.8rem;color:#c0392b;margin-top:8px"></div>
@@ -595,6 +611,54 @@ function dateStrFrom(d) {
 const db = getDatabase(getApp());
 const auth = window.gwangsuAuth.auth;
 
+// ── 접기 상태 / 읽음 여부 (테마 설정처럼 브라우저별 localStorage에 저장 — 사용자마다 따로 유지) ──
+const LS_COLLAPSED_KEY = 'gwangsu_notice_collapsed';
+const LS_SEEN_KEY = 'gwangsu_notice_seen_ids';
+let currentActiveNotices = [];
+
+function getCollapsed() {
+  try { return localStorage.getItem(LS_COLLAPSED_KEY) === 'true'; } catch (e) { return false; }
+}
+function setCollapsed(v) {
+  try { localStorage.setItem(LS_COLLAPSED_KEY, v ? 'true' : 'false'); } catch (e) {}
+}
+function getSeenIds() {
+  try { return new Set(JSON.parse(localStorage.getItem(LS_SEEN_KEY) || '[]')); } catch (e) { return new Set(); }
+}
+function saveSeenIds(set) {
+  try { localStorage.setItem(LS_SEEN_KEY, JSON.stringify([...set])); } catch (e) {}
+}
+function markAllSeen() {
+  const seen = getSeenIds();
+  currentActiveNotices.forEach(n => seen.add(n.id));
+  saveSeenIds(seen);
+}
+function updateBadge() {
+  const badge = document.getElementById('noticeBadge');
+  if (!getCollapsed()) { badge.style.display = 'none'; return; }
+  const seen = getSeenIds();
+  const unread = currentActiveNotices.filter(n => !seen.has(n.id));
+  if (unread.length) {
+    document.getElementById('noticeBadgeCount').textContent = unread.length;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+function applyCollapseState() {
+  const collapsed = getCollapsed();
+  document.getElementById('noticeList').style.display = collapsed ? 'none' : '';
+  document.getElementById('noticeToggleBtn').textContent = collapsed ? '▸ 펼치기' : '▾ 접기';
+  updateBadge();
+}
+window.toggleNoticeCollapse = function() {
+  const nowCollapsed = !getCollapsed();
+  setCollapsed(nowCollapsed);
+  if (!nowCollapsed) markAllSeen(); // 펼치는 순간 지금 보이는 공지는 전부 읽은 것으로 처리
+  applyCollapseState();
+};
+applyCollapseState(); // 데이터 로드 전에도 저장된 접힘 상태를 먼저 반영(깜빡임 방지)
+
 async function loadNotices() {
   const listEl = document.getElementById('noticeList');
   try {
@@ -610,21 +674,32 @@ async function loadNotices() {
 }
 
 function renderNotices(list) {
+  currentActiveNotices = list;
   const listEl = document.getElementById('noticeList');
-  if (!list.length) { listEl.innerHTML = '<div class="notice-empty">등록된 공지사항이 없습니다.</div>'; return; }
-  listEl.innerHTML = list.map(n => `
-    <div class="notice-card">
-      <div class="notice-main">
-        <div class="notice-title">${noticeEsc(n.title)}</div>
+  if (!list.length) { listEl.innerHTML = '<div class="notice-empty">등록된 공지사항이 없습니다.</div>'; }
+  else {
+    const myEmail = (auth.currentUser && auth.currentUser.email) || '';
+    listEl.innerHTML = list.map(n => {
+      const isAuthor = !!myEmail && n.authorEmail === myEmail;
+      return `
+      <div class="notice-card">
+        <div class="notice-card-head">
+          <div class="notice-title">${noticeEsc(n.title)}</div>
+          <div class="notice-card-actions">
+            <span>✍️ ${noticeEsc(n.author || '익명')}</span>
+            <span>${noticeEsc(n.startDate)} ~ ${noticeEsc(n.endDate)}</span>
+            ${isAuthor ? `<button class="notice-edit-btn" onclick="openEditNoticeModal('${n.id}')">수정</button>` : ''}
+            <button class="notice-del-btn" onclick="deleteNotice('${n.id}')">삭제</button>
+          </div>
+        </div>
         <div class="notice-body">${noticeEsc(n.body)}</div>
       </div>
-      <div class="notice-meta">
-        <span>✍️ ${noticeEsc(n.author || '익명')}</span>
-        <span>${noticeEsc(n.startDate)} ~ ${noticeEsc(n.endDate)}</span>
-        <button onclick="deleteNotice('${n.id}')">삭제</button>
-      </div>
-    </div>
-  `).join('');
+    `;
+    }).join('');
+  }
+  // 펼쳐진 상태라면 지금 보이는 공지는 바로 읽음 처리, 접혀있다면 안 읽은 개수만 뱃지로 표시
+  if (!getCollapsed()) markAllSeen();
+  updateBadge();
 }
 
 window.deleteNotice = async function(id) {
@@ -634,20 +709,39 @@ window.deleteNotice = async function(id) {
 };
 
 window.openNoticeModal = function() {
+  document.getElementById('noticeModalTitle').textContent = '공지사항 추가';
+  document.getElementById('noticeEditId').value = '';
   document.getElementById('noticeTitleInput').value = '';
   document.getElementById('noticeBodyInput').value = '';
   document.getElementById('noticeStatusMsg').textContent = '';
   document.getElementById('noticeStartInput').value = todayStr();
   const end = new Date(); end.setDate(end.getDate() + 7);
   document.getElementById('noticeEndInput').value = dateStrFrom(end);
+  document.getElementById('noticeSaveBtn').textContent = '등록';
   document.getElementById('noticeModal').style.display = 'flex';
 };
+
+window.openEditNoticeModal = function(id) {
+  const n = currentActiveNotices.find(x => x.id === id);
+  if (!n) return;
+  document.getElementById('noticeModalTitle').textContent = '공지사항 수정';
+  document.getElementById('noticeEditId').value = id;
+  document.getElementById('noticeTitleInput').value = n.title;
+  document.getElementById('noticeBodyInput').value = n.body;
+  document.getElementById('noticeStartInput').value = n.startDate;
+  document.getElementById('noticeEndInput').value = n.endDate;
+  document.getElementById('noticeStatusMsg').textContent = '';
+  document.getElementById('noticeSaveBtn').textContent = '수정 완료';
+  document.getElementById('noticeModal').style.display = 'flex';
+};
+
 window.closeNoticeModal = function() {
   document.getElementById('noticeModal').style.display = 'none';
 };
 
 window.saveNotice = async function() {
   const statusEl = document.getElementById('noticeStatusMsg');
+  const editId = document.getElementById('noticeEditId').value;
   const title = document.getElementById('noticeTitleInput').value.trim();
   const body = document.getElementById('noticeBodyInput').value.trim();
   const startDate = document.getElementById('noticeStartInput').value;
@@ -656,13 +750,24 @@ window.saveNotice = async function() {
   if (startDate > endDate) { statusEl.textContent = '종료일이 시작일보다 빠릅니다.'; return; }
 
   const user = auth.currentUser;
-  const author = (user && (user.displayName || user.email)) || '익명';
   statusEl.textContent = '저장 중...';
   try {
-    const id = push(ref(db, 'notices')).key;
-    await set(ref(db, 'notices/' + id), {
-      title, body, startDate, endDate, author, authorEmail: (user && user.email) || '', createdAt: Date.now(),
-    });
+    if (editId) {
+      const existing = currentActiveNotices.find(x => x.id === editId) || {};
+      await set(ref(db, 'notices/' + editId), {
+        title, body, startDate, endDate,
+        author: existing.author || (user && (user.displayName || user.email)) || '익명',
+        authorEmail: existing.authorEmail || (user && user.email) || '',
+        createdAt: existing.createdAt || Date.now(),
+        updatedAt: Date.now(),
+      });
+    } else {
+      const author = (user && (user.displayName || user.email)) || '익명';
+      const id = push(ref(db, 'notices')).key;
+      await set(ref(db, 'notices/' + id), {
+        title, body, startDate, endDate, author, authorEmail: (user && user.email) || '', createdAt: Date.now(),
+      });
+    }
     closeNoticeModal();
     loadNotices();
   } catch (err) {
