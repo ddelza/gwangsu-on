@@ -89,6 +89,43 @@ body {
   padding: 9px 18px; background: #e65100; color: white; border: none;
   border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
+/* 공지사항 */
+.notice-wrap { max-width: 960px; margin: 0 auto; padding: 16px 16px 0; }
+.notice-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.notice-head h2 { font-size: 1rem; font-weight: 700; color: var(--accent); margin: 0; }
+.notice-add-btn {
+  padding: 7px 14px; border: none; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff);
+  font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.notice-list { display: flex; flex-direction: column; gap: 8px; }
+.notice-empty { color: var(--text-muted); font-size: 0.85rem; padding: 10px 2px; }
+.notice-card {
+  background: var(--surface); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap;
+  border-left: 4px solid var(--accent);
+}
+.notice-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; }
+.notice-body { font-size: 0.85rem; color: var(--text); line-height: 1.5; white-space: pre-line; }
+.notice-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+.notice-meta button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 0.75rem; padding: 0; }
+.notice-modal-box { max-width: 420px; text-align: left; }
+.notice-modal-box h3 { margin: 0 0 14px; font-size: 1.05rem; color: var(--accent); }
+.notice-field { margin-bottom: 12px; }
+.notice-field label { display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 4px; }
+.notice-field input, .notice-field textarea {
+  width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+  font-size: 0.88rem; font-family: inherit; box-sizing: border-box;
+}
+.notice-field textarea { resize: vertical; min-height: 80px; }
+.notice-date-row { display: flex; gap: 8px; align-items: center; }
+.notice-date-row input { flex: 1; }
+.notice-actions { display: flex; gap: 8px; margin-top: 4px; }
+.notice-save-btn, .notice-cancel-btn { flex: 1; padding: 11px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+.notice-save-btn { border: none; background: var(--accent); color: var(--on-accent, #fff); }
+.notice-cancel-btn { border: 1px solid var(--border); background: var(--surface); color: #555; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+.modal-box { background: var(--surface); border-radius: 16px; padding: 22px; max-width: 420px; width: 100%; max-height: 85vh; overflow-y: auto; }
+
 .search-wrap { padding: 20px 16px 8px; max-width: 960px; margin: 0 auto; }
 .search-box { width: 100%; padding: 14px 16px; font-size: 1.05rem; border: 2px solid var(--border); border-radius: 12px; outline: none; }
 .search-box:focus { border-color: var(--accent); }
@@ -139,6 +176,44 @@ body {
 <div id="inappBanner">
   <p>⚠️ 카카오톡 등 메신저 안에서 열면 데이터를 불러오지 못할 수 있어요.<br>아래 버튼으로 외부 브라우저(Chrome/Safari)에서 열어주세요.</p>
   <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
+</div>
+
+<div class="notice-wrap">
+  <div class="notice-head">
+    <h2>📢 공지사항</h2>
+    <button class="notice-add-btn" onclick="openNoticeModal()">＋ 공지사항 추가하기</button>
+  </div>
+  <div class="notice-list" id="noticeList">
+    <div class="notice-empty">불러오는 중...</div>
+  </div>
+</div>
+
+<!-- 공지사항 추가 모달 -->
+<div class="modal-overlay" id="noticeModal">
+  <div class="modal-box notice-modal-box">
+    <h3>공지사항 추가</h3>
+    <div class="notice-field">
+      <label>제목</label>
+      <input type="text" id="noticeTitleInput" placeholder="공지 제목">
+    </div>
+    <div class="notice-field">
+      <label>내용</label>
+      <textarea id="noticeBodyInput" placeholder="공지 내용을 입력하세요"></textarea>
+    </div>
+    <div class="notice-field">
+      <label>노출 기간</label>
+      <div class="notice-date-row">
+        <input type="date" id="noticeStartInput">
+        <span>~</span>
+        <input type="date" id="noticeEndInput">
+      </div>
+    </div>
+    <div class="notice-actions">
+      <button class="notice-save-btn" onclick="saveNotice()">등록</button>
+      <button class="notice-cancel-btn" onclick="closeNoticeModal()">취소</button>
+    </div>
+    <div id="noticeStatusMsg" style="font-size:0.8rem;color:#c0392b;margin-top:8px"></div>
+  </div>
 </div>
 
 <div class="search-wrap">
@@ -491,5 +566,110 @@ async function trackAndShowVisitors() {
 trackAndShowVisitors();
 </script>
 <script type="module" src="auth-gate.js"></script>
+<script type="module">
+// ── 공지사항 (메인 페이지 전용) ──────────────────────────────
+// auth-gate.js가 이미 초기화해 둔 기본 Firebase 앱/Auth를 재사용한다(중복 초기화 방지).
+// 데이터: /notices/{id} = { title, body, startDate, endDate, author, authorEmail, createdAt }
+// ⚠️ Realtime Database 규칙에 "notices" 경로가 열려있어야 한다 (years/config/stats와 동일하게).
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+function noticeEsc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function dateStrFrom(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+const db = getDatabase(getApp());
+const auth = window.gwangsuAuth.auth;
+
+async function loadNotices() {
+  const listEl = document.getElementById('noticeList');
+  try {
+    const snap = await get(ref(db, 'notices'));
+    const all = snap.exists() ? Object.entries(snap.val()).map(([id, v]) => ({ id, ...v })) : [];
+    const today = todayStr();
+    const active = all.filter(n => n.startDate <= today && today <= n.endDate);
+    active.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    renderNotices(active);
+  } catch (err) {
+    listEl.innerHTML = `<div class="notice-empty">공지사항을 불러오지 못했습니다: ${noticeEsc(err.message || String(err))}</div>`;
+  }
+}
+
+function renderNotices(list) {
+  const listEl = document.getElementById('noticeList');
+  if (!list.length) { listEl.innerHTML = '<div class="notice-empty">등록된 공지사항이 없습니다.</div>'; return; }
+  listEl.innerHTML = list.map(n => `
+    <div class="notice-card">
+      <div class="notice-main">
+        <div class="notice-title">${noticeEsc(n.title)}</div>
+        <div class="notice-body">${noticeEsc(n.body)}</div>
+      </div>
+      <div class="notice-meta">
+        <span>✍️ ${noticeEsc(n.author || '익명')}</span>
+        <span>${noticeEsc(n.startDate)} ~ ${noticeEsc(n.endDate)}</span>
+        <button onclick="deleteNotice('${n.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.deleteNotice = async function(id) {
+  if (!confirm('이 공지사항을 삭제할까요?')) return;
+  await remove(ref(db, 'notices/' + id));
+  loadNotices();
+};
+
+window.openNoticeModal = function() {
+  document.getElementById('noticeTitleInput').value = '';
+  document.getElementById('noticeBodyInput').value = '';
+  document.getElementById('noticeStatusMsg').textContent = '';
+  document.getElementById('noticeStartInput').value = todayStr();
+  const end = new Date(); end.setDate(end.getDate() + 7);
+  document.getElementById('noticeEndInput').value = dateStrFrom(end);
+  document.getElementById('noticeModal').style.display = 'flex';
+};
+window.closeNoticeModal = function() {
+  document.getElementById('noticeModal').style.display = 'none';
+};
+
+window.saveNotice = async function() {
+  const statusEl = document.getElementById('noticeStatusMsg');
+  const title = document.getElementById('noticeTitleInput').value.trim();
+  const body = document.getElementById('noticeBodyInput').value.trim();
+  const startDate = document.getElementById('noticeStartInput').value;
+  const endDate = document.getElementById('noticeEndInput').value;
+  if (!title || !startDate || !endDate) { statusEl.textContent = '제목과 노출 기간을 입력해주세요.'; return; }
+  if (startDate > endDate) { statusEl.textContent = '종료일이 시작일보다 빠릅니다.'; return; }
+
+  const user = auth.currentUser;
+  const author = (user && (user.displayName || user.email)) || '익명';
+  statusEl.textContent = '저장 중...';
+  try {
+    const id = push(ref(db, 'notices')).key;
+    await set(ref(db, 'notices/' + id), {
+      title, body, startDate, endDate, author, authorEmail: (user && user.email) || '', createdAt: Date.now(),
+    });
+    closeNoticeModal();
+    loadNotices();
+  } catch (err) {
+    statusEl.textContent = '저장 실패: ' + (err.message || String(err));
+  }
+};
+
+document.getElementById('noticeModal').addEventListener('click', (e) => {
+  if (e.target.id === 'noticeModal') closeNoticeModal();
+});
+
+onAuthStateChanged(auth, (user) => { if (user) loadNotices(); });
+</script>
 </body>
 </html>
