@@ -8,6 +8,7 @@
 // (YY-###@gwangsu.ms.kr, 예: 24-027@gwangsu.ms.kr)에 해당하면 거부한다.
 // 교사 로컬파트는 형식이 고정돼 있지 않아(t027 외에도 다양) "교사 패턴 매칭"이 아니라
 // "학생 패턴 제외"로 판정한다.
+// science-teacher.kr 등 ALLOWED_EXTRA_DOMAINS에 넣은 개인 도메인은 학생 구분 없이 통째로 허용.
 //
 // ⚠️ 이 파일만으로는 "화면 가리기"에 불과하다. 실제 데이터 보호는 Firebase Realtime
 // Database 보안 규칙에서 auth != null && 같은 조건을 걸어야 완성된다(별도 작업).
@@ -33,18 +34,21 @@ const firebaseConfig = {
 const SCHOOL_DOMAIN = "gwangsu.ms.kr";
 // 학생 이메일 로컬파트 패턴: 두 자리 입학연도 + '-' + 세 자리 번호 (예: 24-027)
 const STUDENT_LOCAL_RE = /^\d{2}-\d{3}$/;
+// 학교 도메인 외에 통째로 허용할 개인 도메인 (학생 계정이 없는 도메인만 추가할 것)
+const ALLOWED_EXTRA_DOMAINS = ["science-teacher.kr"];
 
 function isAllowedEmail(email) {
   if (!email) return false;
   const [local, domain] = email.toLowerCase().split("@");
-  if (domain !== SCHOOL_DOMAIN) return false;
-  return !STUDENT_LOCAL_RE.test(local);
+  if (domain === SCHOOL_DOMAIN) return !STUDENT_LOCAL_RE.test(local);
+  return ALLOWED_EXTRA_DOMAINS.includes(domain);
 }
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ hd: SCHOOL_DOMAIN });
+// hd 파라미터는 도메인 하나만 지정 가능해서, 허용 도메인이 둘 이상인 지금은 계정 선택을
+// 제한하지 않는다 — 대신 로그인 이후 isAllowedEmail()에서 실제 검증한다.
 
 // ── 게이트 UI ──────────────────────────────
 const overlay = document.createElement("div");
