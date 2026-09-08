@@ -447,6 +447,22 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
             </div>
           </details>
 
+          <details class="copt-details" id="prevRefDetails" ontoggle="onPrevRefToggle()">
+            <summary>(6) 지난 배치 참조</summary>
+            <div class="copt-inner">
+              <div class="copt-row">
+                <label style="font-size:0.85rem;font-weight:600;">참조할 배치</label>
+                <select id="prevRefSelect" class="cs-sel" style="max-width:220px"></select>
+              </div>
+              <div class="copt-row">
+                <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;">
+                  <input type="checkbox" id="prevRefDiffPair"> 지난 번과 짝꿍 다르게
+                </label>
+              </div>
+              <p class="cpanel-note">짝꿍은 좌우로 인접한 자리 기준입니다.</p>
+            </div>
+          </details>
+
           <p class="cpanel-note" style="margin-top:10px;">※ 펼쳐진 옵션이 배치 시 자동 적용됩니다</p>
         </div>
       </details>
@@ -461,6 +477,8 @@ table.stu-table { border-collapse:collapse; min-width:340px; background:var(--su
         <button class="btn-secondary" id="printTeacherBtn" style="display:none" onclick="printSeating('teacher')">🖨️ 자리표 인쇄 (교사용)</button>
         <button class="btn-secondary" id="printStudentBtn" style="display:none" onclick="printSeating('student')">🖨️ 자리표 인쇄 (학생용)</button>
         <button class="btn-excel" id="excelDownloadBtn" style="display:none" onclick="downloadSeatingExcel()">📥 엑셀 다운로드</button>
+        <button class="btn-secondary" id="saveNamedBtn" style="display:none" onclick="saveCurrentAsNamed()">💾 이 배치 저장</button>
+        <button class="btn-secondary" onclick="openSavedLayoutsModal()">📂 저장된 배치 불러오기</button>
       </div>
 
       <div id="constraintWarn" class="constraint-warn"></div>
@@ -750,6 +768,7 @@ function initSelects() {
 initSelects();
 initDesk();
 onCpanelToggle();
+populatePrevRefSelect();
 
 function resizeGrid() {
   gridRows = +document.getElementById('rowSel').value;
@@ -823,7 +842,7 @@ function shuffle(arr) {
 }
 
 function hasConstraints() {
-  return ['fixDetails','apartDetails','togetherDetails','sameDetails','diffDetails']
+  return ['fixDetails','apartDetails','togetherDetails','sameDetails','diffDetails','prevRefDetails']
     .some(id => document.getElementById(id)?.open);
 }
 function doAssign() {
@@ -845,6 +864,7 @@ function saveLayout() {
         togetherDetails: !!document.getElementById('togetherDetails')?.open,
         sameDetails: !!document.getElementById('sameDetails')?.open,
         diffDetails: !!document.getElementById('diffDetails')?.open,
+        prevRefDetails: !!document.getElementById('prevRefDetails')?.open,
       },
     };
     localStorage.setItem(LS_LAYOUT_KEY, JSON.stringify(layout));
@@ -891,10 +911,11 @@ function restoreLayoutIfSaved() {
     genderMode = c.genderPairing || null;
 
     const op = layout.openPanels || {};
-    ['fixDetails', 'apartDetails', 'togetherDetails', 'sameDetails', 'diffDetails'].forEach(id => {
+    ['fixDetails', 'apartDetails', 'togetherDetails', 'sameDetails', 'diffDetails', 'prevRefDetails'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.open = !!op[id];
     });
+    populatePrevRefSelect();
     updateBadge();
     return true;
   } catch (e) { return false; }
@@ -916,10 +937,15 @@ function onGenderToggle(mode, el) {
 }
 
 function updateBadge() {
-  const n = ['fixDetails','apartDetails','togetherDetails','sameDetails','diffDetails']
+  const n = ['fixDetails','apartDetails','togetherDetails','sameDetails','diffDetails','prevRefDetails']
     .filter(id => document.getElementById(id)?.open).length;
   const el = document.getElementById('cpBadge');
   el.textContent = n + '개 활성'; el.style.display = n ? '' : 'none';
+}
+
+function onPrevRefToggle() {
+  populatePrevRefSelect();
+  updateBadge();
 }
 
 // ── 배치 옵션 설정 패널 숨기기 ──────────────────────────────
@@ -1015,6 +1041,12 @@ function collectConstraints() {
       const b = document.getElementById(row.id+'_b')?.value;
       if (a && b && a!==b) c.together.push({a,b});
     });
+  }
+  c.prevPairs = null;
+  if (document.getElementById('prevRefDetails')?.open && document.getElementById('prevRefDiffPair')?.checked) {
+    const refId = document.getElementById('prevRefSelect')?.value;
+    const entry = loadSavedLayoutsList().find(e => e.id === refId);
+    if (entry) c.prevPairs = Array.from(extractAdjacentPairs(entry));
   }
   return c;
 }
@@ -1163,7 +1195,130 @@ function calcViol(asgn, con, hPairs, areAdj, nameIdx) {
       if(con.genderPairing==='diff'&&ga===gb) v++;
     }
   }
+  if(con.prevPairs && con.prevPairs.length){
+    const prevSet = new Set(con.prevPairs);
+    for(const [a,b] of hPairs){
+      const sa=asgn[a], sb=asgn[b];
+      if(sa==null||sb==null) continue;
+      const key = [students[sa].name, students[sb].name].sort().join('|');
+      if(prevSet.has(key)) v++;
+    }
+  }
   return v;
+}
+
+// ── 저장된 배치(이름 붙여 저장) ───────────────────────────────
+const LS_SAVED_KEY = 'seat_saved_layouts';
+
+function loadSavedLayoutsList() {
+  try { return JSON.parse(localStorage.getItem(LS_SAVED_KEY) || '[]'); } catch(e) { return []; }
+}
+function persistSavedLayoutsList(list) {
+  try { localStorage.setItem(LS_SAVED_KEY, JSON.stringify(list)); } catch(e) {}
+}
+
+function extractAdjacentPairs(entry) {
+  const pairs = new Set();
+  const { gridRows: gr, gridCols: gc, deskActive: da, seatingMap: sm } = entry;
+  for (let r = 0; r < gr; r++) {
+    for (let c = 0; c < gc - 1; c++) {
+      if (!da[r] || !da[r][c] || !da[r][c+1]) continue;
+      const n1 = sm[`${r},${c}`], n2 = sm[`${r},${c+1}`];
+      if (n1 && n2) pairs.add([n1, n2].sort().join('|'));
+    }
+  }
+  return pairs;
+}
+
+function populatePrevRefSelect() {
+  const sel = document.getElementById('prevRefSelect');
+  if (!sel) return;
+  const list = loadSavedLayoutsList();
+  const cur = sel.value;
+  sel.innerHTML = list.length
+    ? list.map(e => `<option value="${e.id}">${esc(e.name)} (${new Date(e.savedAt).toLocaleDateString('ko-KR')})</option>`).join('')
+    : '<option value="">저장된 배치 없음</option>';
+  if (list.some(e => e.id === cur)) sel.value = cur;
+}
+
+function saveCurrentAsNamed() {
+  if (!lastSeatingMap) { alert('먼저 자리를 배치해주세요.'); return; }
+  const name = prompt('저장할 배치 이름을 입력하세요.', new Date().toLocaleDateString('ko-KR'));
+  if (!name) return;
+  const list = loadSavedLayoutsList();
+  list.push({
+    id: 'sl' + Date.now(),
+    name,
+    savedAt: Date.now(),
+    gridRows, gridCols, deskActive,
+    students: students.map(s => ({ name: s.name, gender: s.gender, num: s.num || '' })),
+    seatingMap: lastSeatingMap,
+    overflow: lastOverflow,
+  });
+  persistSavedLayoutsList(list);
+  populatePrevRefSelect();
+  alert('저장했습니다.');
+}
+
+function getNamedLayoutData(id) {
+  const entry = loadSavedLayoutsList().find(e => e.id === id);
+  if (!entry) return null;
+  return { gridRows: entry.gridRows, gridCols: entry.gridCols, deskActive: entry.deskActive, seatingMap: entry.seatingMap, students: entry.students };
+}
+
+function loadNamedLayout(id) {
+  const entry = loadSavedLayoutsList().find(e => e.id === id);
+  if (!entry) return;
+  document.getElementById('savedLayoutsOverlay')?.remove();
+  students = entry.students.map(s => ({ ...s }));
+  gridRows = entry.gridRows; gridCols = entry.gridCols;
+  deskActive = entry.deskActive.map(row => [...row]);
+  document.getElementById('rowSel').value = gridRows;
+  document.getElementById('colSel').value = gridCols;
+  renderDeskGrid();
+  step1Done = true; step2Done = true;
+  const btn2 = document.getElementById('btn2'); btn2.classList.remove('locked'); btn2.classList.add('done');
+  const btn3 = document.getElementById('btn3'); btn3.classList.remove('locked'); btn3.classList.add('done');
+  goStep(3);
+  renderSeating(entry.seatingMap, entry.overflow || []);
+}
+
+function deleteNamedLayout(id) {
+  if (!confirm('이 저장된 배치를 삭제할까요?')) return;
+  persistSavedLayoutsList(loadSavedLayoutsList().filter(e => e.id !== id));
+  populatePrevRefSelect();
+  document.getElementById('savedLayoutsOverlay')?.remove();
+  openSavedLayoutsModal();
+}
+
+function openSavedLayoutsModal() {
+  const list = loadSavedLayoutsList();
+  const overlay = document.createElement('div');
+  overlay.id = 'savedLayoutsOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);color:var(--text);border-radius:14px;padding:22px;max-width:480px;width:90%;max-height:75vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.25);';
+  let inner = '<h3 style="margin-bottom:14px;font-size:1.05rem;">📂 저장된 배치</h3>';
+  if (!list.length) {
+    inner += '<p style="color:var(--text-muted);font-size:0.88rem;">저장된 배치가 없습니다.</p>';
+  } else {
+    inner += list.slice().reverse().map(e => `
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+        <div style="flex:1;min-width:120px;">
+          <div style="font-weight:600;font-size:0.92rem;">${esc(e.name)}</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);">${new Date(e.savedAt).toLocaleString('ko-KR')} · 학생 ${e.students.length}명</div>
+        </div>
+        <button class="btn-secondary" style="padding:6px 10px;font-size:0.8rem;" onclick="loadNamedLayout('${e.id}')">불러오기</button>
+        <button class="btn-secondary" style="padding:6px 10px;font-size:0.8rem;" onclick="printSeating('teacher', getNamedLayoutData('${e.id}'))">🖨️ 교사용</button>
+        <button class="btn-secondary" style="padding:6px 10px;font-size:0.8rem;" onclick="printSeating('student', getNamedLayoutData('${e.id}'))">🖨️ 학생용</button>
+        <button class="btn-del-copt" onclick="deleteNamedLayout('${e.id}')">✕</button>
+      </div>`).join('');
+  }
+  inner += '<div style="margin-top:16px;text-align:right;"><button class="btn-secondary" onclick="document.getElementById(\'savedLayoutsOverlay\').remove()">닫기</button></div>';
+  box.innerHTML = inner;
+  overlay.appendChild(box);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // ── 공통 렌더링 ───────────────────────────────────────────────
@@ -1174,9 +1329,12 @@ function genderMarkHtml(g) {
 }
 
 // 학년·반 불러오기로 입력한 학생만 출석번호를 알 수 있다 — 있으면 "이름(번호)"로 표시한다.
-function formatStudentLabel(name) {
-  const s = students.find(st => st.name === name);
+function formatStudentLabelFor(studentList, name) {
+  const s = (studentList || []).find(st => st.name === name);
   return (s && s.num) ? `${name}(${s.num})` : name;
+}
+function formatStudentLabel(name) {
+  return formatStudentLabelFor(students, name);
 }
 
 function renderSeating(seatingMap, overflow) {
@@ -1192,6 +1350,7 @@ function renderSeating(seatingMap, overflow) {
   document.getElementById('printTeacherBtn').style.display='';
   document.getElementById('printStudentBtn').style.display='';
   document.getElementById('excelDownloadBtn').style.display='';
+  document.getElementById('saveNamedBtn').style.display='';
 }
 
 // ── 자리표 엑셀 다운로드 (교사용/학생용 시트 각각) ─────────────
@@ -1272,24 +1431,25 @@ function renderSeatingScreen() {
 
 // ── 자리표 인쇄 (교사용/학생용) ──────────────────────────────
 // view: 'teacher'(현재 화면과 동일, 칠판 아래) | 'student'(180도 회전, 칠판 위)
-function printSeating(view) {
-  if (!lastSeatingMap) { alert('먼저 자리를 배치해주세요.'); return; }
+function printSeating(view, data) {
+  data = data || { gridRows, gridCols, deskActive, seatingMap: lastSeatingMap, students };
+  if (!data.seatingMap) { alert('먼저 자리를 배치해주세요.'); return; }
   const rotate = view === 'student';
-  const rowOrder = rotate ? [...Array(gridRows).keys()].reverse() : [...Array(gridRows).keys()];
-  const colOrder = rotate ? [...Array(gridCols).keys()].reverse() : [...Array(gridCols).keys()];
-  const genderByName = new Map(students.map(s => [s.name, s.gender]));
+  const rowOrder = rotate ? [...Array(data.gridRows).keys()].reverse() : [...Array(data.gridRows).keys()];
+  const colOrder = rotate ? [...Array(data.gridCols).keys()].reverse() : [...Array(data.gridCols).keys()];
+  const genderByName = new Map(data.students.map(s => [s.name, s.gender]));
 
   let bodyHtml = '';
   rowOrder.forEach(r => {
     bodyHtml += '<tr>';
     colOrder.forEach(c => {
-      if (!deskActive[r][c]) { bodyHtml += '<td class="p-empty"></td>'; return; }
-      const name = lastSeatingMap[`${r},${c}`];
+      if (!data.deskActive[r][c]) { bodyHtml += '<td class="p-empty"></td>'; return; }
+      const name = data.seatingMap[`${r},${c}`];
       if (!name) { bodyHtml += '<td class="p-desk p-vacant">빈자리</td>'; return; }
       const g = genderByName.get(name);
       const markHtml = g === '남' ? '<span class="p-mark p-male"></span>'
                       : g === '여' ? '<span class="p-mark p-female"></span>' : '';
-      bodyHtml += `<td class="p-desk">${markHtml}<span class="p-name">${esc(formatStudentLabel(name))}</span></td>`;
+      bodyHtml += `<td class="p-desk">${markHtml}<span class="p-name">${esc(formatStudentLabelFor(data.students, name))}</span></td>`;
     });
     bodyHtml += '</tr>';
   });
